@@ -1,13 +1,27 @@
-// 极简版 Service Worker，仅用于触发 PWA 的安装条件
-self.addEventListener('install', (e) => {
-    self.skipWaiting();
+const CACHE_NAME = 'aovein-os-cache-v1';
+const urlsToCache =[
+    './',
+    './index.html',
+    './manifest.json'
+];
+
+// 安装 Service Worker
+self.addEventListener('install', event => {
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then(cache => {
+                return cache.addAll(urlsToCache);
+            })
+    );
 });
 
-self.addEventListener('activate', (e) => {
-    return self.clients.claim();
-});
-
-self.addEventListener('fetch', (e) => {
-    // 基础的网络请求拦截（不作离线缓存，确保每次获取最新数据）
-    e.respondWith(fetch(e.request).catch(() => new Response('请检查网络连接')));
+// 拦截网络请求，支持离线或提升加载速度
+self.addEventListener('fetch', event => {
+    event.respondWith(
+        caches.match(event.request)
+            .then(response => {
+                // 如果缓存中有，则返回缓存；否则进行网络请求
+                return response || fetch(event.request);
+            })
+    );
 });
