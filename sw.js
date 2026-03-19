@@ -1,27 +1,14 @@
-const CACHE_NAME = 'aovein-os-cache-v1';
-const urlsToCache =[
-    './',
-    './index.html',
-    './manifest.json'
-];
-
-// 安装 Service Worker
-self.addEventListener('install', event => {
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(cache => {
-                return cache.addAll(urlsToCache);
-            })
-    );
+// PWA 所需的空白 Service Worker
+self.addEventListener('install', (event) => {
+    // 强制立即接管控制权
+    self.skipWaiting();
 });
 
-// 拦截网络请求，支持离线或提升加载速度
-self.addEventListener('fetch', event => {
-    event.respondWith(
-        caches.match(event.request)
-            .then(response => {
-                // 如果缓存中有，则返回缓存；否则进行网络请求
-                return response || fetch(event.request);
-            })
-    );
+self.addEventListener('activate', (event) => {
+    event.waitUntil(clients.claim());
+});
+
+self.addEventListener('fetch', (event) => {
+    // 对所有请求直接放行网络请求，不做复杂的离线缓存以免影响你的更新
+    event.respondWith(fetch(event.request));
 });
