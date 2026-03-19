@@ -2147,7 +2147,7 @@
             </div>
 
             <!-- 朋友圈 (Moments) -->
-            <div v-if="wechatState.activeNav === 'moments'" class="flex-1 flex flex-col bg-white absolute inset-0 z-50 overflow-y-auto pb-32 moments-scroll-fix" @click="activeMomentMenuId = null" style="-webkit-overflow-scrolling: touch; overscroll-behavior: contain;">
+            <div v-if="wechatState.activeNav === 'moments'" class="bg-white absolute inset-0 z-50 overflow-y-auto pb-32 moments-scroll-fix block" @click="activeMomentMenuId = null" style="-webkit-overflow-scrolling: touch; overscroll-behavior: contain;">
                 <div class="absolute top-0 left-0 w-full h-[90px] pt-10 px-4 flex justify-between items-center z-10 text-white drop-shadow-md">
                     <button @click="wechatState.activeNav='discover'" class="w-8 h-8 flex items-center justify-center"><i class="fas fa-chevron-left text-lg"></i></button>
                     <div class="flex gap-4">
@@ -2294,8 +2294,13 @@
                             <span>{{ formatChatTime(msg.time) }}</span>
                         </div>
 
+                        <!-- 系统旁白消息 (如：拍一拍) -->
+                        <div v-if="msg.type === 'system'" class="chat-timestamp-divider">
+                            <span>{{ msg.content }}</span>
+                        </div>
+
                         <!-- 正常消息 -->
-                        <div v-if="!msg.isRecalled" class="flex w-full gap-3 mb-2 mt-2" :class="msg.isSelf ? 'flex-row-reverse' : 'flex-row'" @contextmenu.prevent="showChatContextMenu($event, msg, i)" @touchstart="longPressStart($event, msg, i)" @touchend="longPressEnd">
+                        <div v-else-if="!msg.isRecalled" class="flex w-full gap-3 mb-2 mt-2" :class="msg.isSelf ? 'flex-row-reverse' : 'flex-row'" @contextmenu.prevent="showChatContextMenu($event, msg, i)" @touchstart="longPressStart($event, msg, i)" @touchend="longPressEnd">
                             <!-- 复选框 -->
                             <div v-if="isMultiSelectMode" class="self-center" @click.stop="toggleSelectMessage(msg)">
                                 <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center transition" :class="selectedMessageIds.includes(msg) ? 'bg-black border-black' : 'bg-white'">
@@ -2303,7 +2308,8 @@
                                 </div>
                             </div>
                             
-                            <div class="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-gray-100" @touchstart="longPressStart($event, msg, i)" @touchend="longPressEnd" @contextmenu.prevent="showChatContextMenu($event, msg, i)">
+                            <!-- 绑定了双击拍一拍事件 -->
+                            <div class="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-gray-100" @dblclick="handleAvatarDblClick(msg)" @touchstart="longPressStart($event, msg, i)" @touchend="longPressEnd" @contextmenu.prevent="showChatContextMenu($event, msg, i)">
                                 <!-- Dynamic Avatar Logic -->
                                 <img :src="getChatAvatar(msg)" class="w-full h-full object-cover">
                             </div>
@@ -3078,6 +3084,11 @@ createApp({
         'wechatState.activeNav'(newVal) {
             if (newVal === 'room') {
                 this.scrollToBottom();
+            } else if (newVal === 'moments') {
+                this.$nextTick(() => {
+                    const m = document.querySelector('.moments-scroll-fix');
+                    if (m) m.scrollTop = 0;
+                });
             }
         },
         'wechatState.activeSession': {
@@ -4053,7 +4064,37 @@ createApp({
                 if (c) c.scrollTop = c.scrollHeight; 
             }); 
         },
-        
+                
+        handleAvatarDblClick(msg) {
+            const session = this.wechatState.activeSession;
+            if (!session) return;
+            
+            // 判断点击的是谁的头像
+            let targetName = msg.isSelf ? '自己' : session.name;
+            let suffix = '';
+            
+            if (msg.isSelf) {
+                const mask = this.getMaskById(session.maskId);
+                suffix = mask.nudge || '';
+            } else {
+                const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
+                suffix = (friend && friend.nudge) ? friend.nudge : '';
+            }
+            
+            let content = `我拍了拍${targetName}`;
+            if (suffix) {
+                content += suffix.startsWith('的') ? suffix : `的${suffix}`;
+            }
+            
+            // 作为系统旁白消息压入聊天
+            session.messages.push({
+                type: 'system',
+                content: content,
+                time: Date.now()
+            });
+            this.scrollToBottom();
+            this.saveData();
+        },
         sendMessage() {
             if(!this.inputMsg.trim()) return;
             const msg = { content: this.inputMsg, isSelf: true, time: Date.now(), avatar: this.getMaskById(this.wechatState.activeSession.maskId).avatar };
@@ -4211,7 +4252,8 @@ createApp({
               "transfer": { "amount": "52.00", "note": "For you" },
               "location": { "name": "Place Name", "address": "Detailed Address" },
               "qinmi_reply": "accept" OR "reject" (Optional),
-              "music_control": "next" OR "prev" OR "stop" (Optional, use only if user asks to change music)
+              "music_control": "next" OR "prev" OR "stop" (Optional),
+              "nudge": "user" OR "self" (Optional, you can playfully nudge the user or yourself)
             }
             "reply" is an array of strings. Split long text into natural short messages.`;
             
@@ -4300,6 +4342,24 @@ createApp({
                         avatar: session.avatar 
                     };
                     session.messages.push(locMsg); session.lastMessage = '[位置]';
+                }
+                
+                // 解析 AI 触发的拍一拍逻辑
+                if (parsed.nudge) {
+                    let targetName = parsed.nudge === 'user' ? '我' : session.name;
+                    let suffix = '';
+                    if (parsed.nudge === 'user') {
+                        const mask = this.getMaskById(session.maskId);
+                        suffix = mask.nudge || '';
+                    } else {
+                        const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
+                        suffix = (friend && friend.nudge) ? friend.nudge : '';
+                    }
+                    let content = `${session.name}拍了拍${targetName}`;
+                    if (suffix) {
+                        content += suffix.startsWith('的') ? suffix : `的${suffix}`;
+                    }
+                    session.messages.push({ type: 'system', content: content, time: Date.now() });
                 }
 
                 if (parsed.red_packet || Math.random() < 0.05) {
