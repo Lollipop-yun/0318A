@@ -2347,6 +2347,10 @@
                                             <div class="moment-card-text">{{ msg.momentData.content || '[图片动态]' }}</div>
                                         </div>
                                     </div>
+                                    
+                                    <!-- 动态交互卡片 (HTML UI) -->
+                                    <div v-else-if="msg.type === 'html'" class="w-full min-w-[220px] rounded-lg overflow-hidden" v-html="msg.content"></div>
+                                    
                                     <!-- 文本消息 -->
                                     <span v-else>{{ msg.content }}</span>
                                 </div>
@@ -4219,7 +4223,8 @@ createApp({
               "location": { "name": "Place Name", "address": "Detailed Address" },
               "qinmi_reply": "accept" OR "reject" (Optional),
               "music_control": "next" OR "prev" OR "stop" (Optional),
-              "nudge": "user" OR "self" (Optional, you can playfully nudge the user or yourself)
+              "nudge": "user" OR "self" (Optional, you can playfully nudge the user or yourself),
+              "html_widget": "OPTIONAL: Valid HTML string using Tailwind CSS classes. Generate a visual UI card (like a To-Do list, ticket, receipt, profile card) if the context suggests planning/showing something, or if the user asks for a specific layout. Ensure double quotes inside the HTML are properly escaped (e.g., class=\\\"text-red-500\\\"). Do not use markdown blocks."
             }
             "reply" is an array of strings. Split long text into natural short messages.`;
             
@@ -4298,6 +4303,19 @@ createApp({
                 if (parsed.fake_image) {
                      const fiMsg = { type: 'fake_image', content: parsed.fake_image, isRevealed: false, isSelf: false, time: Date.now(), avatar: session.avatar };
                     session.messages.push(fiMsg); session.lastMessage = '[图片]';
+                }
+
+                // --- 解析 AI 生成的动态 HTML UI 卡片 ---
+                if (parsed.html_widget) {
+                    const htmlMsg = { 
+                        type: 'html', 
+                        content: parsed.html_widget, 
+                        isSelf: false, 
+                        time: Date.now(), 
+                        avatar: session.avatar 
+                    };
+                    session.messages.push(htmlMsg); 
+                    session.lastMessage = '[互动卡片]';
                 }
 
                 if (parsed.location) {
