@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Aovein小手机</title>
@@ -15,6 +16,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
+    <!-- 引入深层数据防丢失脚本 -->
+    <script src="./persist-storage.js"></script>
     
     <style>
         /* ==================== 全局配置 ==================== */
@@ -4796,10 +4803,38 @@ createApp({
         editCustomWidget(i, f) { let t = f==='bubble'?'气泡文字':'下方文字'; this.showInput(t, this.customWidgets[i][f], "", (v) => { if(v){ this.customWidgets[i][f]=v; this.saveData(); } }); },
         triggerWidgetImageUpload(i) { this.editingWidgetId=i; if(this.$refs.widgetImageInput)this.$refs.widgetImageInput.click(); },
         async handleWidgetImageChange(e) { const f=e.target.files[0]; if(!f)return; try { this.customWidgets[this.editingWidgetId].image = await compressImage(f); this.saveData(); } catch(e){} },
-        saveData() { try { localStorage.setItem('onyunx_hybrid_v40', JSON.stringify(this.$data)); } catch(e){} },
-        loadData() { 
-            const s=localStorage.getItem('onyunx_hybrid_v40'); 
-            if(s) { try { const d=JSON.parse(s); Object.assign(this.$data, d); } catch(e){} }
+        saveData() { 
+            try { 
+                const dataStr = JSON.stringify(this.$data);
+                // 1. 常规保存
+                localStorage.setItem('onyunx_hybrid_v40', dataStr); 
+                // 2. 深层备份到 IndexedDB（防止因图片太多撑爆 localStorage 而丢失）
+                if (window.saveToSafeStorage) {
+                    window.saveToSafeStorage('onyunx_hybrid_v40', dataStr);
+                }
+            } catch(e) {
+                console.warn("常规存储可能已满，正依赖深层存储", e);
+            } 
+        },
+        async loadData() { 
+            const s = localStorage.getItem('onyunx_hybrid_v40'); 
+            if(s) { 
+                try { const d = JSON.parse(s); Object.assign(this.$data, d); } catch(e){} 
+            } else {
+                // 如果常规存储被浏览器清空了，触发深层恢复机制！
+                if (window.loadFromSafeStorage) {
+                    const backup = await window.loadFromSafeStorage('onyunx_hybrid_v40');
+                    if (backup) {
+                        try {
+                            const d = JSON.parse(backup);
+                            Object.assign(this.$data, d);
+                            // 将抢救回来的数据重新写回常规存储
+                            localStorage.setItem('onyunx_hybrid_v40', backup);
+                            console.log("✅ 成功从深层数据库恢复数据！");
+                        } catch(e){}
+                    }
+                }
+            }
             if (localStorage.getItem('onyunx_is_activated') === 'true') { this.isActivated = true; }
         },
         showToast(m) { this.toast.message=m; this.toast.show=true; setTimeout(()=>{this.toast.show=false},2000); },
