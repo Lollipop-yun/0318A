@@ -854,6 +854,8 @@
 
     <!-- 弹窗组件 -->
     <transition name="scale"><div v-if="modelSelectModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[60vh]"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><h3 class="font-bold text-lg text-gray-900">选择模型</h3><button @click="modelSelectModal.show = false" class="text-gray-400 font-medium text-sm">关闭</button></div><div class="flex-1 overflow-y-auto p-2 space-y-1"><div v-if="availableModels.length===0" class="p-4 text-center text-xs text-gray-400">列表为空</div><div v-for="model in availableModels" :key="model" @click="selectModel(model)" class="p-3.5 rounded-xl flex items-center justify-between active:bg-gray-50 transition" :class="apiConfig.selectedModel === model ? 'bg-blue-50' : ''"><span class="font-bold text-sm text-gray-800">{{ model }}</span><i v-if="apiConfig.selectedModel === model" class="fas fa-check text-blue-500"></i></div></div></div></div></transition>
+    <!-- MiniMax 语音模型选择弹窗 -->
+    <transition name="scale"><div v-if="minimaxModelModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[60vh]"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><h3 class="font-bold text-lg text-gray-900">选择语音模型</h3><button @click="minimaxModelModal.show = false" class="text-gray-400 font-medium text-sm">关闭</button></div><div class="flex-1 overflow-y-auto p-2 space-y-1"><div v-if="minimaxModels.length===0" class="p-4 text-center text-xs text-gray-400">列表为空</div><div v-for="model in minimaxModels" :key="model" @click="selectMinimaxModel(model)" class="p-3.5 rounded-xl flex items-center justify-between active:bg-gray-50 transition" :class="minimaxConfig.selectedModel === model ? 'bg-indigo-50' : ''"><span class="font-bold text-sm text-gray-800">{{ model }}</span><i v-if="minimaxConfig.selectedModel === model" class="fas fa-check text-indigo-500"></i></div></div></div></div></transition>
 
     <!-- 世界书绑定弹窗 -->
     <transition name="scale">
@@ -1532,6 +1534,8 @@
 
     <!-- 弹窗组件 -->
     <transition name="scale"><div v-if="modelSelectModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[60vh]"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><h3 class="font-bold text-lg text-gray-900">选择模型</h3><button @click="modelSelectModal.show = false" class="text-gray-400 font-medium text-sm">关闭</button></div><div class="flex-1 overflow-y-auto p-2 space-y-1"><div v-if="availableModels.length===0" class="p-4 text-center text-xs text-gray-400">列表为空</div><div v-for="model in availableModels" :key="model" @click="selectModel(model)" class="p-3.5 rounded-xl flex items-center justify-between active:bg-gray-50 transition" :class="apiConfig.selectedModel === model ? 'bg-blue-50' : ''"><span class="font-bold text-sm text-gray-800">{{ model }}</span><i v-if="apiConfig.selectedModel === model" class="fas fa-check text-blue-500"></i></div></div></div></div></transition>
+    <!-- MiniMax 语音模型选择弹窗 -->
+    <transition name="scale"><div v-if="minimaxModelModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[60vh]"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><h3 class="font-bold text-lg text-gray-900">选择语音模型</h3><button @click="minimaxModelModal.show = false" class="text-gray-400 font-medium text-sm">关闭</button></div><div class="flex-1 overflow-y-auto p-2 space-y-1"><div v-if="minimaxModels.length===0" class="p-4 text-center text-xs text-gray-400">列表为空</div><div v-for="model in minimaxModels" :key="model" @click="selectMinimaxModel(model)" class="p-3.5 rounded-xl flex items-center justify-between active:bg-gray-50 transition" :class="minimaxConfig.selectedModel === model ? 'bg-indigo-50' : ''"><span class="font-bold text-sm text-gray-800">{{ model }}</span><i v-if="minimaxConfig.selectedModel === model" class="fas fa-check text-indigo-500"></i></div></div></div></div></transition>
 
     <!-- 世界书绑定弹窗 -->
     <transition name="scale">
@@ -2659,18 +2663,21 @@
     <div v-if="settingsPage === 'tts-config'" class="absolute inset-0 p-4">
         <div class="space-y-5 pb-10">
             <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="flex items-center gap-3"><div class="w-10 h-10 bg-indigo-100 text-indigo-500 rounded-full flex items-center justify-center text-lg"><i class="fas fa-microphone-alt"></i></div><span class="font-bold text-gray-800">启用 MiniMax 语音</span></div>
-                    <input type="checkbox" id="minimax-toggle" class="switch-checkbox" v-model="minimaxConfig.enabled" @change="saveData">
-                    <label for="minimax-toggle" class="switch-label"><div class="switch-button"></div></label>
+                <div class="flex items-center justify-center mb-2">
+                    <div class="w-12 h-12 bg-indigo-100 text-indigo-500 rounded-full flex items-center justify-center text-xl"><i class="fas fa-microphone-alt"></i></div>
+                </div>
+                <div class="flex justify-between items-center border-b border-gray-100 pb-4">
+                    <h3 class="font-bold text-gray-800">启用 MiniMax 语音</h3>
+                    <input type="checkbox" id="mm-enable" class="switch-checkbox" v-model="minimaxConfig.enabled" @change="saveData">
+                    <label for="mm-enable" class="switch-label"><div class="switch-button"></div></label>
                 </div>
                 
-                <div v-if="minimaxConfig.enabled" class="space-y-4 pt-4 border-t border-gray-100 animate-fade-in">
+                <div v-if="minimaxConfig.enabled" class="space-y-4 animate-fade-in">
                     <div>
-                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">接口节点</label>
+                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">接口版本 (域名)</label>
                         <div class="flex gap-3">
-                            <div @click="minimaxConfig.region = 'mainland'" class="flex-1 py-2.5 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="minimaxConfig.region==='mainland'?'bg-indigo-50 border-indigo-200 text-indigo-600':'bg-white border-gray-200 text-gray-500'">大陆版</div>
-                            <div @click="minimaxConfig.region = 'overseas'" class="flex-1 py-2.5 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="minimaxConfig.region==='overseas'?'bg-indigo-50 border-indigo-200 text-indigo-600':'bg-white border-gray-200 text-gray-500'">海外版</div>
+                            <div @click="minimaxConfig.domain = 'mainland'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="minimaxConfig.domain==='mainland'?'bg-indigo-50 border-indigo-200 text-indigo-600':'bg-white border-gray-200 text-gray-500'">大陆版</div>
+                            <div @click="minimaxConfig.domain = 'overseas'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="minimaxConfig.domain==='overseas'?'bg-indigo-50 border-indigo-200 text-indigo-600':'bg-white border-gray-200 text-gray-500'">海外版</div>
                         </div>
                     </div>
                     <div>
@@ -2681,15 +2688,16 @@
                         <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">Group ID</label>
                         <input v-model="minimaxConfig.groupId" placeholder="填写 Group ID" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none">
                     </div>
-                    
                     <div class="flex items-center gap-2">
-                        <button @click="fetchMinimaxModels" :disabled="isLoading" class="flex-1 bg-gray-900 text-white py-2.5 rounded-xl text-sm font-bold active:scale-95 transition flex items-center justify-center gap-2"><i v-if="isLoading" class="fas fa-spinner fa-spin"></i><span v-else>获取并选择模型</span></button>
+                        <button @click="fetchMinimaxModels" :disabled="isLoading" class="flex-1 bg-gray-900 text-white py-2.5 rounded-xl text-sm font-bold active:scale-95 transition flex items-center justify-center gap-2">
+                            <i v-if="isLoading" class="fas fa-spinner fa-spin"></i><span v-else>自动获取模型</span>
+                        </button>
                     </div>
                     <div v-if="minimaxModels.length > 0">
-                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">当前使用模型</label>
-                        <select v-model="minimaxConfig.selectedModel" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-medium border border-gray-200 outline-none">
-                            <option v-for="m in minimaxModels" :key="m" :value="m">{{ m }}</option>
-                        </select>
+                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">选择模型</label>
+                        <div @click="minimaxModelModal.show = true" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-medium border border-gray-200 flex justify-between items-center cursor-pointer">
+                            <span>{{ minimaxConfig.selectedModel || '点击选择' }}</span><i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2881,8 +2889,8 @@ createApp({
             isActivated: false,
             isAppOpen: false, currentApp: null, settingsPage: 'main', themesPage: 'main', isLoading: false, isFullScreen: false, hideStatusBar: false,
             apiConfig: { baseUrl: '', apiKey: '', selectedModel: 'gpt-3.5-turbo', temperature: 0.7 }, availableModels: [], apiPresets:[], 
-            minimaxConfig: { enabled: false, region: 'mainland', apiKey: '', groupId: '', selectedModel: 'speech-01-turbo' },
-            minimaxModels:[], 
+            minimaxConfig: { enabled: false, apiKey: '', groupId: '', domain: 'mainland', selectedModel: 'speech-01-turbo' },
+            minimaxModels:[], minimaxModelModal: { show: false }, 
             notificationConfig: { currentSound: null, currentName: '默认提示音' }, soundPresets: [],
             themeConfig: { wallpaper: '', fontFamily: '', fontUrl: '', fontSize: 1.0, fontColor: '#000000' }, fontPresets: [], fontInputUrl: '',
             
@@ -5051,76 +5059,101 @@ createApp({
         },
         toggleVoiceText(msg) { msg.isExpanded = !msg.isExpanded; },
         async fetchMinimaxModels() {
-            if (!this.minimaxConfig.apiKey || !this.minimaxConfig.groupId) {
-                return this.showToast('请先填写 API Key 和 Group ID');
-            }
+            if (!this.minimaxConfig.apiKey || !this.minimaxConfig.groupId) return this.showToast('请先填写 API Key 和 Group ID');
             this.isLoading = true;
             try {
-                const domain = this.minimaxConfig.region === 'overseas' ? 'api.minimax.ai' : 'api.minimax.chat';
-                const url = `https://${domain}/v1/models?GroupId=${this.minimaxConfig.groupId.trim()}`;
-                const res = await fetch(url, { headers: { 'Authorization': `Bearer ${this.minimaxConfig.apiKey.trim()}` } });
-                
-                if (!res.ok) throw new Error(`HTTP 错误 ${res.status}`);
+                const domain = this.minimaxConfig.domain === 'overseas' ? 'api.minimaxi.chat' : 'api.minimax.chat';
+                const url = `https://${domain}/v1/models`;
+                const res = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.minimaxConfig.apiKey.trim()}`,
+                        'GroupId': this.minimaxConfig.groupId.trim()
+                    }
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
-                
                 if (data && data.data && Array.isArray(data.data)) {
-                    // 筛选出语音相关模型 (通常带有 speech 字样)
-                    let models = data.data.map(m => m.id).filter(id => id.includes('speech'));
-                    if (models.length === 0) models =['speech-01-turbo']; // 兜底保护
-                    this.minimaxModels = models;
-                    this.minimaxConfig.selectedModel = this.minimaxModels[0]; // 自动选中第一个
-                    this.showToast(`成功获取 ${models.length} 个语音模型`);
+                    // 过滤出含有 speech 字样的语音模型，如果找不到就列出所有
+                    let speechModels = data.data.map(m => m.id).filter(id => id.includes('speech'));
+                    this.minimaxModels = speechModels.length > 0 ? speechModels : data.data.map(m => m.id);
+                    this.showToast(`获取成功: ${this.minimaxModels.length}个`);
+                    if (!this.minimaxConfig.selectedModel && this.minimaxModels.length > 0) {
+                        this.minimaxConfig.selectedModel = this.minimaxModels[0];
+                    }
+                    this.minimaxModelModal.show = true;
                 } else {
                     throw new Error('数据格式错误');
                 }
-            } catch(e) {
-                console.error("Fetch MiniMax models error:", e);
-                this.showToast('获取失败，已应用系统默认模型');
-                // 失败时给出默认的常见模型兜底
-                this.minimaxModels =['speech-01-turbo', 'speech-01-turbo-240228'];
-                this.minimaxConfig.selectedModel = 'speech-01-turbo';
+            } catch (e) {
+                console.error(e);
+                this.showToast('拉取失败: ' + e.message);
+                if(this.minimaxModels.length === 0) this.minimaxModels = ['speech-01-turbo'];
             } finally {
                 this.isLoading = false;
-                this.saveData();
             }
         },
+        selectMinimaxModel(model) {
+            this.minimaxConfig.selectedModel = model;
+            this.saveData();
+            this.minimaxModelModal.show = false;
+        },
         async playMiniMaxVoice(msg) {
-            // 如果开关没开，或者没填关键信息，直接拦截静默（不报错，只展开文字）
-            if (!this.minimaxConfig.enabled || !this.minimaxConfig.apiKey || !this.minimaxConfig.groupId) return;
-            
+            if (!this.minimaxConfig.enabled) return; // 没开启开关直接静默返回，不报错
             if (msg.isPlayingVoice) return;
             msg.isPlayingVoice = true;
             this.showToast('正在为您生成专属语音...');
             
             try {
-                // 根据节点选择域名，并拼接上必须的 GroupId
-                const domain = this.minimaxConfig.region === 'overseas' ? 'api.minimax.ai' : 'api.minimax.chat';
-                const url = `https://${domain}/v1/t2a_v2?GroupId=${this.minimaxConfig.groupId.trim()}`;
-
-                const response = await fetch(url, {
+                const domain = this.minimaxConfig.domain === 'overseas' ? 'api.minimaxi.chat' : 'api.minimax.chat';
+                const response = await fetch(`https://${domain}/v1/t2a_v2`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${this.minimaxConfig.apiKey.trim()}`,
+                        'GroupId': this.minimaxConfig.groupId.trim(),
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         model: this.minimaxConfig.selectedModel || "speech-01-turbo",
                         text: msg.content,
                         stream: false,
-                        voice_setting: {
-                            // 底层静默提供一个基础音色，防止抛出参数缺失错误
-                            voice_id: "male-qn-qingse",
-                            speed: 1,
-                            vol: 1,
-                            pitch: 0
-                        },
                         audio_setting: {
                             sample_rate: 32000,
                             bitrate: 128000,
                             format: "mp3"
                         }
+                        // 根据你的要求，这里已移除 Voice ID (voice_setting) 参数
                     })
                 });
+
+                if (!response.ok) throw new Error(`HTTP 错误: ${response.status}`);
+                const data = await response.json();
+                
+                if (data.base_resp && data.base_resp.status_code !== 0) {
+                    throw new Error(data.base_resp.status_msg || '接口返回异常');
+                }
+
+                const hexString = data.data.audio;
+                if (!hexString) throw new Error('未返回音频数据');
+
+                const bytes = new Uint8Array(hexString.length / 2);
+                for (let i = 0; i < hexString.length; i += 2) {
+                    bytes[i / 2] = parseInt(hexString.substr(i, 2), 16);
+                }
+                const blob = new Blob([bytes], { type: 'audio/mp3' });
+                const url = URL.createObjectURL(blob);
+                
+                const audio = new Audio(url);
+                audio.onended = () => { msg.isPlayingVoice = false; };
+                audio.onerror = () => { msg.isPlayingVoice = false; };
+                audio.play();
+                
+            } catch (e) {
+                console.error("MiniMax TTS Error:", e);
+                this.showToast('语音生成失败: ' + e.message);
+                msg.isPlayingVoice = false;
+            }
+        },
 
                 if (!response.ok) throw new Error(`HTTP 错误: ${response.status}`);
                 const data = await response.json();
@@ -5335,7 +5368,7 @@ createApp({
                 }
             } else if(msg.type === 'voice') {
                 this.toggleVoiceText(msg);
-                // 只有在开关打开时，才触发请求并播放
+                // 只有开启了语音开关，才会触发发声，关闭则不报错
                 if (!msg.isSelf && this.minimaxConfig && this.minimaxConfig.enabled) {
                     this.playMiniMaxVoice(msg);
                 }
