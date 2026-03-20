@@ -2662,40 +2662,42 @@
                 <div class="flex items-center justify-center mb-2">
                     <div class="w-12 h-12 bg-indigo-100 text-indigo-500 rounded-full flex items-center justify-center text-xl"><i class="fas fa-microphone-alt"></i></div>
                 </div>
-                <h3 class="font-bold text-center text-gray-800 mb-4">MiniMax 语音配置</h3>
                 
-                <!-- 语音总开关 -->
-                <div class="flex justify-between items-center pb-2 border-b border-gray-100">
-                    <span class="text-sm font-bold text-gray-700">启用专属语音</span>
-                    <input type="checkbox" id="tts-toggle" class="switch-checkbox" v-model="minimaxConfig.enabled" @change="saveData">
-                    <label for="tts-toggle" class="switch-label"><div class="switch-button"></div></label>
+                <!-- 总开关 -->
+                <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-4">
+                    <span class="font-bold text-gray-800">开启 MiniMax 语音</span>
+                    <input type="checkbox" id="minimax-toggle" class="switch-checkbox" v-model="minimaxConfig.enabled" @change="saveData">
+                    <label for="minimax-toggle" class="switch-label"><div class="switch-button"></div></label>
                 </div>
-
-                <!-- 只有开启开关才显示具体配置 -->
-                <div v-if="minimaxConfig.enabled" class="space-y-4 pt-2">
+                
+                <!-- 开启后才显示的配置项 -->
+                <div v-if="minimaxConfig.enabled" class="space-y-4 animate-fade-in">
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">接口域名</label>
+                        <div class="flex gap-3">
+                            <div @click="minimaxConfig.region = 'cn'" class="flex-1 py-2.5 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="minimaxConfig.region==='cn'?'bg-indigo-50 border-indigo-200 text-indigo-600':'bg-white border-gray-200 text-gray-500'">大陆版</div>
+                            <div @click="minimaxConfig.region = 'overseas'" class="flex-1 py-2.5 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="minimaxConfig.region==='overseas'?'bg-indigo-50 border-indigo-200 text-indigo-600':'bg-white border-gray-200 text-gray-500'">海外版</div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">Group ID</label>
+                        <input v-model="minimaxConfig.groupId" type="text" placeholder="填写您的 Group ID" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none">
+                    </div>
                     <div>
                         <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">API Key</label>
                         <input v-model="minimaxConfig.apiKey" type="password" placeholder="填写您的 API Key" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none">
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">Group ID (部分账号必填)</label>
-                        <input v-model="minimaxConfig.groupId" placeholder="填写您的 Group ID" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none">
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">接口域名</label>
-                        <select v-model="minimaxConfig.domain" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none appearance-none">
-                            <option value="api.minimax.chat">大陆版 (api.minimax.chat)</option>
-                            <option value="api.minimaxi.chat">海外版 (api.minimaxi.chat)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">模型选择</label>
+                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">语音模型</label>
                         <input v-model="minimaxConfig.model" placeholder="例如: speech-01-turbo" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none">
                     </div>
                     <div>
                         <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">音色 ID (Voice ID)</label>
                         <input v-model="minimaxConfig.voiceId" placeholder="例如: male-qn-qingse" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none">
                     </div>
+                </div>
+                <div v-else class="text-center text-xs text-gray-400 py-4">
+                    开启后，点击 AI 的语音气泡将自动播放声音。
                 </div>
             </div>
             <button @click="saveSettings" class="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-indigo-200 active:scale-95 transition">保存配置</button>
@@ -2885,8 +2887,8 @@ createApp({
         return {
             isActivated: false,
             isAppOpen: false, currentApp: null, settingsPage: 'main', themesPage: 'main', isLoading: false, isFullScreen: false, hideStatusBar: false,
-            apiConfig: { baseUrl: '', apiKey: '', selectedModel: 'gpt-3.5-turbo', temperature: 0.7 }, availableModels: [], apiPresets:[], 
-            minimaxConfig: { enabled: false, apiKey: '', groupId: '', domain: 'api.minimax.chat', model: 'speech-01-turbo', voiceId: 'male-qn-qingse' }, 
+            apiConfig: { baseUrl: '', apiKey: '', selectedModel: 'gpt-3.5-turbo', temperature: 0.7 }, availableModels:[], apiPresets:[], 
+            minimaxConfig: { enabled: false, apiKey: '', groupId: '', region: 'cn', model: 'speech-01-turbo', voiceId: 'male-qn-qingse' }, 
             notificationConfig: { currentSound: null, currentName: '默认提示音' }, soundPresets: [],
             themeConfig: { wallpaper: '', fontFamily: '', fontUrl: '', fontSize: 1.0, fontColor: '#000000' }, fontPresets: [], fontInputUrl: '',
             
@@ -5055,30 +5057,27 @@ createApp({
         },
         toggleVoiceText(msg) { msg.isExpanded = !msg.isExpanded; },
         async playMiniMaxVoice(msg) {
-            // 开关关闭时，直接退出不执行任何报错
-            if (!this.minimaxConfig.enabled) return; 
-            
+            // 防止重复点击导致多次生成
             if (msg.isPlayingVoice) return;
             msg.isPlayingVoice = true;
             this.showToast('正在为您生成专属语音...');
             
             try {
-                // 动态获取填写的域名
-                const domain = this.minimaxConfig.domain || 'api.minimax.chat';
-                const url = `https://${domain}/v1/t2a_v2`;
+                // 判断域名：海外版为 minimaxi.chat，大陆版为 minimax.chat
+                const domain = this.minimaxConfig.region === 'overseas' ? 'api.minimaxi.chat' : 'api.minimax.chat';
                 
-                const headers = {
-                    'Authorization': `Bearer ${this.minimaxConfig.apiKey.trim()}`,
-                    'Content-Type': 'application/json'
-                };
-                // 如果填写了 Group ID，加入到请求头中
+                // 拼接 URL，如果有 Group ID 则将其作为 URL 参数传递
+                let reqUrl = `https://${domain}/v1/t2a_v2`;
                 if (this.minimaxConfig.groupId && this.minimaxConfig.groupId.trim() !== '') {
-                    headers['GroupId'] = this.minimaxConfig.groupId.trim();
+                    reqUrl += `?GroupId=${this.minimaxConfig.groupId.trim()}`;
                 }
 
-                const response = await fetch(url, {
+                const response = await fetch(reqUrl, {
                     method: 'POST',
-                    headers: headers,
+                    headers: {
+                        'Authorization': `Bearer ${this.minimaxConfig.apiKey.trim()}`,
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
                         model: this.minimaxConfig.model || "speech-01-turbo",
                         text: msg.content,
@@ -5310,7 +5309,7 @@ createApp({
                 }
             } else if(msg.type === 'voice') {
                 this.toggleVoiceText(msg);
-                // 只有当开关开启，并且填了 API Key 时，才播放语音
+                // 必须开启了开关，且填了 API Key 才会发声
                 if (!msg.isSelf && this.minimaxConfig && this.minimaxConfig.enabled && this.minimaxConfig.apiKey) {
                     this.playMiniMaxVoice(msg);
                 }
