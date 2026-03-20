@@ -2351,13 +2351,15 @@
                                     <!-- 动态交互卡片 (HTML UI) -->
                                     <div v-else-if="msg.type === 'html'" class="w-full min-w-[220px] rounded-lg overflow-hidden" v-html="msg.content"></div>
                                     
-                                    <!-- 文本消息 (含翻译功能) -->
+                                   <!-- 文本消息 (含后台预翻译功能) -->
                                     <div v-else class="flex flex-col">
                                         <span>{{ msg.content }}</span>
                                         <transition name="fade">
-                                            <div v-if="msg.isTranslating || msg.translation" class="mt-2 pt-2 border-t border-gray-300/30 text-[13px] opacity-90">
-                                                <div v-if="msg.isTranslating" class="flex items-center gap-1"><i class="fas fa-spinner fa-spin"></i> 正在翻译...</div>
-                                                <div v-else>{{ msg.translation }}</div>
+                                            <!-- @click.stop 用于阻止冒泡，实现点击翻译文本即可收起 -->
+                                            <div v-if="msg.showTranslation && (msg.isTranslating || msg.translation)" @click.stop="msg.showTranslation = false; saveData()" class="mt-2 pt-2 border-t border-gray-400/20 text-[13px] opacity-90 cursor-pointer active:opacity-50">
+                                                <div v-if="msg.isTranslating" class="flex items-center gap-1 text-gray-400"><i class="fas fa-spinner fa-spin"></i> 提前为您翻译中...</div>
+                                                <div v-else-if="msg.translation === '翻译失败'" class="text-red-400"><i class="fas fa-exclamation-circle"></i> 翻译失败，点击上方气泡重试</div>
+                                                <div v-else class="text-gray-500 font-medium">{{ msg.translation }}</div>
                                             </div>
                                         </transition>
                                     </div>
@@ -4070,6 +4072,8 @@ createApp({
             this.wechatState.activeSession.messages.push(msg);
             this.wechatState.activeSession.lastMessage = this.inputMsg;
             this.inputMsg = ''; this.scrollToBottom(); this.saveData();
+            // 静默后台预翻译
+            if (this.wechatState.activeSession.enableClickTranslate) { this.translateMessage(msg); }
         },
         triggerReceive() {
             if (!this.apiConfig.apiKey) { this.showToast('请先配置 API Key'); return; }
@@ -4408,6 +4412,10 @@ createApp({
                          };
                          session.messages.push(aiMsg);
                          this.scrollToBottom();
+                         // 静默后台预翻译
+                         if (session.enableClickTranslate && msgType === 'text') {
+                             this.translateMessage(aiMsg);
+                         }
                          
                          if (index === segments.length - 1) {
                              session.lastMessage = msgType === 'voice' ? '[语音]' : seg.trim();
@@ -5186,16 +5194,22 @@ createApp({
             } else if(msg.type === 'moment') {
                 this.wechatState.activeNav = 'moments';
             } else if(!msg.type || msg.type === 'text') {
-                // 点击普通文本气泡时，如果开了翻译开关，就执行翻译
+                // 点击普通文本气泡时，如果开了翻译开关
                 if (this.wechatState.activeSession && this.wechatState.activeSession.enableClickTranslate) {
-                    this.translateMessage(msg);
+                    // 如果没翻译过，或者之前翻译失败了，重新发起翻译
+                    if (!msg.translation || msg.translation === '翻译失败') {
+                        this.translateMessage(msg);
+                    }
+                    // 切换 显示/隐藏 状态
+                    msg.showTranslation = !msg.showTranslation;
+                    this.saveData();
                 }
             }
         },
         async translateMessage(msg) {
-            // 如果已经翻译过，或者正在翻译中，就不重复请求
-            if (msg.translation || msg.isTranslating) return;
-            if (!this.apiConfig.apiKey) return this.showToast('请先配置 API Key');
+            // 如果已经在翻译，或者已经翻译成功，就不重复请求
+            if (msg.isTranslating || (msg.translation && msg.translation !== '翻译失败')) return;
+            if (!this.apiConfig.apiKey) return; // 静默失败，不打扰用户
 
             msg.isTranslating = true;
             this.saveData();
@@ -5210,19 +5224,25 @@ createApp({
                     body: JSON.stringify({ 
                         model: this.apiConfig.selectedModel, 
                         messages:[
-                            { role: 'system', content: '你是一个精准的翻译助手。请将用户输入的文字(可能是英语、日语、韩语、法语、俄语、西班牙语、意大利语等常见外语，也可能是粤语、闽南语等地方方言)直接翻译成标准简体中文。如果已经是标准中文，请直接原样返回。除了翻译结果，绝对不要输出任何多余的解释、音标或引导语！' },
+                            { role: 'system', content: '你是一个精准的翻译助手。请判断用户的输入，如果是外语(英语/日语/韩语等)或方言(粤语/闽南语等)，请直接翻译成标准简体中文并输出；如果是纯正的标准简体中文，或者纯符号、纯数字，请直接回复“无需翻译”。除了翻译结果，绝对不要输出任何多余的解释、音标或引导语！' },
                             { role: 'user', content: msg.content }
                         ],
-                        temperature: 0.3 // 较低的温度保证翻译的准确性
+                        temperature: 0.1 
                     })
                 });
 
                 if(!res.ok) throw new Error('API 请求失败');
                 const data = await res.json();
-                msg.translation = data.choices[0].message.content.trim();
+                let result = data.choices[0].message.content.trim();
+                
+                // 如果 AI 判断无需翻译，我们标记一下，避免展示无用信息
+                if (result.includes('无需翻译')) {
+                    msg.translation = '原内容为中文，无需翻译';
+                } else {
+                    msg.translation = result;
+                }
             } catch(e) {
                 console.error("翻译失败:", e);
-                this.showToast('翻译失败，请检查网络或API');
                 msg.translation = "翻译失败";
             } finally {
                 msg.isTranslating = false;
