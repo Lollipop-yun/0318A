@@ -4678,43 +4678,66 @@ createApp({
         
         previewFontFromUrl() {
             if(!this.fontInputUrl) return this.showToast('请输入URL');
-            this.isLoading = true; // 开启加载动画
+            this.isLoading = true;
             const n = 'PreviewFont_' + Date.now();
-            // 修复url路径引用缺少双引号导致解析失败的问题
-            const font = new FontFace(n, `url("${this.fontInputUrl}")`);
-            font.load().then(f => {
-                document.fonts.add(f);
+            
+            // 移除旧的预览样式，防止冲突
+            let oldStyle = document.getElementById('dynamic-preview-font');
+            if (oldStyle) oldStyle.remove();
+
+            // 改用 CSS 动态注入方式，兼容性极强，绕过严格的 JS CORS 拦截
+            let style = document.createElement('style');
+            style.id = 'dynamic-preview-font';
+            style.innerHTML = `@font-face { font-family: "${n}"; src: url("${this.fontInputUrl}"); font-display: swap; }`;
+            document.head.appendChild(style);
+            
+            // 给予浏览器 800ms 解析并下载字体的时间
+            setTimeout(() => {
                 this.previewFontFamily = n;
-                this.isLoading = false; // 关闭加载动画
-                this.showToast('预览已更新');
-            }).catch(e => {
-                this.isLoading = false; // 关闭加载动画
-                this.showToast('加载失败，请检查链接或跨域限制(CORS)');
-                console.error("Font load error:", e);
-            });
+                this.isLoading = false;
+                this.showToast('预览已更新（若仍无效，请确认链接是 .ttf / .woff 直链格式）');
+            }, 800);
         },
         applyFontFromUrl() {
             if(this.previewFontFamily) {
                 this.themeConfig.fontFamily = this.previewFontFamily;
                 this.themeConfig.fontUrl = this.fontInputUrl;
                 this.saveData();
-                document.body.style.fontFamily = this.themeConfig.fontFamily;
-                this.showToast('字体已应用');
+                this.loadFont(this.themeConfig.fontUrl, this.themeConfig.fontFamily);
+                this.showToast('字体已全局应用');
             } else { this.showToast('请先预览字体'); }
         },
-        async loadFont(u, n) { 
-            try { const f = new FontFace(n, `url(${u})`); await f.load(); document.fonts.add(f); document.body.style.fontFamily = n; } catch(e){} 
+        loadFont(u, n) { 
+            let style = document.getElementById('global-custom-font');
+            if (!style) {
+                style = document.createElement('style');
+                style.id = 'global-custom-font';
+                document.head.appendChild(style);
+            }
+            // 全局注入 @font-face
+            style.innerHTML = `@font-face { font-family: "${n}"; src: url("${u}"); font-display: swap; }`;
+            // 全局挂载字体，并保留系统默认字体作为后备以防万一
+            document.body.style.fontFamily = `"${n}", var(--custom-font, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif)`;
         },
         resetFont() {
             this.themeConfig.fontFamily = '';
             this.themeConfig.fontUrl = '';
             document.body.style.fontFamily = '';
+            let style = document.getElementById('global-custom-font');
+            if (style) style.remove(); // 清除动态注入的 CSS
             this.saveData();
             this.showToast('已恢复默认字体');
         },
+        applyFontPreset(p) { 
+            if(p.fontUrl) this.loadFont(p.fontUrl, p.fontFamily); 
+            this.themeConfig.fontFamily = p.fontFamily; 
+            this.themeConfig.fontUrl = p.fontUrl; 
+            this.themeConfig.fontSize = p.fontSize; 
+            this.themeConfig.fontColor = p.fontColor; 
+            this.saveData(); 
+        },
 
-        saveFontPreset() { this.showInput("预设名称", "", "", (n) => { if(n) { this.fontPresets.push({ name:n, fontFamily:this.themeConfig.fontFamily, fontUrl:this.themeConfig.fontUrl, fontSize:this.themeConfig.fontSize, fontColor:this.themeConfig.fontColor }); this.saveData(); } }); },
-        applyFontPreset(p) { if(p.fontUrl) this.loadFont(p.fontUrl, p.fontFamily); this.themeConfig.fontFamily=p.fontFamily; this.themeConfig.fontUrl=p.fontUrl; this.themeConfig.fontSize=p.fontSize; this.themeConfig.fontColor=p.fontColor; document.body.style.fontFamily=p.fontFamily; this.saveData(); },
+        saveFontPreset() { this.showInput("预设名称", "", "", (n) => { if(n) { this.fontPresets.push({ name:n, fontFamily:this.themeConfig.fontFamily, fontUrl:this.themeConfig.fontUrl, fontSize:this.themeConfig.fontSize, fontColor:this.themeConfig.fontColor }); this.saveData(); } }); },        
         deleteFontPreset(i) { this.showConfirm("删除？",()=>{this.fontPresets.splice(i,1);this.saveData();}); },
         triggerWallpaperUpload() { this.$refs.wallpaperInput.click(); },
         async handleWallpaperUpload(e) { const f=e.target.files[0]; if(!f)return; try { this.themeConfig.wallpaper = await compressImage(f, 1080); this.saveData(); } catch(e){} },
