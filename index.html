@@ -4671,13 +4671,20 @@ createApp({
         
         previewFontFromUrl() {
             if(!this.fontInputUrl) return this.showToast('请输入URL');
+            this.isLoading = true; // 开启加载动画
             const n = 'PreviewFont_' + Date.now();
-            const font = new FontFace(n, `url(${this.fontInputUrl})`);
+            // 修复url路径引用缺少双引号导致解析失败的问题
+            const font = new FontFace(n, `url("${this.fontInputUrl}")`);
             font.load().then(f => {
                 document.fonts.add(f);
                 this.previewFontFamily = n;
+                this.isLoading = false; // 关闭加载动画
                 this.showToast('预览已更新');
-            }).catch(e => this.showToast('加载失败'));
+            }).catch(e => {
+                this.isLoading = false; // 关闭加载动画
+                this.showToast('加载失败，请检查链接或跨域限制(CORS)');
+                console.error("Font load error:", e);
+            });
         },
         applyFontFromUrl() {
             if(this.previewFontFamily) {
@@ -5756,18 +5763,39 @@ createApp({
                      try {
                         let url = this.apiConfig.baseUrl.trim().replace(/\/+$/, '');
                         if (!url.endsWith('/v1')) url += '/v1';
+
+                        // --- 新增：读取面具与聊天记录逻辑 ---
+                        const session = this.wechatState.sessions.find(s => s.targetId === aiFriend.id);
+                        let myName = this.homeProfile.name;
+                        let myBio = "无";
+                        let recentChatContext = "无近期聊天记录。";
+
+                        if (session) {
+                            const mask = this.getMaskById(session.maskId);
+                            myName = mask.name || this.homeProfile.name;
+                            myBio = mask.bio || "无";
+                            
+                            if (session.messages && session.messages.length > 0) {
+                                 // 取最近 5 条消息帮助 AI 回忆
+                                 const recentMsgs = session.messages.slice(-5).map(m => `[${m.isSelf ? myName : aiFriend.name}]: ${m.content}`).join('\n');
+                                 recentChatContext = `你们最近的聊天内容:\n${recentMsgs}`;
+                            }
+                        }
                         
                         let context = isAuthorReply 
-                            ? `这是你发的朋友圈: "${moment.content}"。别人评论了你: "${userComment}"。`
-                            : `在朋友的朋友圈下，别人回复了你的评论: "${userComment}"。`;
+                            ? `这是你发的朋友圈: "${moment.content}"。你的好友(名字:${myName}, 人设:${myBio})评论了你: "${userComment}"。`
+                            : `在朋友圈下，你的好友(名字:${myName}, 人设:${myBio})回复了你的评论: "${userComment}"。`;
+                            
+                        context += `\n参考资料：${recentChatContext}`;
+                        // --- 新增结束 ---
 
                         const res = await fetch(`${url}/chat/completions`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiConfig.apiKey.trim()}` },
                             body: JSON.stringify({ 
                                 model: this.apiConfig.selectedModel, 
-                                messages: [
-                                    { role: 'system', content: `你是 ${aiFriend.name}。这是你的人设: ${aiFriend.bio || '无'}。${context} 请根据你的人设，用符合你性格的口吻简短回复（10字以内）。绝对不要只回“哈哈”、“嗯”！` },
+                                messages:[
+                                    { role: 'system', content: `你是 ${aiFriend.name}。这是你的人设: ${aiFriend.bio || '无'}。${context} 请根据你的人设以及你们的聊天记录，用符合你性格的口吻简短回复（10字以内）。绝对不要只回“哈哈”、“嗯”！` },
                                     { role: 'user', content: '直接输出回复内容，不要加引号。' }
                                 ]
                             })
@@ -5782,7 +5810,7 @@ createApp({
                             replyTo: this.homeProfile.name 
                         });
                         this.saveData();
-                        this.showToast(`${aiFriend.name} 回复了你`); // 增加提示
+                        this.showToast(`${aiFriend.name} 回复了你`);
                     } catch(e) { console.error("Reply to comment failed", e); }
                 }
             }, 3000 + Math.random() * 2000);
