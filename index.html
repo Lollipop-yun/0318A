@@ -5329,8 +5329,8 @@ createApp({
                 }
             } else if(msg.type === 'voice') {
                 this.toggleVoiceText(msg);
-                // 如果是 AI 发的语音，且你在设置里配置了 MiniMax API，就触发发声
-                if (!msg.isSelf && this.minimaxConfig && this.minimaxConfig.apiKey) {
+                // 只有开启了开关，并且填了必要参数，才会触发语音播放和报错；否则只展开文字
+                if (!msg.isSelf && this.minimaxConfig && this.minimaxConfig.enabled && this.minimaxConfig.apiKey) {
                     this.playMiniMaxVoice(msg);
                 }
             } else if(msg.type === 'fake_image') {
