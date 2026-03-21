@@ -1,29 +1,19 @@
 /* activation.css */
-#activation-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #f7f7f7; z-index: 999990; display: flex; justify-content: center; align-items: center; transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
-.login-container { background: #fff; width: 85%; max-width: 360px; padding: 40px 30px; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); }
-.activation-header { text-align: center; margin-bottom: 30px; }
-.activation-logo { font-size: 26px; font-weight: 700; letter-spacing: 1px; color: #000; margin-bottom: 4px; }
-.activation-sub { font-size: 13px; color: #888; }
-.input-group { margin-bottom: 16px; }
-.input-group label { display: block; font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px; margin-left: 4px; }
-.input-group input { w-full; width: 100%; box-sizing: border-box; padding: 14px 16px; font-size: 14px; border: 1.5px solid #eee; border-radius: 12px; outline: none; transition: border-color 0.3s; background: #fafafa; }
-.input-group input:focus { border-color: #000; background: #fff; }
-.input-group input.error { border-color: #ff4d4f; }
-.checkbox-group { display: flex; items-center; margin: 20px 0; font-size: 12px; color: #666; }
-.checkbox-group input { margin-right: 8px; width: 16px; height: 16px; accent-color: #000; }
-.checkbox-group a { color: #000; font-weight: bold; text-decoration: underline; }
-.error-msg { color: #ff4d4f; font-size: 12px; height: 16px; text-align: center; margin-bottom: 10px; }
-.activate-btn { background-color: #000; color: white; padding: 14px 0; border-radius: 12px; font-size: 15px; font-weight: bold; text-align: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
-.activate-btn.disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
-.activate-btn:not(.disabled):active { transform: scale(0.96); }
+.code-input-group { width: 85%; max-width: 340px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; }
+.code-input { width: 100%; padding: 15px; text-align: center; font-size: 16px; border: 2px solid #eee; border-radius: 12px; outline: none; transition: all 0.3s; background: #f9f9f9; color: #333; }
+.code-input:focus { border-color: #000; background: #fff; }
+.code-input.error { border-color: #ff4d4f; animation: shake 0.4s; }
 
-/* Modal */
-#disclaimer-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
-.disclaimer-box { background: #fff; width: 85%; max-width: 340px; border-radius: 20px; overflow: hidden; display: flex; flex-col; }
-.disclaimer-box h3 { text-align: center; padding: 20px; margin: 0; border-bottom: 1px solid #eee; font-size: 16px; color: #000; }
-.disclaimer-content { padding: 20px; font-size: 13px; color: #444; line-height: 1.6; max-height: 50vh; overflow-y: auto; }
-.disclaimer-content p { margin-bottom: 12px; text-align: justify; }
-#disclaimer-agree-btn { width: 100%; border: none; padding: 16px; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-#disclaimer-agree-btn.disabled { background: #f5f5f5; color: #aaa; }
-#disclaimer-agree-btn:not(.disabled) { background: #000; color: #fff; }
-.hidden-screen { display: none !important; }
+.disclaimer-checkbox-box { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; color: #666; margin-top: 5px; }
+.disclaimer-checkbox-box a { color: #576b95; text-decoration: none; font-weight: bold; }
+.author-info { position: absolute; bottom: 50px; text-align: center; color: #999; font-size: 12px; line-height: 1.8; width: 100%; }
+
+/* 免责声明弹窗 */
+#disclaimer-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 999999; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+#disclaimer-modal.show { opacity: 1; pointer-events: auto; }
+.disclaimer-content { background: #fff; width: 85%; max-width: 320px; border-radius: 20px; padding: 25px 20px; display: flex; flex-direction: column; }
+.disclaimer-content h3 { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 15px; color: #000; }
+.disclaimer-text { font-size: 13px; color: #444; line-height: 1.6; max-height: 50vh; overflow-y: auto; margin-bottom: 20px; }
+.disclaimer-text p { margin-bottom: 10px; }
+#disclaimer-agree-btn { background: #000; color: #fff; border: none; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+#disclaimer-agree-btn:disabled { background: #ccc; cursor: not-allowed; }
