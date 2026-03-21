@@ -22,8 +22,6 @@
     
     <!-- 引入深层数据防丢失脚本 -->
     <script src="./persist-storage.js"></script>
-    
-    <!-- 引入激活系统专属样式与逻辑 -->
     <link rel="stylesheet" href="./activation.css">
     <script src="./activation.js"></script>
     
@@ -389,43 +387,53 @@
     </div>
 </div>
 
-<!-- 激活界面 -->
+<!-- 全新激活界面 -->
 <div id="activation-screen" class="hidden-screen">
-    <div class="activation-header"><div class="activation-logo">Aovein OS</div><div class="activation-sub">系统登录与设备认证</div></div>
-    
-    <div class="code-input-group">
-        <input type="text" id="login-account" class="code-input" placeholder="请输入账号 (自定义)">
-        <input type="password" id="login-pwd" class="code-input" placeholder="请输入密码">
-        <input type="text" id="login-code" class="code-input" placeholder="激活码 (首次注册或更换设备必填)" style="text-transform: uppercase;">
-        
-        <div class="disclaimer-checkbox-box">
-            <input type="checkbox" id="agree-checkbox">
-            <label for="agree-checkbox">我已阅读并同意 <a href="javascript:void(0)" onclick="openDisclaimer()">《隐私与免责声明》</a></label>
-        </div>
-
-        <div id="activation-error" class="error-msg"></div>
+    <div class="activation-header">
+        <div class="activation-logo">Aovein OS</div>
+        <div class="activation-sub">安全终端验证</div>
     </div>
     
-    <div class="activate-btn" onclick="attemptActivationV2()">登 录 / 激 活</div>
+    <div class="device-id-box">
+        <span class="device-label">当前设备标识码 (DEVICE ID)</span>
+        <span id="device-id-display">获取中...</span>
+    </div>
 
-    <div class="author-info">
+    <div class="form-group">
+        <input type="text" id="acc-input" class="form-input" placeholder="设置账号" disabled>
+        <input type="password" id="pwd-input" class="form-input" placeholder="设置密码" disabled>
+        <input type="text" id="code-input" class="form-input" placeholder="输入 AOV 激活码" maxlength="13" disabled>
+    </div>
+
+    <label class="disclaimer-check">
+        <input type="checkbox" id="agree-check"> 
+        <span>我已阅读并完全同意 <a id="show-disclaimer">《免责声明及隐私协议》</a></span>
+    </label>
+
+    <button id="activate-btn" class="activate-btn" disabled>验证并进入系统</button>
+    
+    <div style="position: absolute; bottom: 50px; text-align: center; color: #999; font-size: 12px; line-height: 1.8; width: 100%; padding: 0 20px; box-sizing: border-box;">
         <p>原作者小红书：@檩因冬信 | 售前群：168635248</p>
     </div>
 </div>
 
 <!-- 免责声明弹窗 -->
 <div id="disclaimer-modal">
-    <div class="disclaimer-content">
-        <h3>隐私与免责声明</h3>
-        <div class="disclaimer-text">
-            <p>欢迎使用 Aovein 小手机！在开始使用前，请仔细阅读：</p>
-            <p><strong>1. 绝对的隐私保护</strong><br>本系统为纯本地运行环境。您的聊天记录、设定的面具数据、导入的图片等，均加密存储在您当前浏览器的本地数据库中。<strong>我们绝对不会窥探您的屏幕</strong>，也不会窃取您的私人数据上传至任何云端服务器。</p>
-            <p><strong>2. 第三方接口说明</strong><br>系统内置的 AI 对话与语音合成，完全依赖您自行填写的第三方 API Key。系统绝不干预您的 API 调用，产生的数据内容及相关资费由 API 厂商及您个人负责。</p>
-            <p><strong>3. 免责条款</strong><br>本产品仅供娱乐、学习与界面展示使用。<strong>使用者需自行承担使用本产品后产生的一切后果。使用者应严格遵守国家法律法规及相关监管要求，不得利用本网站从事任何违法、违规、违背公序良俗的行为（包括但不限于传播违法信息、进行网络诈骗、侵犯他人知识产权及隐私等），若用户行为违反前述规定，由此产生的一切法律责任、经济损失均由用户自行承担。使用者做出的一切行为及生成的任何内容，均与原作者无关。</strong></p>
+    <div class="modal-content">
+        <div class="modal-title">免责声明及隐私协议</div>
+        <div class="modal-text">
+            欢迎使用 Aovein 小手机终端系统。<br><br>
+            1. <b>纯本地运行与隐私保护：</b> 本系统采用最严格的纯本地（Local）运行架构。您输入的账号、密码、配置信息及聊天数据均加密存储于您本机的浏览器缓存中。本系统<b>没有任何云端数据库或后端服务器</b>，绝对不存在“窥屏”、上传或收集用户隐私数据的可能。<br><br>
+            2. <b>第三方接口声明：</b> 您的 API Key 仅用于直接与您配置的大模型服务商（如 OpenAI、MiniMax 等）建立点对点通信，请妥善保管。<br><br>
+            3. <b>免责条款：</b> 本产品仅供 UI 交互展示与娱乐模拟使用。使用者在应用内进行的一切模拟操作、AI 生成内容及由此产生的衍生行为，由使用者本人自行承担全部责任。使用者做出的任何行为均与本代码原作者（小红书：@檩因冬信）无关。<br><br>
+            4. <b>合规使用：</b> 严禁将本产品用于任何非法、诈骗或造谣用途，一经发现，由使用者独立承担全部法律后果。
         </div>
-        <button id="disclaimer-agree-btn" disabled onclick="agreeDisclaimer()">请阅读 (5s)</button>
+        <button id="modal-agree-btn" class="modal-btn" disabled>请认真阅读 (5s)</button>
     </div>
 </div>
+
+<div id="app" v-cloak class="max-w-md mx-auto h-screen bg-[#f3f4f6] flex flex-col relative overflow-hidden shadow-2xl border-x border-gray-200" style="display: none;" @click="closeAllMenus"
+     :style="{ '--custom-font': themeConfig.fontFamily ? themeConfig.fontFamily : 'inherit', 'color': themeConfig.fontColor || '#000000', 'font-size': (themeConfig.fontSize || 1) + 'em' }">
 
     <!-- 全局弹窗 (Z-Index 调高) -->
     <transition name="fade"><div v-if="toast.show" class="fixed inset-0 z-[90000] flex items-center justify-center pointer-events-none"><div class="bg-black/70 text-white px-5 py-3 rounded-xl shadow-lg backdrop-blur-sm text-sm font-medium">{{ toast.message }}</div></div></transition>
@@ -3078,26 +3086,16 @@ createApp({
         
         // 设定 2000ms (2秒) 的等待时间
             setTimeout(() => {
-                const loader = document.getElementById('loading-screen');
-                if (loader) loader.style.opacity = '0'; // 触发渐隐动画
-                
-                // 判断是否已激活
-                if (this.isActivated) {
-                    // 已激活：直接显示主屏幕，彻底隐藏激活界面
-                    document.getElementById('app').style.display = 'flex';
-                    document.getElementById('activation-screen').style.display = 'none'; 
-                } else {
-                    // 未激活：隐藏主屏幕，显示激活界面
-                    document.getElementById('app').style.display = 'none';
-                    document.getElementById('activation-screen').classList.remove('hidden-screen');
-                }
-
-                // 800ms 渐隐动画结束后，彻底移除加载页的占位
-                setTimeout(() => { 
-                    if (loader) loader.style.display = 'none'; 
-                }, 800);
-                
-            }, 2000);
+            const loader = document.getElementById('loading-screen');
+            if (loader) loader.style.opacity = '0';
+            
+            // 调用 activation.js 中的跨浏览器指纹验证逻辑
+            if (typeof window.checkActivationState === 'function') {
+                window.checkActivationState();
+            }
+            
+            setTimeout(() => { if (loader) loader.style.display = 'none'; }, 800);
+        }, 2000);
 
         this.updateTime(); this.timer = setInterval(this.updateTime, 1000); this.initBattery();
         document.addEventListener("fullscreenchange", () => { this.isFullScreen = !!document.fullscreenElement; });
@@ -3105,9 +3103,7 @@ createApp({
             this.loadFont(this.themeConfig.fontUrl, this.themeConfig.fontFamily); 
             document.body.style.fontFamily = this.themeConfig.fontFamily;
         }
-        window.openDisclaimer = this.openDisclaimer;
-        window.agreeDisclaimer = this.agreeDisclaimer;
-        window.attemptActivationV2 = this.attemptActivationV2; 
+        window.attemptActivate = this.attemptActivate; 
     },
     unmounted() { clearInterval(this.timer); },
     watch: {
@@ -3937,66 +3933,45 @@ createApp({
             document.body.removeChild(el);
         },
 
-        // 挂载全局方法供外部 HTML 调用
-        openDisclaimer() {
-            document.getElementById('disclaimer-modal').classList.add('show');
-            const btn = document.getElementById('disclaimer-agree-btn');
-            btn.disabled = true;
-            let countdown = 5;
-            btn.innerText = `请阅读 (${countdown}s)`;
-            
-            clearInterval(this.disclaimerTimer);
-            this.disclaimerTimer = setInterval(() => {
-                countdown--;
-                if (countdown > 0) {
-                    btn.innerText = `请阅读 (${countdown}s)`;
-                } else {
-                    clearInterval(this.disclaimerTimer);
-                    btn.disabled = false;
-                    btn.innerText = '我已完全理解并同意';
-                }
-            }, 1000);
+        initDevice() {
+            let did = localStorage.getItem('onyunx_device_id');
+            if(!did) {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                const rand = (l) => Array.from({length:l}, ()=>chars[Math.floor(Math.random()*chars.length)]).join('');
+                did = `${rand(3)}-${rand(4)}-${rand(4)}`;
+                localStorage.setItem('onyunx_device_id', did);
+            }
+            this.deviceId = did;
+            document.getElementById('device-id-display').innerText = did;
+            const clean = did.replace(/-/g, '').toUpperCase();
+            const map = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'; 
+            let res = '';
+            for(let i = 0; i < clean.length; i++) {
+                let code = clean.charCodeAt(i);
+                let mixed = (code * 7 + i * 13 + 99) % 36;
+                res += map[mixed];
+            }
+            const validCode = `${res.substring(0,3)}-${res.substring(3,7)}-${res.substring(7,11)}`;
+            console.log(`%c 🔑 [ADMIN] 当前设备激活码: ${validCode} `, 'background: #222; color: #bada55; font-size: 16px; padding: 10px;');
+            this.validCode = validCode;
         },
-        agreeDisclaimer() {
-            document.getElementById('disclaimer-modal').classList.remove('show');
-            document.getElementById('agree-checkbox').checked = true;
-        },
-        async attemptActivationV2() {
-            const acc = document.getElementById('login-account').value.trim();
-            const pwd = document.getElementById('login-pwd').value.trim();
-            const code = document.getElementById('login-code').value.trim().toUpperCase();
-            const agree = document.getElementById('agree-checkbox').checked;
+        attemptActivate() {
+            if (localStorage.getItem('onyunx_is_activated') === 'true') {
+                this.isActivated = true; return;
+            }
+            const input = document.getElementById('activation-code');
             const err = document.getElementById('activation-error');
-
-            if (!agree) { err.innerText = "请先勾选并同意《免责声明》"; err.classList.add('show'); return; }
-            if (!acc || !pwd) { err.innerText = "账号和密码不能为空"; err.classList.add('show'); return; }
-
-            err.innerText = "验证中..."; err.classList.add('show'); err.style.color = '#1890ff';
-
-            try {
-                // 调用 activation.js 中的核心验证逻辑
-                const resultMsg = await window.verifyActivation(acc, pwd, code);
-                
+            const val = input.value.trim().toUpperCase();
+            if(val === this.validCode) {
                 this.isActivated = true;
                 localStorage.setItem('onyunx_is_activated', 'true');
-                this.saveData(); // 确保持久化存储
-                
-                err.innerText = resultMsg; err.style.color = '#52c41a';
-                
-                setTimeout(() => {
-                    const screen = document.getElementById('activation-screen');
-                    screen.style.transform = 'scale(1.1)'; screen.style.opacity = '0';
-                    setTimeout(() => { 
-                        screen.classList.add('hidden-screen'); 
-                        document.getElementById('app').style.display = 'flex'; 
-                    }, 600);
-                }, 500);
-                
-            } catch (errorMsg) {
-                err.style.color = '#ff4d4f';
-                err.innerText = errorMsg;
-                document.getElementById('login-account').classList.add('error');
-                setTimeout(() => document.getElementById('login-account').classList.remove('error'), 1000);
+                this.saveData();
+                const screen = document.getElementById('activation-screen');
+                screen.style.transform = 'scale(1.1)'; screen.style.opacity = '0';
+                setTimeout(() => { screen.classList.add('hidden-screen'); document.getElementById('app').style.display = 'flex'; }, 600);
+            } else {
+                input.classList.add('error'); err.classList.add('show');
+                setTimeout(() => { input.classList.remove('error'); err.classList.remove('show'); }, 1000);
             }
         },
 
