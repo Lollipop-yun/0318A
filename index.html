@@ -370,24 +370,20 @@
         .diary-action-btn { color: #576b95; font-size: 20px; cursor: pointer; transition: color 0.2s; }
         .diary-action-btn:active { opacity: 0.6; }
 
-/* ==================== 夜间模式 (Dark Mode) ==================== */
-        .dark-mode { background-color: #000 !important; color: #fff !important; }
-        .dark-mode .bg-white { background-color: #1c1c1e !important; border-color: #2c2c2e !important; color: #fff !important; }
-        .dark-mode .bg-gray-50, .dark-mode .bg-[#f3f4f6], .dark-mode .bg-[#f7f7f7], .dark-mode .bg-[#fdfdfd], .dark-mode .bg-[#f9f9f9], .dark-mode .bg-gray-100 { background-color: #000 !important; border-color: #2c2c2e !important; color: #fff !important; }
-        .dark-mode .text-gray-900, .dark-mode .text-black, .dark-mode .text-gray-800 { color: #f2f2f7 !important; }
-        .dark-mode .text-gray-700, .dark-mode .text-gray-600, .dark-mode .text-gray-500 { color: #aeaeb2 !important; }
-        .dark-mode .border-gray-50, .dark-mode .border-gray-100, .dark-mode .border-gray-200 { border-color: #2c2c2e !important; }
-        .dark-mode .chat-bubble-ai { background-color: #2c2c2e !important; color: #fff !important; }
-        .dark-mode .chat-bubble-user { background-color: #07c160 !important; color: #fff !important; }
-        .dark-mode .wechat-bottom-nav { background-color: #1c1c1e !important; }
-        .dark-mode .chat-input-area { background-color: #1c1c1e !important; border-color: #2c2c2e !important; }
-        .dark-mode input, .dark-mode textarea { color: #fff !important; background-color: #2c2c2e !important; border-color: #3a3a3c !important; }
-        .dark-mode .moment-card-wrapper, .dark-mode .forward-card { background-color: #2c2c2e !important; color: #fff !important; border-color: #3a3a3c !important;}
-        .dark-mode .ios-list-header { background-color: #1c1c1e !important; color: #fff !important; border-bottom: 1px solid #2c2c2e !important; }
-        .dark-mode .ios-list-item { background-color: #1c1c1e !important; border-bottom: 1px solid #2c2c2e !important; }
-        .dark-mode .ios-list-content { background-color: #000 !important; }
-        .dark-mode header { background-color: rgba(28,28,30,0.95) !important; color: #fff !important; border-bottom: 1px solid #2c2c2e !important; }
-        .dark-mode header i, .dark-mode header button { color: #fff !important; }
+/* ==================== 夜间模式 (色彩反转魔法) ==================== */
+        .dark-mode-invert {
+            /* 将整个界面的颜色完全反转（白变黑，黑变白） */
+            filter: invert(1) hue-rotate(180deg) brightness(0.95);
+            background-color: #000;
+        }
+        /* 必须将所有图片、视频、头像的颜色再反转一次，否则图片会变成底片（鬼影）效果 */
+        .dark-mode-invert img, 
+        .dark-mode-invert video, 
+        .dark-mode-invert .home-icon-custom,
+        .dark-mode-invert .moments-cover,
+        .dark-mode-invert .music-disc-inner {
+            filter: invert(1) hue-rotate(180deg);
+        }
         
     </style>
     
@@ -451,7 +447,7 @@
     </div>
 </div>
 
-<div id="app" v-cloak class="max-w-md mx-auto h-screen bg-[#f3f4f6] flex flex-col relative overflow-hidden shadow-2xl border-x border-gray-200" :class="{'dark-mode': themeConfig.isDarkMode}" style="display: none;" @click="closeAllMenus"
+<div id="app" v-cloak class="max-w-md mx-auto h-screen bg-[#f3f4f6] flex flex-col relative overflow-hidden shadow-2xl border-x border-gray-200" :class="{'dark-mode-invert': themeConfig.isDarkMode}" style="display: none;" @click="closeAllMenus"
      :style="{ '--custom-font': themeConfig.fontFamily ? themeConfig.fontFamily : 'inherit', 'color': themeConfig.fontColor || '#000000', 'font-size': (themeConfig.fontSize || 1) + 'em' }">
 
     <!-- 全局弹窗 (Z-Index 调高) -->
@@ -4256,27 +4252,18 @@ createApp({
             const recentMoments = this.moments.slice(0, 5).map(m => `[Moment by ${m.name}]: ${m.content}`).join("\n");
             const momentContext = recentMoments ? `\n[Recent Social Media Moments]:\n${recentMoments}\n` : "";
             
-            // Time Sense Logic (精准时间感知)
-            let timeContext = "";
-            if (session.enableTimeSense) {
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = now.getMonth() + 1;
-                const day = now.getDate();
-                const hour = now.getHours();
-                const minute = String(now.getMinutes()).padStart(2, '0');
-                const weekDays =['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
-                const weekDay = weekDays[now.getDay()];
-                
-                let timePeriod = "";
-                if (hour >= 5 && hour < 11) { timePeriod = "早上"; } 
-                else if (hour >= 11 && hour < 14) { timePeriod = "中午"; } 
-                else if (hour >= 14 && hour < 18) { timePeriod = "下午"; } 
-                else if (hour >= 18 && hour < 22) { timePeriod = "晚上"; } 
-                else { timePeriod = "深夜"; }
-                
-                timeContext = `\n[当前真实时间]: ${year}年${month}月${day}日 ${hour}:${minute} ${weekDay} (${timePeriod})。请在聊天中自然地感知并贴合当前的具体日期和时间，但不要生硬地去报时。`;
-            }
+            // --- 精准时间感知逻辑 (强制获取系统真实年月日和时间) ---
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            const hour = now.getHours();
+            const minute = String(now.getMinutes()).padStart(2, '0');
+            const weekDays =['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+            const weekDay = weekDays[now.getDay()];
+            
+            // 直接将精准的系统时间写入上下文，AI 100% 能感应到具体日期
+            let timeContext = `\n[系统提示-当前真实时间]: 今天是 ${year}年${month}月${day}日，${weekDay}，当前具体时间是 ${hour}:${minute}。请在对话中准确认知现在的具体日期和时间。`;
             
             // Music Sense Logic (NEW)
             let musicContext = "";
@@ -6110,11 +6097,14 @@ createApp({
                             }
                         }
                         
+                        const now = new Date();
+                        const exactTime = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+                        
                         let context = isAuthorReply 
                             ? `这是你发的朋友圈: "${moment.content}"。你的好友(名字:${myName}, 人设:${myBio})评论了你: "${userComment}"。`
                             : `在朋友圈下，你的好友(名字:${myName}, 人设:${myBio})回复了你的评论: "${userComment}"。`;
                             
-                        context += `\n参考资料：${recentChatContext}`;
+                        context += `\n[当前真实时间]: ${exactTime}\n参考资料：${recentChatContext}`;
                         // --- 新增结束 ---
 
                         const res = await fetch(`${url}/chat/completions`, {
