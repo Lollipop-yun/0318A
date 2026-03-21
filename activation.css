@@ -1,0 +1,53 @@
+/* activation.css - 激活与登录界面样式 */
+.act-container {
+    width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; 
+    justify-content: center; padding: 20px; box-sizing: border-box; background: #fafafa;
+}
+.act-form {
+    width: 100%; max-width: 320px; background: white; padding: 30px 20px; 
+    border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+}
+.input-box {
+    display: flex; align-items: center; background: #f4f4f4; border-radius: 12px; 
+    padding: 12px 15px; margin-bottom: 15px; border: 1px solid #eee; transition: all 0.3s;
+}
+.input-box:focus-within { border-color: #000; background: #fff; }
+.input-box i { color: #999; margin-right: 12px; font-size: 14px; }
+.input-box input {
+    border: none; background: transparent; outline: none; width: 100%; 
+    font-size: 14px; color: #333; font-family: inherit;
+}
+.disclaimer-check {
+    display: flex; align-items: center; gap: 8px; font-size: 11px; color: #666; margin-bottom: 15px;
+}
+.link-text { color: #576b95; cursor: pointer; font-weight: bold; }
+.act-btn {
+    width: 100%; background: #000; color: #fff; border: none; padding: 14px; 
+    border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; transition: all 0.3s;
+}
+.act-btn.disabled { background: #ccc; cursor: not-allowed; pointer-events: none; }
+.act-btn:active { transform: scale(0.97); }
+.act-error { color: #ff4d4f; font-size: 11px; text-align: center; min-height: 16px; margin-bottom: 10px; }
+.act-footer { position: absolute; bottom: 40px; text-align: center; color: #aaa; font-size: 10px; }
+
+/* 免责声明弹窗 */
+.act-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px);
+    z-index: 9999999; display: flex; align-items: center; justify-content: center;
+}
+.act-modal-box {
+    background: #fff; width: 85%; max-width: 340px; border-radius: 20px; padding: 25px 20px;
+    display: flex; flex-direction: column; animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.act-modal-box h3 { text-align: center; font-size: 16px; margin-bottom: 15px; margin-top: 0; color: #000; }
+.act-modal-content {
+    font-size: 12px; color: #666; line-height: 1.6; max-height: 50vh; overflow-y: auto; 
+    margin-bottom: 20px; padding-right: 5px;
+}
+.act-modal-content p { margin-bottom: 10px; }
+.act-modal-content strong { color: #333; }
+.act-modal-close {
+    width: 100%; background: #f4f4f4; color: #000; border: none; padding: 12px;
+    border-radius: 10px; font-weight: bold; cursor: pointer;
+}
+@keyframes modalPop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
