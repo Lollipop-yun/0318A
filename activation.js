@@ -105,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 关闭弹窗
     modalBtn.addEventListener('click', () => {
         modal.classList.remove('show');
+        agreeCheck.disabled = false; // 必须加上这行解除禁用
         agreeCheck.checked = true;
         activateBtn.disabled = false;
         document.querySelectorAll('.form-input').forEach(input => input.disabled = false);
