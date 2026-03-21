@@ -173,3 +173,13 @@ function verifyAccountStatusFromCloud(user) {
     if (!db.codes[bindCode] || db.codes[bindCode].status === 'revoked') return false;
     return true;
 }
+// 临时测试专用：在控制台或特定按钮直接生成激活码
+window.TEST_GEN_CODE = function() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const rand = (l) => Array.from({length:l}, ()=>chars[Math.floor(Math.random()*chars.length)]).join('');
+    const code = `AOV-${rand(4)}-${rand(4)}`;
+    let db = getCloudDB();
+    db.codes[code] = { status: 'unused', usedBy: null };
+    setCloudDB(db);
+    alert('✅ 内部测试生成成功！请复制以下激活码：\n\n' + code);
+}
