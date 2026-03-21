@@ -373,7 +373,7 @@
     <!-- 动态美化样式 -->
     <style id="dynamic-beautify-style"></style>
     
-    <!-- 引入账号系统与激活样式 -->
+    <!-- 引入账号激活系统的样式和逻辑 -->
     <link rel="stylesheet" href="./activation.css">
     <script src="./activation.js"></script>
 </head>
@@ -389,42 +389,54 @@
     </div>
 </div>
 
-<!-- 新版 激活与登录界面 -->
+<!-- 账号登录与激活界面 -->
 <div id="activation-screen" class="hidden-screen">
-    <div class="act-header">
-        <div class="act-logo">Aovein OS</div>
-        <div class="act-sub">身份验证与设备绑定</div>
-    </div>
-    
-    <div class="act-form">
-        <input type="text" id="act-user" class="act-input" placeholder="输入账号名称">
-        <input type="password" id="act-pass" class="act-input" placeholder="输入密码">
-        <input type="text" id="act-code" class="act-input" placeholder="激活码 (已绑定老账号留空)">
-        
-        <div class="act-agreement">
-            <input type="checkbox" id="act-agree-check">
-            <label>我已阅读并同意 <a id="act-disclaimer-link">《免责声明及隐私保护协议》</a></label>
+    <div class="login-container">
+        <div class="activation-header">
+            <div class="activation-logo">Aovein OS</div>
+            <div class="activation-sub">系统登录与设备绑定</div>
         </div>
         
-        <button id="act-btn" class="act-btn">登录 / 绑定激活</button>
-    </div>
+        <div class="input-group">
+            <label>账号</label>
+            <input type="text" id="act-username" placeholder="请输入账号">
+        </div>
+        <div class="input-group">
+            <label>密码</label>
+            <input type="password" id="act-password" placeholder="请输入密码">
+        </div>
+        <div class="input-group">
+            <label>激活码 <span style="font-size: 10px; color: #aaa; font-weight: normal;">(已绑定的老用户留空即可)</span></label>
+            <input type="text" id="act-code" placeholder="XXXX-XXXX-XXXX" maxlength="14">
+        </div>
+        <div id="act-error" class="error-msg"></div>
 
-    <div class="act-footer">
-        <p>原作者小红书：@檩因冬信 | 售前群：168635248</p>
+        <div class="checkbox-group">
+            <input type="checkbox" id="act-agree" onchange="checkAgree()">
+            <label for="act-agree">我已阅读并同意 <a href="javascript:void(0)" onclick="openDisclaimer()">《免责声明》</a></label>
+        </div>
+
+        <div class="activate-btn disabled" id="act-btn" onclick="attemptLogin()">进入系统</div>
+        
+        <!-- 版权及免责简述 -->
+        <div style="margin-top: 40px; text-align: center; color: #999; font-size: 12px; line-height: 1.8;">
+            <p>原作者小红书：@檩因冬信 | 售前群：168635248</p>
+            <p style="font-size: 10px; margin-top: 6px; color: #aaa;">免责声明：使用者需自行承担使用本产品后的一切后果，<br>使用者做出的一切行为与原作者无关。</p>
+        </div>
     </div>
 </div>
 
-<!-- 免责声明详细弹窗 -->
-<div id="disclaimer-modal">
+<!-- 免责声明强制倒计时弹窗 -->
+<div id="disclaimer-modal" class="hidden-screen">
     <div class="disclaimer-box">
-        <h3>免责声明与隐私协议</h3>
+        <h3>Aovein 小手机免责声明</h3>
         <div class="disclaimer-content">
-            <p>1. <b>隐私保护原则</b>：本网站及系统为纯前端本地化运行程序。您的所有聊天记录、人设数据、存储的图片均只保存在您本机的浏览器缓存（LocalStorage / IndexedDB）中。<b>本程序绝不包含任何窥屏、后门或后台上传代码，绝对不会收集您的任何隐私数据。</b></p><br>
-            <p>2. <b>数据安全</b>：由于数据存储在本地，若您主动清理浏览器缓存或重置设备，数据将会丢失。请妥善使用设置中的“数据导出”功能进行备份。</p><br>
-            <p>3. <b>大模型 API 声明</b>：本系统自身不提供任何 AI 能力，仅作为调用您自行填写的第三方大模型 API 的工具界面。大模型生成的任何内容均属于外部接口反馈。</p><br>
-            <p>4. <b>免责声明</b>：使用者需自行承担使用本产品后产生的一切后果（包括但不限于数据丢失、API 扣费等）。使用者做出的一切行为均与原作者（小红书 @檩因冬信）无关。严禁将本系统用于任何非法用途。</p>
+            <p>欢迎使用 Aovein 小手机系统体验版。在您开始使用前，请务必仔细阅读以下条款：</p>
+            <p><strong>1. 数据绝对安全与隐私保护：</strong><br>本系统为纯前端运行环境。您的所有聊天记录、人设数据、上传的图片及音频等，均<strong>100% 加密存储于您个人的本地浏览器设备中</strong>。本系统未连接任何后台收集数据库，<strong>绝对不会、也无法窥屏、窃取、上传或泄露您的任何隐私数据</strong>。</p>
+            <p><strong>2. 行为责任承担：</strong><br>本系统内生成的聊天记录、转账、红包、朋友圈等均为<strong>虚拟模拟效果</strong>，仅供个人娱乐。使用者需自行承担使用本产品后的一切后果。因使用者截图、录屏向第三方展示而引发的任何误解、纠纷或法律责任，均由使用者本人承担，<strong>使用者做出的一切行为与原作者（@檩因冬信）无关</strong>。</p>
+            <p><strong>3. 严禁非法用途：</strong><br>严禁将本系统用于任何形式的诈骗、造谣、伪造证据等非法用途。一旦发现，使用者将自行承担一切法律后果。</p>            
         </div>
-        <button id="disclaimer-agree-btn" class="disclaimer-btn">我已阅读并同意</button>
+        <button id="disclaimer-agree-btn" class="disabled" onclick="acceptDisclaimer()">请认真阅读 (5s)</button>
     </div>
 </div>
 
@@ -3071,7 +3083,6 @@ createApp({
         }
     },
     mounted() { 
-        window.vueApp = this; // 【新增】把 Vue 实例暴露出去，让 activation.js 可以控制它
         this.initDevice();
         this.loadData();
         this.updateDynamicStyles();
@@ -3081,21 +3092,37 @@ createApp({
         this.imageUploadInput.accept = 'image/*';
         this.imageUploadInput.onchange = this.handleImageUploadForChat;
         
-        // 这里的逻辑简化了，因为复杂的判断已经在 activation.js 里处理了
-        setTimeout(() => {
-            const loader = document.getElementById('loading-screen');
-            if (loader) loader.style.opacity = '0';
-            setTimeout(() => { if(loader) loader.style.display = 'none'; }, 800);
-        }, 2000);
+        // 暴露全局解锁方法给 activation.js 调用
+            window.unlockApp = () => {
+                this.isActivated = true;
+                const actScreen = document.getElementById('activation-screen');
+                actScreen.style.transform = 'scale(1.1)';
+                actScreen.style.opacity = '0';
+                setTimeout(() => { 
+                    actScreen.classList.add('hidden-screen'); 
+                    actScreen.style.display = 'none';
+                    document.getElementById('app').style.display = 'flex'; 
+                }, 600);
+            };
 
-        this.updateTime(); this.timer = setInterval(this.updateTime, 1000); this.initBattery();
-        document.addEventListener("fullscreenchange", () => { this.isFullScreen = !!document.fullscreenElement; });
-        if(this.themeConfig.fontUrl && this.themeConfig.fontFamily) { 
-            this.loadFont(this.themeConfig.fontUrl, this.themeConfig.fontFamily); 
-            document.body.style.fontFamily = this.themeConfig.fontFamily;
-        }
-    },
+            // 设定 2000ms 的等待时间
+            setTimeout(() => {
+                const loader = document.getElementById('loading-screen');
+                if (loader) loader.style.opacity = '0'; 
+                
+                // 调用 activation.js 中的鉴权方法
+                if (window.isUserLoggedIn && window.isUserLoggedIn()) {
+                    document.getElementById('app').style.display = 'flex';
+                    document.getElementById('activation-screen').style.display = 'none'; 
+                    this.isActivated = true;
+                } else {
+                    document.getElementById('app').style.display = 'none';
+                    document.getElementById('activation-screen').classList.remove('hidden-screen');
+                }
 
+                setTimeout(() => { if (loader) loader.style.display = 'none'; }, 800);
+            }, 2000);
+        
         this.updateTime(); this.timer = setInterval(this.updateTime, 1000); this.initBattery();
         document.addEventListener("fullscreenchange", () => { this.isFullScreen = !!document.fullscreenElement; });
         if(this.themeConfig.fontUrl && this.themeConfig.fontFamily) { 
@@ -3954,7 +3981,26 @@ createApp({
             console.log(`%c 🔑 [ADMIN] 当前设备激活码: ${validCode} `, 'background: #222; color: #bada55; font-size: 16px; padding: 10px;');
             this.validCode = validCode;
         },
-        
+        attemptActivate() {
+            if (localStorage.getItem('onyunx_is_activated') === 'true') {
+                this.isActivated = true; return;
+            }
+            const input = document.getElementById('activation-code');
+            const err = document.getElementById('activation-error');
+            const val = input.value.trim().toUpperCase();
+            if(val === this.validCode) {
+                this.isActivated = true;
+                localStorage.setItem('onyunx_is_activated', 'true');
+                this.saveData();
+                const screen = document.getElementById('activation-screen');
+                screen.style.transform = 'scale(1.1)'; screen.style.opacity = '0';
+                setTimeout(() => { screen.classList.add('hidden-screen'); document.getElementById('app').style.display = 'flex'; }, 600);
+            } else {
+                input.classList.add('error'); err.classList.add('show');
+                setTimeout(() => { input.classList.remove('error'); err.classList.remove('show'); }, 1000);
+            }
+        },
+
         openApp(name) { this.currentApp = name; this.isAppOpen = true; this.settingsPage = 'main'; this.themesPage = 'main'; },
         closeApp() { 
             this.isAppOpen = false; 
