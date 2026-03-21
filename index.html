@@ -370,26 +370,6 @@
         .diary-action-btn { color: #576b95; font-size: 20px; cursor: pointer; transition: color 0.2s; }
         .diary-action-btn:active { opacity: 0.6; }
 
-/* ==================== 夜间模式核心逻辑 ==================== */
-        #app.dark-mode {
-            /* 翻转明暗，同时旋转色相保持基础色彩逻辑，0.9使纯白变成高级深灰而不是死黑 */
-            filter: invert(0.9) hue-rotate(180deg);
-            background-color: #111; 
-        }
-        /* 把所有图片、视频、带背景图的容器反转回来，保证图片色彩正常 */
-        #app.dark-mode img, 
-        #app.dark-mode video, 
-        #app.dark-mode canvas,
-        #app.dark-mode .bg-cover, 
-        #app.dark-mode [style*="background-image"],
-        #app.dark-mode .home-icon-custom img,
-        #app.dark-mode .wechat-avatar-ring img,
-        #app.dark-mode .music-disc-inner img,
-        #app.dark-mode .chat-bubble-image img,
-        #app.dark-mode .moments-cover {
-            filter: invert(1) hue-rotate(180deg);
-        }
-
     </style>
     
     <!-- 动态美化样式 -->
@@ -1913,7 +1893,7 @@
     <!-- 主界面 -->
     <div class="h-full w-full flex flex-col items-center pb-safe relative overflow-hidden overflow-y-auto scrollbar-hide transition-all duration-300 bg-center bg-cover" 
          :style="{ backgroundImage: themeConfig.wallpaper ? `url(${themeConfig.wallpaper})` : '', backgroundColor: themeConfig.wallpaper ? 'transparent' : '#f3f4f6' }"
-         :class="[hideStatusBar ? 'pt-0' : 'pt-[44px]', {'scale-95 opacity-80': isAppOpen, 'dark-mode': themeConfig.isDarkMode}]"
+         :class="[hideStatusBar ? 'pt-0' : 'pt-[44px]', {'scale-95 opacity-80': isAppOpen}]">
          <div class="w-full flex flex-col items-center skin-text-container">
             <div class="w-[90%] z-20 mt-2 mb-2 shrink-0"><div class="bg-white/90 backdrop-blur-sm rounded-[20px] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] relative"><div class="flex justify-between items-start mb-3"><div class="flex gap-3"><div class="w-[52px] h-[52px] border border-gray-100 rounded-lg p-0.5 flex flex-col items-center justify-between shrink-0 cursor-pointer active:scale-95 transition bg-white" @click="triggerCardAvatarUpload"><div class="w-full h-[70%] rounded-md overflow-hidden bg-gray-50 relative"><img v-if="cardProfile.avatar" :src="cardProfile.avatar" class="w-full h-full object-cover grayscale opacity-80"><i v-else class="fas fa-user text-gray-300 text-xl flex h-full items-center justify-center"></i></div><span class="text-[8px] opacity-60 scale-90 origin-bottom font-medium truncate w-full text-center" @click.stop="editCardProfile('status')">{{ cardProfile.status }}</span></div><div class="flex flex-col pt-0.5" style="font-size: var(--custom-font-size)"><h2 @click="editCardProfile('name')" class="text-[14px] font-bold tracking-wider mb-0.5 cursor-pointer active:opacity-50" :style="{color: themeConfig.fontColor}">{{ cardProfile.name }}</h2><p @click="editCardProfile('id')" class="text-[10px] opacity-60 font-mono tracking-wide cursor-pointer active:opacity-50" :style="{color: themeConfig.fontColor}">@ {{ cardProfile.id }}</p></div></div><div class="flex items-center gap-1 text-[10px] opacity-60 font-medium pt-1" :style="{color: themeConfig.fontColor}"><span>{{ displayDate.dateString }}</span><i class="fas fa-heart text-[8px]"></i><span>{{ displayDate.dayString }}</span></div></div><div @click="editCardProfile('bio')" class="text-[12px] leading-relaxed font-medium tracking-wide text-justify cursor-pointer active:opacity-50 border-t border-gray-50/20 pt-2" :style="{color: themeConfig.fontColor, fontSize: 'calc(var(--custom-font-size) * 0.9)'}">{{ cardProfile.bio }}</div></div></div>
             <div class="flex flex-col items-center w-full mb-3 z-10 shrink-0" style="font-size: var(--custom-font-size)"><div class="w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-gray-200 to-white shadow-lg mb-2 cursor-pointer active:scale-95 transition" @click="triggerHomeAvatarUpload"><div class="w-full h-full rounded-full overflow-hidden bg-gray-100 relative"><img v-if="homeProfile.avatar" :src="homeProfile.avatar" class="w-full h-full object-cover"><i v-else class="fas fa-user text-gray-300 text-3xl flex h-full items-center justify-center"></i></div></div><h2 @click="editHomeProfile('name')" class="text-lg font-bold tracking-wide cursor-pointer active:opacity-50 transition" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow-md': themeConfig.wallpaper}">{{ homeProfile.name }}</h2><p @click="editHomeProfile('id')" class="text-xs opacity-80 mt-1 font-mono tracking-wider cursor-pointer active:opacity-50 transition" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': themeConfig.wallpaper}">@{{ homeProfile.id }}</p><p @click="editHomeProfile('bio')" class="text-[10px] opacity-80 mt-2 tracking-[0.1em] cursor-pointer active:opacity-50 transition px-8 text-center" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': themeConfig.wallpaper}">{{ homeProfile.bio }}</p><div @click="editHomeProfile('location')" class="mt-3 flex items-center gap-1 text-xs opacity-80 cursor-pointer active:opacity-50 transition" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': themeConfig.wallpaper}"><i class="fas fa-map-marker-alt"></i><span>{{ homeProfile.location }}</span></div></div>
@@ -2488,20 +2468,20 @@
                         <button @click="openForwardModal" class="flex flex-col items-center text-gray-500"><i class="fas fa-share text-lg"></i><span class="text-[10px]">转发</span></button>
                         <button @click="isMultiSelectMode = false" class="flex flex-col items-center text-gray-500"><i class="fas fa-times text-lg"></i><span class="text-[10px]">取消</span></button>
                     </div>
-                    <!-- 正常输入栏 (优化布局) -->
-                    <div v-else class="flex items-center gap-2 px-2 py-2">
+                    <!-- 正常输入栏 (自适应高度) -->
+                    <div v-else class="flex items-end gap-2 px-2 py-2">
                         <transition name="fade"><div v-if="replyingTo" class="absolute bottom-full left-0 w-full bg-gray-100 p-2 text-xs text-gray-500 border-t border-gray-200 flex justify-between items-center z-10"><span>引用: {{ replyingTo.content }}</span><button @click="replyingTo=null"><i class="fas fa-times"></i></button></div></transition>
                         
-                        <button @click.stop="wechatState.showAttachMenu = !wechatState.showAttachMenu" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-800 transition shrink-0"><i class="fas fa-paperclip text-xl"></i></button>
-                        <button @click="openVoiceInput" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-black transition active:scale-95 shrink-0"><i class="fas fa-microphone text-xl"></i></button>
+                        <button @click.stop="wechatState.showAttachMenu = !wechatState.showAttachMenu" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-800 transition shrink-0 mb-1"><i class="fas fa-paperclip text-xl"></i></button>
+                        <button @click="openVoiceInput" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-black transition active:scale-95 shrink-0 mb-1"><i class="fas fa-microphone text-xl"></i></button>
                         
-                        <textarea v-model="inputMsg" ref="chatInputArea" @input="autoResizeInput" @keydown.enter.prevent="sendMessage" class="flex-1 bg-gray-100 rounded-2xl py-2 px-3 text-sm border-none outline-none min-w-0 resize-none overflow-hidden" style="min-height: 36px; max-height: 120px;" placeholder="Aa..." rows="1"></textarea>
+                        <!-- 修改为自适应高度的 textarea -->
+                        <textarea v-model="inputMsg" ref="chatInputArea" @input="autoResizeInput" @keydown.enter.prevent="sendMessage" class="flex-1 bg-gray-100 rounded-[18px] py-2.5 px-3 text-sm border-none outline-none min-w-0 resize-none overflow-y-auto scrollbar-hide" style="min-height: 36px; max-height: 120px;" rows="1" placeholder="Aa..."></textarea>
                         
-                        <button @click="showStickerPanel = !showStickerPanel" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-yellow-500 transition shrink-0" :class="showStickerPanel ? 'text-yellow-500' : ''"><i class="far fa-smile text-xl"></i></button>
+                        <button @click="showStickerPanel = !showStickerPanel" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-yellow-500 transition shrink-0 mb-1" :class="showStickerPanel ? 'text-yellow-500' : ''"><i class="far fa-smile text-xl"></i></button>
                         
-                        <button v-if="inputMsg.trim().length > 0" @click="sendMessage" class="w-8 h-8 flex items-center justify-center text-gray-500 active:text-green-500 transition shrink-0"><i class="fas fa-check-circle text-2xl"></i></button>
-                        <!-- 接收按钮：灰色外观 (外圈+三点) 尺寸调小 -->
-                        <button v-else @click="triggerReceive" class="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-600 transition shrink-0 active:scale-95"><i class="far fa-comment-dots text-xl"></i></button>
+                        <button v-if="inputMsg.trim().length > 0" @click="sendMessage" class="w-8 h-8 flex items-center justify-center text-gray-500 active:text-green-500 transition shrink-0 mb-1"><i class="fas fa-check-circle text-2xl"></i></button>
+                        <button v-else @click="triggerReceive" class="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-600 transition shrink-0 active:scale-95 mb-1"><i class="far fa-comment-dots text-xl"></i></button>
                     </div>
                 </div>
             </div>
@@ -2707,12 +2687,17 @@
     </transition>
 
     <!-- 设置 App -->
-    <transition name="app-slide"><div v-if="currentApp === 'settings'" class="absolute inset-0 z-[1000] bg-gray-50 flex flex-col overflow-hidden"><header class="bg-white/80 backdrop-blur h-[90px] pt-10 flex items-center justify-between px-4 border-b border-gray-200 sticky top-0 z-10"><button @click="navigateSettings('back')" class="w-8 h-8 flex items-center justify-center text-gray-800 bg-gray-100 rounded-full active:bg-gray-200 transition"><i v-if="settingsPage !== 'main'" class="fas fa-chevron-left text-sm"></i><i v-else class="fas fa-times text-sm"></i></button><h1 class="font-bold text-gray-900 text-[17px]">{{ settingsTitle }}</h1><div class="w-8"></div></header><main class="flex-1 overflow-y-auto relative"><transition name="page-slide"><div v-if="settingsPage === 'main'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-4 flex items-center gap-4 shadow-sm border border-gray-100"><div class="w-14 h-14 rounded-full bg-gray-100 overflow-hidden"><img v-if="homeProfile.avatar" :src="homeProfile.avatar" class="w-full h-full object-cover"></div><div><div class="font-bold text-lg">{{ homeProfile.name }}</div><div class="text-xs text-gray-400">@{{ homeProfile.id }}</div></div></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 divide-y divide-gray-50"><div @click="navigateSettings('api-config')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-blue-500 text-white flex items-center justify-center"><i class="fas fa-robot"></i></div><span class="font-medium text-gray-800">API 配置</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div @click="navigateSettings('notification')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-green-500 text-white flex items-center justify-center"><i class="fas fa-bell"></i></div><span class="font-medium text-gray-800">消息提示音</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div @click="navigateSettings('data-manage')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-orange-500 text-white flex items-center justify-center"><i class="fas fa-database"></i></div><span class="font-medium text-gray-800">数据管理</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div class="p-4 flex items-center justify-between active:bg-gray-50"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-purple-500 text-white flex items-center justify-center"><i class="fas fa-expand"></i></div><span class="font-medium text-gray-800">全屏模式</span></div><input type="checkbox" id="toggle-fs" class="switch-checkbox" v-model="isFullScreen" @change="toggleFullScreen"><label for="toggle-fs" class="switch-label"><div class="switch-button"></div></label></div><div class="p-4 flex items-center justify-between active:bg-gray-50"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-gray-500 text-white flex items-center justify-center"><i class="fas fa-eye-slash"></i></div><span class="font-medium text-gray-800">隐藏状态栏</span></div><input type="checkbox" id="toggle-sb" class="switch-checkbox" v-model="hideStatusBar" @change="saveData"><label for="toggle-sb" class="switch-label"><div class="switch-button"></div></label></div>
+    <transition name="app-slide"><div v-if="currentApp === 'settings'" class="absolute inset-0 z-[1000] bg-gray-50 flex flex-col overflow-hidden"><header class="bg-white/80 backdrop-blur h-[90px] pt-10 flex items-center justify-between px-4 border-b border-gray-200 sticky top-0 z-10"><button @click="navigateSettings('back')" class="w-8 h-8 flex items-center justify-center text-gray-800 bg-gray-100 rounded-full active:bg-gray-200 transition"><i v-if="settingsPage !== 'main'" class="fas fa-chevron-left text-sm"></i><i v-else class="fas fa-times text-sm"></i></button><h1 class="font-bold text-gray-900 text-[17px]">{{ settingsTitle }}</h1><div class="w-8"></div></header><main class="flex-1 overflow-y-auto relative"><transition name="page-slide"><div v-if="settingsPage === 'main'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-4 flex items-center gap-4 shadow-sm border border-gray-100"><div class="w-14 h-14 rounded-full bg-gray-100 overflow-hidden"><img v-if="homeProfile.avatar" :src="homeProfile.avatar" class="w-full h-full object-cover"></div><div><div class="font-bold text-lg">{{ homeProfile.name }}</div><div class="text-xs text-gray-400">@{{ homeProfile.id }}</div></div></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 divide-y divide-gray-50"><div @click="navigateSettings('api-config')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-blue-500 text-white flex items-center justify-center"><i class="fas fa-robot"></i></div><span class="font-medium text-gray-800">API 配置</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div @click="navigateSettings('notification')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-green-500 text-white flex items-center justify-center"><i class="fas fa-bell"></i></div><span class="font-medium text-gray-800">消息提示音</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div @click="navigateSettings('data-manage')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-orange-500 text-white flex items-center justify-center"><i class="fas fa-database"></i></div><span class="font-medium text-gray-800">数据管理</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><!-- 新增：夜间模式开关 -->
+<div class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer">
+    <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-gray-800 text-white flex items-center justify-center"><i class="fas fa-moon"></i></div>
+        <span class="font-medium text-gray-800">夜间模式 (Dark Mode)</span>
+    </div>
+    <input type="checkbox" id="toggle-dark" class="switch-checkbox" v-model="themeConfig.isDarkMode" @change="toggleDarkMode">
+    <label for="toggle-dark" class="switch-label"><div class="switch-button"></div></label>
+</div>
 
-<!-- 新增：夜间模式开关 -->
-<div class="p-4 flex items-center justify-between active:bg-gray-50"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-indigo-500 text-white flex items-center justify-center"><i class="fas fa-moon"></i></div><span class="font-medium text-gray-800">夜间模式</span></div><input type="checkbox" id="toggle-dark" class="switch-checkbox" v-model="themeConfig.isDarkMode" @change="saveData"><label for="toggle-dark" class="switch-label"><div class="switch-button"></div></label></div>
-
-</div></div></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'api-config'" class="absolute inset-0 p-4"><div class="space-y-5 pb-10"><div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4"><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">反代地址</label><input v-model="apiConfig.baseUrl" placeholder="https://..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">API 密钥</label><input v-model="apiConfig.apiKey" type="password" placeholder="sk-..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div class="flex items-center gap-2"><button @click="fetchModels" :disabled="isLoading" class="flex-1 bg-gray-900 text-white py-2.5 rounded-xl text-sm font-bold active:scale-95 transition flex items-center justify-center gap-2"><i v-if="isLoading" class="fas fa-spinner fa-spin"></i><span v-else>拉取模型</span></button></div><div v-if="availableModels.length > 0" class="animate-fade-in"><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">选择模型</label><div @click="modelSelectModal.show = true" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-medium border border-gray-200 flex justify-between items-center cursor-pointer"><span>{{ apiConfig.selectedModel || '点击选择' }}</span><i class="fas fa-chevron-down text-gray-400 text-xs"></i></div></div><div><div class="flex justify-between mb-1"><label class="text-xs font-bold text-gray-500 ml-1">温度 (创造性): {{ apiConfig.temperature }}</label></div><input type="range" min="0" max="2" step="0.1" v-model.number="apiConfig.temperature" class="w-full h-2 bg-gray-200 rounded-lg cursor-pointer"></div></div>
+<div class="p-4 flex items-center justify-between active:bg-gray-50"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-purple-500 text-white flex items-center justify-center"><i class="fas fa-expand"></i></div><span class="font-medium text-gray-800">全屏模式</span></div><input type="checkbox" id="toggle-fs" class="switch-checkbox" v-model="isFullScreen" @change="toggleFullScreen"><label for="toggle-fs" class="switch-label"><div class="switch-button"></div></label></div><div class="p-4 flex items-center justify-between active:bg-gray-50"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-gray-500 text-white flex items-center justify-center"><i class="fas fa-eye-slash"></i></div><span class="font-medium text-gray-800">隐藏状态栏</span></div><input type="checkbox" id="toggle-sb" class="switch-checkbox" v-model="hideStatusBar" @change="saveData"><label for="toggle-sb" class="switch-label"><div class="switch-button"></div></label></div></div></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'api-config'" class="absolute inset-0 p-4"><div class="space-y-5 pb-10"><div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4"><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">反代地址</label><input v-model="apiConfig.baseUrl" placeholder="https://..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">API 密钥</label><input v-model="apiConfig.apiKey" type="password" placeholder="sk-..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div class="flex items-center gap-2"><button @click="fetchModels" :disabled="isLoading" class="flex-1 bg-gray-900 text-white py-2.5 rounded-xl text-sm font-bold active:scale-95 transition flex items-center justify-center gap-2"><i v-if="isLoading" class="fas fa-spinner fa-spin"></i><span v-else>拉取模型</span></button></div><div v-if="availableModels.length > 0" class="animate-fade-in"><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">选择模型</label><div @click="modelSelectModal.show = true" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-medium border border-gray-200 flex justify-between items-center cursor-pointer"><span>{{ apiConfig.selectedModel || '点击选择' }}</span><i class="fas fa-chevron-down text-gray-400 text-xs"></i></div></div><div><div class="flex justify-between mb-1"><label class="text-xs font-bold text-gray-500 ml-1">温度 (创造性): {{ apiConfig.temperature }}</label></div><input type="range" min="0" max="2" step="0.1" v-model.number="apiConfig.temperature" class="w-full h-2 bg-gray-200 rounded-lg cursor-pointer"></div></div>
 
 <!-- === 新增：MiniMax 语音合成面板 === -->
 <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
@@ -2931,7 +2916,7 @@ createApp({
             apiConfig: { baseUrl: '', apiKey: '', selectedModel: 'gpt-3.5-turbo', temperature: 0.7 }, availableModels: [], apiPresets:[], 
             minimaxConfig: { enabled: false, region: 'cn', groupId: '', apiKey: '', selectedModel: '', voiceId: 'male-qn-qingse' }, minimaxModels:[],
             notificationConfig: { currentSound: null, currentName: '默认提示音' }, soundPresets:[],
-            themeConfig: { isDarkMode: false, wallpaper: '', fontFamily: '', fontUrl: '', fontSize: 1.0, fontColor: '#000000' }, fontPresets: [], fontInputUrl: '',
+            themeConfig: { wallpaper: '', fontFamily: '', fontUrl: '', fontSize: 1.0, fontColor: '#000000', isDarkMode: false }, fontPresets:[], fontInputUrl: '',
             
             // 美化配置
             beautifyConfig: {
@@ -4146,15 +4131,6 @@ createApp({
             this.scrollToBottom();
             this.saveData();
         },
-        autoResizeInput() {
-            this.$nextTick(() => {
-                const el = this.$refs.chatInputArea;
-                if (el) {
-                    el.style.height = 'auto'; // 先重置高度
-                    el.style.height = Math.min(el.scrollHeight, 120) + 'px'; // 根据内容拉高，最大不超过120px
-                }
-            });
-        },
         sendMessage() {
             if(!this.inputMsg.trim()) return;
             const msg = { content: this.inputMsg, isSelf: true, time: Date.now(), avatar: this.getMaskById(this.wechatState.activeSession.maskId).avatar };
@@ -4162,11 +4138,14 @@ createApp({
             this.wechatState.activeSession.messages.push(msg);
             this.wechatState.activeSession.lastMessage = this.inputMsg;
             this.inputMsg = ''; 
-            this.$nextTick(() => {
-                if (this.$refs.chatInputArea) this.$refs.chatInputArea.style.height = 'auto'; // 发送后重置高度
-                this.scrollToBottom(); 
-            });
+            this.scrollToBottom(); 
             this.saveData();
+            
+            // 发送后重置输入框高度
+            this.$nextTick(() => { 
+                if(this.$refs.chatInputArea) this.$refs.chatInputArea.style.height = 'auto'; 
+            });
+        },
             // 静默后台预翻译
             if (this.wechatState.activeSession.enableClickTranslate) { this.translateMessage(msg); }
         },
@@ -4265,25 +4244,25 @@ createApp({
             const recentMoments = this.moments.slice(0, 5).map(m => `[Moment by ${m.name}]: ${m.content}`).join("\n");
             const momentContext = recentMoments ? `\n[Recent Social Media Moments]:\n${recentMoments}\n` : "";
             
-            // Time Sense Logic & Date Sense
+            // Time Sense Logic (带有精准日期感知)
             let timeContext = "";
+            const now = new Date();
+            const fullDate = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 星期${['日','一','二','三','四','五','六'][now.getDay()]}`;
+            
             if (session.enableTimeSense) {
-                const now = new Date();
                 const hour = now.getHours();
-                const fullDate = now.toLocaleDateString(); // 获取具体日期 (例如: 2024/5/20)
-                const weekDays =['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-                const weekDay = weekDays[now.getDay()]; // 获取星期几
-                
+                const minutes = String(now.getMinutes()).padStart(2, '0');
                 let timePeriod = "";
                 let suggestedAction = "";
-                if (hour >= 5 && hour < 11) { timePeriod = "Morning"; suggestedAction = "Ask about breakfast."; } 
-                else if (hour >= 11 && hour < 14) { timePeriod = "Noon"; suggestedAction = "Ask about lunch."; } 
-                else if (hour >= 14 && hour < 18) { timePeriod = "Afternoon"; suggestedAction = "Maybe tea time."; } 
-                else if (hour >= 18 && hour < 22) { timePeriod = "Evening"; suggestedAction = "Ask about dinner."; } 
-                else { timePeriod = "Late Night"; suggestedAction = "Tell user to sleep."; }
-                
-                // 将具体的日期和星期喂给 AI
-                timeContext = `\n[Real World Date & Time]: 今天是 ${fullDate} (${weekDay}), 当前时间是 ${hour}:00 (${timePeriod}). ${suggestedAction} 如果有必要，请在聊天中自然地体现你知道今天是哪一天。`;
+                if (hour >= 5 && hour < 11) { timePeriod = "早晨"; suggestedAction = "可以关心一下早餐或新的一天。"; } 
+                else if (hour >= 11 && hour < 14) { timePeriod = "中午"; suggestedAction = "可以问问午餐吃了什么。"; } 
+                else if (hour >= 14 && hour < 18) { timePeriod = "下午"; suggestedAction = "适合聊聊下午茶或工作进度。"; } 
+                else if (hour >= 18 && hour < 22) { timePeriod = "晚上"; suggestedAction = "可以问问晚餐或者晚上打算做什么。"; } 
+                else { timePeriod = "深夜"; suggestedAction = "可以提醒对方早点休息。"; }
+                timeContext = `\n[现实世界时间与日期]: 今天是 ${fullDate}，当前精准时间是 ${hour}:${minutes} (${timePeriod})。${suggestedAction} 请在回复中自然地体现出对今天日期和时间的感知。`;
+            } else {
+                // 即使用户没开时间感应，我们也默认告诉它今天是几号，防止它错乱
+                timeContext = `\n[当前日期]: 今天是 ${fullDate}。`;
             }
             
             // Music Sense Logic (NEW)
@@ -4936,6 +4915,54 @@ createApp({
         editCustomWidget(i, f) { let t = f==='bubble'?'气泡文字':'下方文字'; this.showInput(t, this.customWidgets[i][f], "", (v) => { if(v){ this.customWidgets[i][f]=v; this.saveData(); } }); },
         triggerWidgetImageUpload(i) { this.editingWidgetId=i; if(this.$refs.widgetImageInput)this.$refs.widgetImageInput.click(); },
         async handleWidgetImageChange(e) { const f=e.target.files[0]; if(!f)return; try { this.customWidgets[this.editingWidgetId].image = await compressImage(f); this.saveData(); } catch(e){} },
+        // --- 新增：自动拉伸输入框高度 ---
+        autoResizeInput(e) {
+            const el = e.target || this.$refs.chatInputArea;
+            if (el) {
+                el.style.height = 'auto'; // 先重置，以便缩小
+                el.style.height = Math.min(el.scrollHeight, 120) + 'px'; // 动态拔高，最高 120px
+            }
+        },
+
+        // --- 新增：夜间模式切换与应用逻辑 ---
+        toggleDarkMode() {
+            this.saveData();
+            this.applyDarkMode();
+        },
+        
+        applyDarkMode() {
+            let style = document.getElementById('dark-mode-style-override');
+            if (this.themeConfig.isDarkMode) {
+                if (!style) {
+                    style = document.createElement('style');
+                    style.id = 'dark-mode-style-override';
+                    document.head.appendChild(style);
+                }
+                // 通过动态 CSS 强制覆盖原有亮色设定，实现全局深色
+                style.innerHTML = `
+                    #app { background-color: #000 !important; color: #e5e5e5 !important; border-color: #222 !important; }
+                    .bg-white, .bg-[#fdfdfd], .bg-[#f3f4f6], .bg-[#f7f7f7], .bg-[#f9f9f9] { background-color: #121212 !important; color: #e5e5e5 !important; }
+                    .bg-gray-50, .bg-gray-100 { background-color: #1e1e1e !important; color: #ccc !important; border-color: #333 !important; }
+                    .text-black, .text-gray-900, .text-gray-800 { color: #e5e5e5 !important; }
+                    .text-gray-700, .text-gray-600 { color: #aaa !important; }
+                    .text-gray-500 { color: #888 !important; }
+                    .border-gray-50, .border-gray-100, .border-gray-200 { border-color: #2a2a2a !important; }
+                    header { background-color: rgba(18, 18, 18, 0.95) !important; border-bottom-color: #2a2a2a !important; }
+                    .chat-bubble-user { background-color: #2b5278 !important; color: #fff !important; }
+                    .chat-bubble-ai { background-color: #1e1e1e !important; color: #e5e5e5 !important; border: 1px solid #333 !important; }
+                    .wechat-bottom-nav { background-color: #121212 !important; box-shadow: 0 -5px 20px rgba(0,0,0,0.8) !important; }
+                    .ios-list-modal { background: #121212 !important; }
+                    .moment-card-wrapper, .chat-attach-menu { background: #1e1e1e !important; border-color: #333 !important; }
+                    .shadow-sm, .shadow-md, .shadow-lg { box-shadow: none !important; border: 1px solid #333 !important; }
+                    input, textarea, select { color: #eee !important; background: transparent !important; }
+                    .moment-item { border-bottom-color: #333 !important; }
+                `;
+            } else {
+                if (style) style.remove();
+            }
+        },
+        // ------------------------------------
+
         saveData() { 
             try { 
                 const dataStr = JSON.stringify(this.$data);
@@ -4969,6 +4996,9 @@ createApp({
                 }
             }
             if (localStorage.getItem('onyunx_is_activated') === 'true') { this.isActivated = true; }
+            
+            // 启动时自动应用夜间模式
+            this.applyDarkMode();
         },
         showToast(m) { this.toast.message=m; this.toast.show=true; setTimeout(()=>{this.toast.show=false},2000); },
         showInput(t,v,p,cb, inputType = 'text') { 
