@@ -2654,59 +2654,39 @@
     </transition>
 
     <!-- 设置 App -->
-    <transition name="app-slide"><div v-if="currentApp === 'settings'" class="absolute inset-0 z-[1000] bg-gray-50 flex flex-col overflow-hidden"><header class="bg-white/80 backdrop-blur h-[90px] pt-10 flex items-center justify-between px-4 border-b border-gray-200 sticky top-0 z-10"><button @click="navigateSettings('back')" class="w-8 h-8 flex items-center justify-center text-gray-800 bg-gray-100 rounded-full active:bg-gray-200 transition"><i v-if="settingsPage !== 'main'" class="fas fa-chevron-left text-sm"></i><i v-else class="fas fa-times text-sm"></i></button><h1 class="font-bold text-gray-900 text-[17px]">{{ settingsTitle }}</h1><div class="w-8"></div></header><main class="flex-1 overflow-y-auto relative"><transition name="page-slide"><div v-if="settingsPage === 'main'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-4 flex items-center gap-4 shadow-sm border border-gray-100"><div class="w-14 h-14 rounded-full bg-gray-100 overflow-hidden"><img v-if="homeProfile.avatar" :src="homeProfile.avatar" class="w-full h-full object-cover"></div><div><div class="font-bold text-lg">{{ homeProfile.name }}</div><div class="text-xs text-gray-400">@{{ homeProfile.id }}</div></div></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 divide-y divide-gray-50"><div @click="navigateSettings('api-config')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-blue-500 text-white flex items-center justify-center"><i class="fas fa-robot"></i></div><span class="font-medium text-gray-800">API 配置</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
-<div @click="navigateSettings('tts-config')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-indigo-500 text-white flex items-center justify-center"><i class="fas fa-microphone-alt"></i></div><span class="font-medium text-gray-800">语音 TTS 配置</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div @click="navigateSettings('notification')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-green-500 text-white flex items-center justify-center"><i class="fas fa-bell"></i></div><span class="font-medium text-gray-800">消息提示音</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div @click="navigateSettings('data-manage')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-orange-500 text-white flex items-center justify-center"><i class="fas fa-database"></i></div><span class="font-medium text-gray-800">数据管理</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div class="p-4 flex items-center justify-between active:bg-gray-50"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-purple-500 text-white flex items-center justify-center"><i class="fas fa-expand"></i></div><span class="font-medium text-gray-800">全屏模式</span></div><input type="checkbox" id="toggle-fs" class="switch-checkbox" v-model="isFullScreen" @change="toggleFullScreen"><label for="toggle-fs" class="switch-label"><div class="switch-button"></div></label></div><div class="p-4 flex items-center justify-between active:bg-gray-50"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-gray-500 text-white flex items-center justify-center"><i class="fas fa-eye-slash"></i></div><span class="font-medium text-gray-800">隐藏状态栏</span></div><input type="checkbox" id="toggle-sb" class="switch-checkbox" v-model="hideStatusBar" @change="saveData"><label for="toggle-sb" class="switch-label"><div class="switch-button"></div></label></div></div></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'api-config'" class="absolute inset-0 p-4"><div class="space-y-5 pb-10"><div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4"><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">反代地址</label><input v-model="apiConfig.baseUrl" placeholder="https://..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">API 密钥</label><input v-model="apiConfig.apiKey" type="password" placeholder="sk-..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div class="flex items-center gap-2"><button @click="fetchModels" :disabled="isLoading" class="flex-1 bg-gray-900 text-white py-2.5 rounded-xl text-sm font-bold active:scale-95 transition flex items-center justify-center gap-2"><i v-if="isLoading" class="fas fa-spinner fa-spin"></i><span v-else>拉取模型</span></button></div><div v-if="availableModels.length > 0" class="animate-fade-in"><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">选择模型</label><div @click="modelSelectModal.show = true" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-medium border border-gray-200 flex justify-between items-center cursor-pointer"><span>{{ apiConfig.selectedModel || '点击选择' }}</span><i class="fas fa-chevron-down text-gray-400 text-xs"></i></div></div><div><div class="flex justify-between mb-1"><label class="text-xs font-bold text-gray-500 ml-1">温度 (创造性): {{ apiConfig.temperature }}</label></div><input type="range" min="0" max="2" step="0.1" v-model.number="apiConfig.temperature" class="w-full h-2 bg-gray-200 rounded-lg cursor-pointer"></div></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">API 预设</span><button @click="savePreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="apiPresets.length === 0" class="p-8 text-center text-gray-400 text-xs">暂无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(preset, idx) in apiPresets" :key="idx" class="p-4 flex items-center justify-between"><div class="flex-1 min-w-0 mr-4"><div class="font-bold text-gray-800 text-sm truncate">{{ preset.name }}</div><div class="text-[10px] text-gray-400 truncate">{{ preset.baseUrl }}</div></div><div class="flex items-center gap-2"><button @click="applyPreset(preset)" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-green-100 hover:text-green-600 transition"><i class="fas fa-check text-xs"></i></button><button @click="deletePreset(idx)" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-red-100 hover:text-red-600 transition"><i class="fas fa-trash text-xs"></i></button></div></div></div></div><button @click="saveSettings" class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-blue-200 active:scale-95 transition">保存配置</button></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'data-manage'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center"><div class="w-16 h-16 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fas fa-database"></i></div><h3 class="font-bold text-gray-900 text-lg">数据管理</h3><p class="text-xs text-gray-400 mt-2 px-4">备份恢复所有设置。</p></div><div class="grid grid-cols-2 gap-4"><button @click="exportData" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 active:scale-95 transition"><div class="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-file-export"></i></div><span class="text-sm font-bold text-gray-700">导出</span></button><button @click="triggerImport" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 active:scale-95 transition"><div class="w-10 h-10 rounded-full bg-green-50 text-green-500 flex items-center justify-center"><i class="fas fa-file-import"></i></div><span class="text-sm font-bold text-gray-700">导入</span></button></div><input type="file" ref="importInput" accept=".json" class="hidden" @change="handleImport"></div></div></transition><transition name="page-slide">
-    <div v-if="settingsPage === 'tts-config'" class="absolute inset-0 p-4">
-        <div class="space-y-5 pb-10">
-            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
-                <div class="flex items-center justify-center mb-2">
-                    <div class="w-12 h-12 bg-indigo-100 text-indigo-500 rounded-full flex items-center justify-center text-xl"><i class="fas fa-microphone-alt"></i></div>
-                </div>
-                <h3 class="font-bold text-center text-gray-800 mb-4">MiniMax 语音配置</h3>
-                
-                <!-- 语音总开关 -->
-                <div class="flex justify-between items-center border-b border-gray-100 pb-4">
-                    <span class="text-sm font-bold text-gray-800">启用 MiniMax 语音</span>
-                    <input type="checkbox" id="minimax-toggle" class="switch-checkbox" v-model="minimaxConfig.enabled" @change="saveData">
-                    <label for="minimax-toggle" class="switch-label"><div class="switch-button"></div></label>
-                </div>
+    <transition name="app-slide"><div v-if="currentApp === 'settings'" class="absolute inset-0 z-[1000] bg-gray-50 flex flex-col overflow-hidden"><header class="bg-white/80 backdrop-blur h-[90px] pt-10 flex items-center justify-between px-4 border-b border-gray-200 sticky top-0 z-10"><button @click="navigateSettings('back')" class="w-8 h-8 flex items-center justify-center text-gray-800 bg-gray-100 rounded-full active:bg-gray-200 transition"><i v-if="settingsPage !== 'main'" class="fas fa-chevron-left text-sm"></i><i v-else class="fas fa-times text-sm"></i></button><h1 class="font-bold text-gray-900 text-[17px]">{{ settingsTitle }}</h1><div class="w-8"></div></header><main class="flex-1 overflow-y-auto relative"><transition name="page-slide"><div v-if="settingsPage === 'main'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-4 flex items-center gap-4 shadow-sm border border-gray-100"><div class="w-14 h-14 rounded-full bg-gray-100 overflow-hidden"><img v-if="homeProfile.avatar" :src="homeProfile.avatar" class="w-full h-full object-cover"></div><div><div class="font-bold text-lg">{{ homeProfile.name }}</div><div class="text-xs text-gray-400">@{{ homeProfile.id }}</div></div></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 divide-y divide-gray-50"><div @click="navigateSettings('api-config')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-blue-500 text-white flex items-center justify-center"><i class="fas fa-robot"></i></div><span class="font-medium text-gray-800">API 配置</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div @click="navigateSettings('notification')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-green-500 text-white flex items-center justify-center"><i class="fas fa-bell"></i></div><span class="font-medium text-gray-800">消息提示音</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div @click="navigateSettings('data-manage')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-orange-500 text-white flex items-center justify-center"><i class="fas fa-database"></i></div><span class="font-medium text-gray-800">数据管理</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div class="p-4 flex items-center justify-between active:bg-gray-50"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-purple-500 text-white flex items-center justify-center"><i class="fas fa-expand"></i></div><span class="font-medium text-gray-800">全屏模式</span></div><input type="checkbox" id="toggle-fs" class="switch-checkbox" v-model="isFullScreen" @change="toggleFullScreen"><label for="toggle-fs" class="switch-label"><div class="switch-button"></div></label></div><div class="p-4 flex items-center justify-between active:bg-gray-50"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-gray-500 text-white flex items-center justify-center"><i class="fas fa-eye-slash"></i></div><span class="font-medium text-gray-800">隐藏状态栏</span></div><input type="checkbox" id="toggle-sb" class="switch-checkbox" v-model="hideStatusBar" @change="saveData"><label for="toggle-sb" class="switch-label"><div class="switch-button"></div></label></div></div></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'api-config'" class="absolute inset-0 p-4"><div class="space-y-5 pb-10"><div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4"><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">反代地址</label><input v-model="apiConfig.baseUrl" placeholder="https://..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">API 密钥</label><input v-model="apiConfig.apiKey" type="password" placeholder="sk-..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div class="flex items-center gap-2"><button @click="fetchModels" :disabled="isLoading" class="flex-1 bg-gray-900 text-white py-2.5 rounded-xl text-sm font-bold active:scale-95 transition flex items-center justify-center gap-2"><i v-if="isLoading" class="fas fa-spinner fa-spin"></i><span v-else>拉取模型</span></button></div><div v-if="availableModels.length > 0" class="animate-fade-in"><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">选择模型</label><div @click="modelSelectModal.show = true" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-medium border border-gray-200 flex justify-between items-center cursor-pointer"><span>{{ apiConfig.selectedModel || '点击选择' }}</span><i class="fas fa-chevron-down text-gray-400 text-xs"></i></div></div><div><div class="flex justify-between mb-1"><label class="text-xs font-bold text-gray-500 ml-1">温度 (创造性): {{ apiConfig.temperature }}</label></div><input type="range" min="0" max="2" step="0.1" v-model.number="apiConfig.temperature" class="w-full h-2 bg-gray-200 rounded-lg cursor-pointer"></div></div>
 
-                <!-- 开启后才显示的配置项 -->
-                <div v-if="minimaxConfig.enabled" class="space-y-4 animate-fade-in">
-                    <div>
-                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">接口版本 (域名)</label>
-                        <select v-model="minimaxConfig.domain" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-medium border border-gray-200 outline-none">
-                            <option value="api.minimax.chat">大陆版 (api.minimax.chat)</option>
-                            <option value="api.minimaxi.chat">海外版 (api.minimaxi.chat)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">MiniMax API Key</label>
-                        <input v-model="minimaxConfig.apiKey" type="password" placeholder="填写您的 API Key" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none">
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">Group ID</label>
-                        <input v-model="minimaxConfig.groupId" placeholder="填写您的 Group ID" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none">
-                    </div>
-                    
-                    <!-- 模型选择区 -->
-                    <div class="flex items-center gap-2">
-                        <button @click="fetchMinimaxModels" class="flex-1 bg-gray-900 text-white py-2.5 rounded-xl text-sm font-bold active:scale-95 transition flex items-center justify-center gap-2">
-                            <span>自动获取模型</span>
-                        </button>
-                    </div>
-                    <div v-if="minimaxModels.length > 0">
-                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">选择语音模型</label>
-                        <select v-model="minimaxConfig.model" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-medium border border-gray-200 outline-none">
-                            <option v-for="m in minimaxModels" :key="m" :value="m">{{ m }}</option>
-                        </select>
-                    </div>
-                </div>
+<!-- === 新增：MiniMax 语音合成面板 === -->
+<div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
+    <div class="flex justify-between items-center">
+        <span class="font-bold text-gray-800 text-sm">MiniMax 语音合成</span>
+        <input type="checkbox" id="minimax-toggle" class="switch-checkbox" v-model="minimaxConfig.enabled" @change="saveData">
+        <label for="minimax-toggle" class="switch-label"><div class="switch-button"></div></label>
+    </div>
+    <div v-if="minimaxConfig.enabled" class="space-y-4 pt-4 border-t border-gray-50">
+        <div>
+            <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">接口域节点</label>
+            <div class="flex gap-2">
+                <button @click="minimaxConfig.region = 'cn'; saveData()" class="flex-1 py-2 rounded-xl text-xs font-bold transition border" :class="minimaxConfig.region === 'cn' ? 'bg-black text-white border-black' : 'bg-gray-50 text-gray-500 border-gray-200'">大陆版</button>
+                <button @click="minimaxConfig.region = 'intl'; saveData()" class="flex-1 py-2 rounded-xl text-xs font-bold transition border" :class="minimaxConfig.region === 'intl' ? 'bg-black text-white border-black' : 'bg-gray-50 text-gray-500 border-gray-200'">海外版</button>
             </div>
-            <button @click="saveSettings" class="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-indigo-200 active:scale-95 transition">保存配置</button>
+        </div>
+        <div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">Group ID</label><input v-model="minimaxConfig.groupId" placeholder="输入 Group ID" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div>
+        <div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">API Key</label><input v-model="minimaxConfig.apiKey" type="password" placeholder="输入 API Key" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div>
+        <div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">音色 ID (Voice ID)</label><input v-model="minimaxConfig.voiceId" placeholder="如: male-qn-qingse" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div>
+        <button @click="fetchMinimaxModels" class="w-full bg-gray-900 text-white py-2.5 rounded-xl text-sm font-bold active:scale-95 transition">获取模型</button>
+        <div v-if="minimaxModels.length > 0" class="animate-fade-in">
+            <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">选择模型</label>
+            <select v-model="minimaxConfig.selectedModel" @change="saveData" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-medium border border-gray-200 outline-none cursor-pointer">
+                <option disabled value="">请选择模型</option>
+                <option v-for="m in minimaxModels" :key="m" :value="m">{{ m }}</option>
+            </select>
         </div>
     </div>
-</transition><transition name="page-slide"><div v-if="settingsPage === 'notification'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"><div class="flex items-center justify-between mb-4"><span class="text-sm font-bold text-gray-700">当前提示音</span><span class="text-xs text-gray-400">{{ notificationConfig.currentName || '系统默认' }}</span></div><div class="flex gap-2"><button @click="triggerAudioUpload" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-upload"></i> 导入文件</button><button @click="triggerAudioUrl" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-link"></i> 网络直链</button><button @click="playCurrentSound" class="w-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center border border-green-100 active:scale-95 transition"><i class="fas fa-play"></i></button></div><input type="file" ref="audioInput" accept="audio/*" class="hidden" @change="handleAudioUpload"><button @click="simulateAiMessage" class="w-full mt-3 bg-gray-800 text-white py-2.5 rounded-xl text-xs font-bold active:bg-black transition">测试音效</button></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">音频预设</span><button @click="saveSoundPreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="soundPresets.length === 0" class="p-6 text-center text-gray-400 text-xs">暂无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(sound, idx) in soundPresets" :key="idx" class="p-4 flex items-center justify-between"><span class="font-bold text-gray-700 text-sm truncate max-w-[50%]">{{ sound.name }}</span><div class="flex items-center gap-2"><button @click="playPresetSound(sound)" class="w-7 h-7 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center"><i class="fas fa-play text-[10px]"></i></button><button @click="applySoundPreset(sound)" class="w-7 h-7 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-check text-[10px]"></i></button><button @click="deleteSoundPreset(idx)" class="w-7 h-7 rounded-full bg-red-50 text-red-500 flex items-center justify-center"><i class="fas fa-trash text-[10px]"></i></button></div></div></div></div></div></div></transition></main></div></transition>
+</div>
+<!-- ============================== -->
+
+<div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">API 预设</span><button @click="savePreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="apiPresets.length === 0" class="p-8 text-center text-gray-400 text-xs">暂无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(preset, idx) in apiPresets" :key="idx" class="p-4 flex items-center justify-between"><div class="flex-1 min-w-0 mr-4"><div class="font-bold text-gray-800 text-sm truncate">{{ preset.name }}</div><div class="text-[10px] text-gray-400 truncate">{{ preset.baseUrl }}</div></div><div class="flex items-center gap-2"><button @click="applyPreset(preset)" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-green-100 hover:text-green-600 transition"><i class="fas fa-check text-xs"></i></button><button @click="deletePreset(idx)" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-red-100 hover:text-red-600 transition"><i class="fas fa-trash text-xs"></i></button></div></div></div></div><button @click="saveSettings" class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-blue-200 active:scale-95 transition">保存配置</button></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'data-manage'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center"><div class="w-16 h-16 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fas fa-database"></i></div><h3 class="font-bold text-gray-900 text-lg">数据管理</h3><p class="text-xs text-gray-400 mt-2 px-4">备份恢复所有设置。</p></div><div class="grid grid-cols-2 gap-4"><button @click="exportData" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 active:scale-95 transition"><div class="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-file-export"></i></div><span class="text-sm font-bold text-gray-700">导出</span></button><button @click="triggerImport" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 active:scale-95 transition"><div class="w-10 h-10 rounded-full bg-green-50 text-green-500 flex items-center justify-center"><i class="fas fa-file-import"></i></div><span class="text-sm font-bold text-gray-700">导入</span></button></div><input type="file" ref="importInput" accept=".json" class="hidden" @change="handleImport"></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'notification'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"><div class="flex items-center justify-between mb-4"><span class="text-sm font-bold text-gray-700">当前提示音</span><span class="text-xs text-gray-400">{{ notificationConfig.currentName || '系统默认' }}</span></div><div class="flex gap-2"><button @click="triggerAudioUpload" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-upload"></i> 导入文件</button><button @click="triggerAudioUrl" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-link"></i> 网络直链</button><button @click="playCurrentSound" class="w-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center border border-green-100 active:scale-95 transition"><i class="fas fa-play"></i></button></div><input type="file" ref="audioInput" accept="audio/*" class="hidden" @change="handleAudioUpload"><button @click="simulateAiMessage" class="w-full mt-3 bg-gray-800 text-white py-2.5 rounded-xl text-xs font-bold active:bg-black transition">测试音效</button></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">音频预设</span><button @click="saveSoundPreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="soundPresets.length === 0" class="p-6 text-center text-gray-400 text-xs">暂无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(sound, idx) in soundPresets" :key="idx" class="p-4 flex items-center justify-between"><span class="font-bold text-gray-700 text-sm truncate max-w-[50%]">{{ sound.name }}</span><div class="flex items-center gap-2"><button @click="playPresetSound(sound)" class="w-7 h-7 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center"><i class="fas fa-play text-[10px]"></i></button><button @click="applySoundPreset(sound)" class="w-7 h-7 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-check text-[10px]"></i></button><button @click="deleteSoundPreset(idx)" class="w-7 h-7 rounded-full bg-red-50 text-red-500 flex items-center justify-center"><i class="fas fa-trash text-[10px]"></i></button></div></div></div></div></div></div></transition></main></div></transition>
     
     <!-- 主题 App -->
     <transition name="app-slide"><div v-if="currentApp === 'themes'" class="absolute inset-0 z-[1000] bg-gray-50 flex flex-col overflow-hidden"><header class="bg-white/80 backdrop-blur h-[90px] pt-10 flex items-center justify-between px-4 border-b border-gray-200 sticky top-0 z-10"><button @click="navigateThemes('back')" class="w-8 h-8 flex items-center justify-center text-gray-800 bg-gray-100 rounded-full active:bg-gray-200 transition"><i v-if="themesPage !== 'main'" class="fas fa-chevron-left text-sm"></i><i v-else class="fas fa-times text-sm"></i></button><h1 class="font-bold text-gray-900 text-[17px]">{{ themesTitle }}</h1><div class="w-8"></div></header><main class="flex-1 overflow-y-auto relative">
@@ -2891,8 +2871,8 @@ createApp({
             isActivated: false,
             isAppOpen: false, currentApp: null, settingsPage: 'main', themesPage: 'main', isLoading: false, isFullScreen: false, hideStatusBar: false,
             apiConfig: { baseUrl: '', apiKey: '', selectedModel: 'gpt-3.5-turbo', temperature: 0.7 }, availableModels: [], apiPresets:[], 
-            minimaxConfig: { enabled: false, domain: 'api.minimax.chat', apiKey: '', groupId: '', model: 'speech-01-turbo' }, minimaxModels:[], 
-            notificationConfig: { currentSound: null, currentName: '默认提示音' }, soundPresets: [],
+            minimaxConfig: { enabled: false, region: 'cn', groupId: '', apiKey: '', selectedModel: '', voiceId: 'male-qn-qingse' }, minimaxModels:[],
+            notificationConfig: { currentSound: null, currentName: '默认提示音' }, soundPresets:[],
             themeConfig: { wallpaper: '', fontFamily: '', fontUrl: '', fontSize: 1.0, fontColor: '#000000' }, fontPresets: [], fontInputUrl: '',
             
             // 美化配置
@@ -3042,7 +3022,7 @@ createApp({
         }
     },
     computed: {
-        settingsTitle() { if (this.settingsPage === 'api-config') return 'API 配置'; if (this.settingsPage === 'data-manage') return '数据管理'; if (this.settingsPage === 'notification') return '消息提示音'; if (this.settingsPage === 'tts-config') return '语音 TTS 配置'; return '系统设置'; },
+        settingsTitle() { if (this.settingsPage === 'api-config') return 'API 配置'; if (this.settingsPage === 'data-manage') return '数据管理'; if (this.settingsPage === 'notification') return '消息提示音'; return '系统设置'; },
         themesTitle() { if (this.themesPage === 'wallpaper') return '壁纸设置'; if (this.themesPage === 'font') return '字体设置'; if (this.themesPage === 'icons') return '图标设置'; if (this.themesPage === 'beautify') return '美化设置'; return '主题商店'; },
         folders() { return this.worldData.filter(i => i.type === 'folder'); },
         rootFiles() { return this.worldData.filter(i => i.type === 'file' && !i.parentId); },
@@ -5059,120 +5039,6 @@ createApp({
             this.saveData();
         },
         toggleVoiceText(msg) { msg.isExpanded = !msg.isExpanded; },
-        async playMiniMaxVoice(msg) {
-            if (msg.isPlayingVoice) return;
-            msg.isPlayingVoice = true;
-            this.showToast('正在为您生成专属语音...');
-            
-            try {
-                const domain = this.minimaxConfig.domain || 'api.minimax.chat';
-                // 根据 MiniMax 鉴权规则，GroupId 拼接在 URL 上
-                const groupIdStr = this.minimaxConfig.groupId ? `?GroupId=${this.minimaxConfig.groupId.trim()}` : '';
-                const url = `https://${domain}/v1/t2a_v2${groupIdStr}`;
-
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${this.minimaxConfig.apiKey.trim()}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        model: this.minimaxConfig.model || "speech-01-turbo",
-                        text: msg.content,
-                        stream: false,
-                        voice_setting: {
-                            voice_id: "male-qn-qingse", // 系统底层默认一个兜底音色防止报错
-                            speed: 1,
-                            vol: 1,
-                            pitch: 0
-                        },
-                        audio_setting: {
-                            sample_rate: 32000,
-                            bitrate: 128000,
-                            format: "mp3"
-                        }
-                    })
-                });
-
-                if (!response.ok) throw new Error(`HTTP 错误: ${response.status}`);
-                const data = await response.json();
-                
-                if (data.base_resp && data.base_resp.status_code !== 0) {
-                    throw new Error(data.base_resp.status_msg || '接口返回异常');
-                }
-
-                const hexString = data.data.audio;
-                if (!hexString) throw new Error('未返回音频数据');
-
-                const bytes = new Uint8Array(hexString.length / 2);
-                for (let i = 0; i < hexString.length; i += 2) {
-                    bytes[i / 2] = parseInt(hexString.substr(i, 2), 16);
-                }
-                const blob = new Blob([bytes], { type: 'audio/mp3' });
-                const audioUrl = URL.createObjectURL(blob);
-                
-                const audio = new Audio(audioUrl);
-                audio.onended = () => { msg.isPlayingVoice = false; };
-                audio.onerror = () => { msg.isPlayingVoice = false; };
-                audio.play();
-                
-            } catch (e) {
-                console.error("MiniMax TTS Error:", e);
-                this.showToast('语音生成失败: ' + e.message);
-                msg.isPlayingVoice = false;
-            }
-        },
-
-        // --- 新增：自动获取 MiniMax 可用模型库 ---
-        async fetchMinimaxModels() {
-            this.showToast('正在自动获取可用模型...');
-            // 获取目前 MiniMax 最新的语音大模型列表
-            setTimeout(() => {
-                this.minimaxModels =[
-                    'speech-01-turbo', 
-                    'speech-02-turbo', 
-                    'speech-02-hd', 
-                    'speech-2.6-turbo', 
-                    'speech-2.6-hd',
-                    'speech-2.8-turbo',
-                    'speech-2.8-hd'
-                ];
-                if (!this.minimaxConfig.model) this.minimaxConfig.model = 'speech-02-turbo';
-                this.saveData();
-                this.showToast('模型获取成功，请在下方选择');
-            }, 600);
-        },
-
-                if (!response.ok) throw new Error(`HTTP 错误: ${response.status}`);
-                const data = await response.json();
-                
-                if (data.base_resp && data.base_resp.status_code !== 0) {
-                    throw new Error(data.base_resp.status_msg || '接口返回异常');
-                }
-
-                const hexString = data.data.audio;
-                if (!hexString) throw new Error('未返回音频数据');
-
-                // 将 MiniMax 传回的 Hex 字符串快速解码为可播放的 MP3 Blob 文件
-                const bytes = new Uint8Array(hexString.length / 2);
-                for (let i = 0; i < hexString.length; i += 2) {
-                    bytes[i / 2] = parseInt(hexString.substr(i, 2), 16);
-                }
-                const blob = new Blob([bytes], { type: 'audio/mp3' });
-                const url = URL.createObjectURL(blob);
-                
-                // 播放音频
-                const audio = new Audio(url);
-                audio.onended = () => { msg.isPlayingVoice = false; };
-                audio.onerror = () => { msg.isPlayingVoice = false; };
-                audio.play();
-                
-            } catch (e) {
-                console.error("MiniMax TTS Error:", e);
-                this.showToast('语音生成失败: ' + e.message);
-                msg.isPlayingVoice = false;
-            }
-        },
 
         openStickerManager() { this.showStickerManager = true; this.isStickerMultiSelect = false; },
         triggerStickerUpload() { this.$refs.stickerUploadInput.click(); },
@@ -5355,10 +5221,12 @@ createApp({
                     this.showToast('等待对方收款');
                 }
             } else if(msg.type === 'voice') {
-                this.toggleVoiceText(msg);
-                // 如果启用了开关并且填写了API Key，才触发发声（否则安静地展开文字）
-                if (!msg.isSelf && this.minimaxConfig && this.minimaxConfig.enabled && this.minimaxConfig.apiKey) {
-                    this.playMiniMaxVoice(msg);
+                // 判断 MiniMax 是否开启且配置完整，并且点击的不是自己发的语音
+                if (this.minimaxConfig && this.minimaxConfig.enabled && !msg.isSelf) {
+                    this.playMinimaxVoice(msg);
+                } else {
+                    // 如果没开启配置或点击自己发的，维持原样展开文字
+                    this.toggleVoiceText(msg);
                 }
             } else if(msg.type === 'fake_image') {
                 msg.isRevealed = !msg.isRevealed;
@@ -5375,6 +5243,114 @@ createApp({
                     msg.showTranslation = !msg.showTranslation;
                     this.saveData();
                 }
+            }
+        },
+        async fetchMinimaxModels() {
+            if (!this.minimaxConfig.groupId || !this.minimaxConfig.apiKey) {
+                return this.showToast('请先填写 Group ID 和 API Key');
+            }
+            this.showToast('正在获取...');
+            try {
+                const baseUrl = this.minimaxConfig.region === 'intl' ? 'https://api.minimaxi.chat/v1' : 'https://api.minimax.chat/v1';
+                const res = await fetch(`${baseUrl}/models?GroupId=${this.minimaxConfig.groupId.trim()}`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${this.minimaxConfig.apiKey.trim()}` }
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                if (data && data.data) {
+                    this.minimaxModels = data.data.map(m => m.id);
+                    this.showToast(`获取成功: ${this.minimaxModels.length} 个模型`);
+                    if (!this.minimaxConfig.selectedModel && this.minimaxModels.length > 0) {
+                        this.minimaxConfig.selectedModel = this.minimaxModels[0];
+                    }
+                } else {
+                    throw new Error('数据解析异常');
+                }
+            } catch (e) {
+                console.error(e);
+                this.showToast('拉取失败: ' + e.message);
+                // 容错：如果拉取失败，直接内置 MiniMax 官方常用的两个语音模型
+                if (this.minimaxModels.length === 0) {
+                    this.minimaxModels = ['speech-01-turbo', 'speech-01'];
+                }
+            } finally {
+                this.saveData();
+            }
+        },
+
+        async playMinimaxVoice(msg) {
+            // 防抖：防止正在播放或生成时重复点击
+            if (msg.isPlayingAudio) return;
+            
+            if (!this.minimaxConfig.groupId || !this.minimaxConfig.apiKey || !this.minimaxConfig.selectedModel) {
+                return this.showToast('请在设置中完善 MiniMax 语音配置');
+            }
+
+            msg.isPlayingAudio = true;
+            this.showToast('正在生成语音...');
+            this.saveData();
+            
+            try {
+                const baseUrl = this.minimaxConfig.region === 'intl' ? 'https://api.minimaxi.chat/v1' : 'https://api.minimax.chat/v1';
+                
+                const requestBody = {
+                    model: this.minimaxConfig.selectedModel,
+                    text: msg.content,
+                    stream: false,
+                    voice_setting: {
+                        voice_id: this.minimaxConfig.voiceId || "male-qn-qingse",
+                        speed: 1.0,
+                        vol: 1.0,
+                        pitch: 0
+                    },
+                    audio_setting: {
+                        sample_rate: 32000,
+                        bitrate: 128000,
+                        format: "mp3",
+                        channel: 1
+                    }
+                };
+
+                const res = await fetch(`${baseUrl}/t2a_v2?GroupId=${this.minimaxConfig.groupId.trim()}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.minimaxConfig.apiKey.trim()}`
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!res.ok) throw new Error(`API 报错 HTTP ${res.status}`);
+                
+                const data = await res.json();
+                if (data.baseStatus && data.baseStatus.statusCode !== 0) {
+                    throw new Error(data.baseStatus.statusMsg);
+                }
+
+                // MiniMax 返回的是十六进制 (Hex String) 格式的音频，需要手动转换为 Buffer
+                const hexString = data.data.audio;
+                if (!hexString) throw new Error('未返回音频流');
+                
+                const bytes = new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                const blob = new Blob([bytes], { type: 'audio/mp3' });
+                const audioUrl = URL.createObjectURL(blob);
+                
+                const audio = new Audio(audioUrl);
+                audio.onended = () => {
+                    msg.isPlayingAudio = false;
+                    URL.revokeObjectURL(audioUrl);
+                };
+                audio.onerror = () => {
+                    msg.isPlayingAudio = false;
+                    this.showToast('音频播放出错');
+                };
+                audio.play();
+
+            } catch(e) {
+                console.error("语音生成失败:", e);
+                this.showToast('语音生成失败: ' + e.message);
+                msg.isPlayingAudio = false;
             }
         },
         async translateMessage(msg) {
