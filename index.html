@@ -2275,53 +2275,6 @@
                 </header>
                 
                 <!-- 聊天容器：支持自定义背景图 -->
-                <!-- 一起读：小窗悬浮模式 -->
-                <transition name="fade">
-                    <div v-if="readingState.isActive && readingState.isMinimized" class="absolute top-24 right-4 w-48 bg-[#fdfbf6]/95 backdrop-blur-md shadow-[0_10px_40px_rgba(0,0,0,0.15)] rounded-xl p-3 z-50 border border-[#e8dfc8] cursor-move">
-                        <div class="flex justify-between items-center mb-2 pb-2 border-b border-[#e8dfc8]/50">
-                            <span class="text-xs font-bold text-gray-800 truncate flex-1 flex items-center gap-1"><i class="fas fa-book-open text-orange-600"></i> {{ getActiveBook()?.title }}</span>
-                            <div class="flex gap-3 ml-2 shrink-0">
-                                <i class="fas fa-expand text-gray-500 text-xs cursor-pointer active:scale-95 hover:text-black" @click="readingState.isMinimized = false"></i>
-                                <i class="fas fa-times text-gray-500 text-xs cursor-pointer active:scale-95 hover:text-red-500" @click="readingState.isActive = false"></i>
-                            </div>
-                        </div>
-                        <div class="text-[11px] text-gray-600 line-clamp-4 leading-relaxed font-serif">{{ getCurrentBookContent() }}</div>
-                    </div>
-                </transition>
-
-                <!-- 一起读：全屏阅读模式 -->
-                <transition name="app-slide">
-                    <div v-if="readingState.isActive && !readingState.isMinimized" class="absolute inset-0 z-[60] bg-[#f4ecd8] flex flex-col text-[#333]">
-                        <header class="h-[90px] pt-10 px-4 flex items-center justify-between border-b border-[#e6d8b8] shrink-0 bg-[#f4ecd8]/95 backdrop-blur-sm z-10">
-                            <div class="flex items-center gap-4">
-                                <!-- 缩小回小窗 -->
-                                <i class="fas fa-compress text-gray-700 text-lg cursor-pointer active:scale-95" @click="readingState.isMinimized = true"></i>
-                                <div class="flex flex-col">
-                                    <span class="font-bold text-sm truncate max-w-[150px]">{{ getActiveBook()?.title }}</span>
-                                    <span class="text-[10px] text-gray-500">{{ getActiveBook()?.author }}</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-4">
-                                <span class="text-xs font-bold text-gray-600 px-2 py-1 bg-[#e6d8b8]/50 rounded cursor-pointer" @click="changeBookFontSize(2)">A+</span>
-                                <span class="text-xs font-bold text-gray-600 px-2 py-1 bg-[#e6d8b8]/50 rounded cursor-pointer" @click="changeBookFontSize(-2)">A-</span>
-                                <span class="text-xs font-bold text-gray-600 px-2 py-1 bg-[#e6d8b8]/50 rounded cursor-pointer" @click="readingState.readMode = readingState.readMode === 'scroll' ? 'page' : 'scroll'">{{ readingState.readMode === 'scroll' ? '上下滑动' : '左右翻页' }}</span>
-                            </div>
-                        </header>
-                        
-                        <!-- 阅读内容区 -->
-                        <div class="flex-1 overflow-y-auto p-5 font-serif relative" :class="readingState.readMode === 'page' ? 'overflow-hidden' : ''" :style="{fontSize: readingState.fontSize + 'px'}">
-                            <!-- 上下滚动模式 -->
-                            <div v-if="readingState.readMode === 'scroll'" class="whitespace-pre-wrap leading-loose">{{ getActiveBook()?.content }}</div>
-                            <!-- 左右翻页模式 -->
-                            <div v-else class="whitespace-pre-wrap leading-loose h-full" @click="turnBookPage($event)">{{ getCurrentBookContent() }}</div>
-                        </div>
-                        
-                        <!-- 翻页模式底部提示 -->
-                        <div v-if="readingState.readMode === 'page'" class="h-8 flex items-center justify-center text-xs text-[#a3947f] bg-[#f4ecd8] border-t border-[#e6d8b8]/50 shrink-0">
-                            点击左侧上一页，点击右侧下一页
-                        </div>
-                    </div>
-                </transition>
                 <div class="flex-1 overflow-y-auto p-4 space-y-2 bg-[#fdfdfd] bg-cover bg-center" ref="chatContainer" @click="closeChatMenus"
                      :style="{ backgroundImage: wechatState.activeSession.wallpaper ? 'url(' + wechatState.activeSession.wallpaper + ')' : '' }">
                     <div v-if="wechatState.activeSession.messages.length === 0" class="text-center text-xs text-gray-300 py-4">星期日 13:42</div>
@@ -2464,7 +2417,31 @@
                         </div>
                     </div>
                 </div>
-
+                
+                <!-- 一起读悬浮窗/全屏窗 (阅读器) -->
+                <transition name="scale">
+                    <div v-if="readingState.show" class="absolute z-40 bg-[#f4ecd8] border border-[#d5c3a5] shadow-2xl flex flex-col transition-all duration-300 overflow-hidden"
+                         :class="readingState.isMinimized ? 'w-[140px] h-[180px] top-24 right-4 rounded-xl opacity-90 hover:opacity-100' : 'inset-0 rounded-none'">
+                        <!-- 头部控制栏 -->
+                        <div class="flex items-center justify-between p-2 border-b border-[#e1d0b3] shrink-0 bg-[#f4ecd8]/95 backdrop-blur z-10" :class="readingState.isMinimized ? 'text-[10px]' : 'pt-12 text-sm'">
+                            <div class="font-bold text-[#5c4b37] truncate flex-1 px-1">{{ getActiveBookTitle() }}</div>
+                            <div class="flex gap-3 text-[#8b7965] shrink-0 items-center">
+                                <button v-if="!readingState.isMinimized" @click="readingState.fontSize = Math.max(12, readingState.fontSize - 2)"><i class="fas fa-font"></i>-</button>
+                                <button v-if="!readingState.isMinimized" @click="readingState.fontSize = Math.min(32, readingState.fontSize + 2)"><i class="fas fa-font"></i>+</button>
+                                <button v-if="!readingState.isMinimized" @click="toggleReadMode" class="text-xs border border-[#8b7965] px-1 rounded">{{ readingState.mode === 'scroll' ? '上下' : '左右' }}</button>
+                                <button @click="readingState.isMinimized = !readingState.isMinimized"><i class="fas" :class="readingState.isMinimized ? 'fa-expand' : 'fa-compress'"></i></button>
+                                <button @click="closeTogetherRead"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
+                        <!-- 阅读内容区 -->
+                        <div class="flex-1 overflow-y-auto p-4 text-[#3e2f1d] leading-relaxed relative" 
+                             :style="{ fontSize: readingState.isMinimized ? '8px' : readingState.fontSize + 'px', columnWidth: readingState.mode === 'flip' && !readingState.isMinimized ? '100vw' : 'auto', columnGap: '32px' }"
+                             @scroll="handleReadScroll" ref="readingContainer">
+                            <div class="whitespace-pre-wrap text-justify">{{ getActiveBookContent() }}</div>
+                        </div>
+                    </div>
+                </transition>
+                
                 <!-- 聊天输入区域 -->
                 <div class="bg-white border-t border-gray-100 pb-safe relative chat-input-area">
                     <!-- 附件菜单 (全新网格布局) -->
@@ -2486,7 +2463,7 @@
                             <div class="attach-item" @click="openTransferModal"><div class="attach-icon-box"><i class="fas fa-money-bill-wave text-gray-600"></i></div><span class="attach-label">转账</span></div>
                             <div class="attach-item" @click="showToast('功能开发中')"><div class="attach-icon-box"><i class="fas fa-cube text-gray-600"></i></div><span class="attach-label">收藏</span></div>
                             <div class="attach-item" @click="showMusicModal"><div class="attach-icon-box"><i class="fas fa-music text-gray-600"></i></div><span class="attach-label">一起听</span></div>
-                            <div class="attach-item" @click="bookSelectModal.show = true; wechatState.showAttachMenu = false;"><div class="attach-icon-box"><i class="fas fa-book-open text-gray-600"></i></div><span class="attach-label">一起读</span></div>
+                            <div class="attach-item" @click="openBookSelectModal"><div class="attach-icon-box"><i class="fas fa-book-open text-gray-600"></i></div><span class="attach-label">一起读</span></div>
                             <!-- 线下模式 (灰色咖啡杯) -->
                             <div class="attach-item" @click="showToast('功能开发中')"><div class="attach-icon-box"><i class="fas fa-coffee text-gray-600"></i></div><span class="attach-label">线下模式</span></div>
                         </div>
@@ -2685,78 +2662,75 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- 书架管理页面 -->
-            <div v-if="wechatState.activeNav === 'bookshelf'" class="flex-1 flex flex-col bg-white absolute inset-0 z-[55]">
-                <header class="h-[90px] pt-10 px-4 flex items-center justify-between border-b border-gray-100 sticky top-0 bg-white z-10">
-                    <button @click="wechatState.activeNav = 'discover'" class="w-8 h-8 flex items-center justify-center text-black"><i class="fas fa-chevron-left text-lg"></i></button>
+
+            <!-- 书架 (Bookshelf) 视图 -->
+            <div v-if="wechatState.activeNav === 'bookshelf'" class="flex-1 flex flex-col bg-[#f7f7f7] absolute inset-0 z-50">
+                <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-100 sticky top-0 z-10">
+                    <button @click="wechatState.activeNav = 'discover'" class="w-8 h-8 flex items-center justify-center"><i class="fas fa-chevron-left text-lg text-black"></i></button>
                     <h1 class="font-bold text-[17px]">我的书架</h1>
                     <div class="flex gap-3">
-                        <button @click="bookshelfState.isMultiSelect = !bookshelfState.isMultiSelect" class="text-sm font-bold" :class="bookshelfState.isMultiSelect ? 'text-red-500' : 'text-black'">{{ bookshelfState.isMultiSelect ? '取消' : '多选' }}</button>
-                        <button @click="$refs.bookImportInput.click()" class="text-black"><i class="fas fa-file-import text-lg"></i></button>
+                        <button @click="triggerBookImport" class="text-black"><i class="fas fa-file-import text-lg"></i></button>
+                        <button @click="toggleBookMulti" :class="bookshelfState.isMulti ? 'text-red-500' : 'text-black'"><i class="fas fa-check-square text-lg"></i></button>
                     </div>
                 </header>
-                <div class="flex-1 overflow-y-auto p-4 pb-20">
-                    <div v-if="books.length === 0" class="text-center text-gray-400 mt-20 text-xs">暂无书籍，请点击右上角导入 .txt 格式小说</div>
-                    <div class="grid grid-cols-3 gap-x-4 gap-y-6">
-                        <div v-for="book in sortedBooks" :key="book.id" class="flex flex-col gap-1 relative" @click="handleBookClick(book)">
-                            <!-- 多选勾选框 -->
-                            <div v-if="bookshelfState.isMultiSelect" class="absolute top-1 right-1 z-20 w-6 h-6 rounded-full border-2 flex items-center justify-center bg-white" :class="bookshelfState.selectedIds.includes(book.id) ? 'border-black bg-black' : 'border-gray-300'">
-                                <i v-if="bookshelfState.selectedIds.includes(book.id)" class="fas fa-check text-white text-xs"></i>
+                <div class="flex-1 overflow-y-auto p-4 grid grid-cols-3 gap-4 content-start">
+                    <div v-if="!bookshelf || bookshelf.length === 0" class="col-span-3 text-center text-gray-400 mt-20 text-xs">书架空空如也，请点击右上角导入 .txt 小说</div>
+                    <div v-for="book in sortedBookshelf" :key="book.id" class="flex flex-col gap-2 relative" @click="bookshelfState.isMulti ? toggleSelectBook(book.id) : openBookEdit(book)">
+                        <div class="aspect-[3/4] bg-white rounded-md shadow-sm border border-gray-200 overflow-hidden relative">
+                            <img v-if="book.cover" :src="book.cover" class="w-full h-full object-cover">
+                            <div v-else class="w-full h-full flex flex-col items-center justify-center bg-blue-50 text-blue-400 p-2 text-center">
+                                <i class="fas fa-book text-2xl mb-2"></i><span class="text-[10px] font-bold line-clamp-3 text-blue-800">{{ book.title }}</span>
                             </div>
-                            <!-- 收藏角标 -->
-                            <i v-if="book.isFavorite" class="fas fa-bookmark absolute -top-1 left-2 z-20 text-red-500 text-2xl drop-shadow-md"></i>
-                            
-                            <div class="aspect-[3/4] bg-gray-100 rounded-md shadow-[0_4px_10px_rgba(0,0,0,0.1)] overflow-hidden relative cursor-pointer active:scale-95 transition">
-                                <img v-if="book.cover" :src="book.cover" class="w-full h-full object-cover">
-                                <div v-else class="w-full h-full flex flex-col items-center justify-center bg-[#f4ecd8] text-[#5c4a3d] p-3 text-center border border-[#e6d8b8]">
-                                    <div class="font-bold text-sm line-clamp-3 mb-2">{{ book.title }}</div>
-                                    <div class="text-[10px] opacity-80 line-clamp-1">{{ book.author }}</div>
+                            <div v-if="book.isFavorite" class="absolute top-1 right-1 text-yellow-500 text-xs drop-shadow"><i class="fas fa-star"></i></div>
+                            <div v-if="bookshelfState.isMulti" class="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
+                                <div class="w-6 h-6 rounded-full border-2 border-gray-400 flex items-center justify-center" :class="{'bg-black border-black': bookshelfState.selectedIds.includes(book.id)}">
+                                    <i v-if="bookshelfState.selectedIds.includes(book.id)" class="fas fa-check text-white text-xs"></i>
                                 </div>
                             </div>
-                            <span class="text-xs font-bold text-gray-800 truncate px-1 mt-1">{{ book.title }}</span>
                         </div>
+                        <div class="text-xs font-bold text-gray-800 line-clamp-1 text-center">{{ book.title }}</div>
+                        <div class="text-[10px] text-gray-400 line-clamp-1 text-center">{{ book.author }}</div>
                     </div>
                 </div>
-                <!-- 多选底部栏 -->
-                <div v-if="bookshelfState.isMultiSelect" class="bg-white border-t border-gray-100 p-4 pb-safe flex justify-around shadow-lg absolute bottom-0 w-full z-20">
-                    <button @click="deleteSelectedBooks" class="flex flex-col items-center text-red-500"><i class="far fa-trash-alt text-lg"></i><span class="text-[10px] mt-1">删除</span></button>
-                    <button @click="favoriteSelectedBooks" class="flex flex-col items-center text-orange-500"><i class="fas fa-bookmark text-lg"></i><span class="text-[10px] mt-1">收藏/取消</span></button>
-                </div>
+                <transition name="app-slide">
+                    <div v-if="bookshelfState.isMulti" class="bg-white border-t border-gray-100 p-4 pb-safe flex justify-around shadow-lg">
+                        <button @click="deleteSelectedBooks" class="text-red-500 font-bold text-sm flex flex-col items-center"><i class="fas fa-trash mb-1"></i>删除</button>
+                        <button @click="favoriteSelectedBooks" class="text-yellow-500 font-bold text-sm flex flex-col items-center"><i class="fas fa-star mb-1"></i>收藏/取消</button>
+                    </div>
+                </transition>
                 <input type="file" ref="bookImportInput" accept=".txt" class="hidden" @change="handleBookImport">
             </div>
 
-            <!-- 书籍编辑弹窗 -->
+            <!-- 编辑书籍信息弹窗 -->
             <transition name="scale">
-                <div v-if="editBookModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                    <div class="bg-white w-[85%] rounded-2xl overflow-hidden shadow-2xl p-5 flex flex-col gap-4">
+                <div v-if="bookEditModal.show" class="fixed inset-0 z-[60000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                    <div class="bg-white w-[85%] rounded-2xl p-5 flex flex-col gap-4 shadow-2xl">
                         <h3 class="text-lg font-bold text-center">编辑书籍信息</h3>
-                        <div><label class="text-xs text-gray-500 ml-1">书名</label><input v-model="editBookModal.title" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none"></div>
-                        <div><label class="text-xs text-gray-500 ml-1">作者</label><input v-model="editBookModal.author" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none"></div>
-                        <div><label class="text-xs text-gray-500 ml-1">封面图片 URL (选填)</label><input v-model="editBookModal.cover" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none"></div>
+                        <div><label class="text-xs text-gray-500 mb-1 block">书名</label><input v-model="bookEditModal.title" class="w-full bg-gray-50 p-2 rounded-lg text-sm border border-gray-200 outline-none"></div>
+                        <div><label class="text-xs text-gray-500 mb-1 block">作者</label><input v-model="bookEditModal.author" class="w-full bg-gray-50 p-2 rounded-lg text-sm border border-gray-200 outline-none"></div>
+                        <div><label class="text-xs text-gray-500 mb-1 block">封面 URL</label><input v-model="bookEditModal.cover" class="w-full bg-gray-50 p-2 rounded-lg text-sm border border-gray-200 outline-none"></div>
                         <div class="flex gap-2 mt-2">
-                            <button @click="editBookModal.show=false" class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold">取消</button>
-                            <button @click="saveBookEdit" class="flex-1 py-3 bg-black text-white rounded-xl text-sm font-bold">保存</button>
+                            <button @click="bookEditModal.show = false" class="flex-1 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-bold">取消</button>
+                            <button @click="saveBookEdit" class="flex-1 py-2 bg-black text-white rounded-lg text-sm font-bold">保存</button>
                         </div>
                     </div>
                 </div>
             </transition>
 
-            <!-- 聊天附件中“一起读”选书弹窗 -->
+            <!-- 选择一起读的小说弹窗 -->
             <transition name="app-slide">
-                <div v-if="bookSelectModal.show" class="fixed inset-0 z-[65000]">
-                    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="bookSelectModal.show = false"></div>
-                    <div class="ios-list-modal h-[60vh]">
-                        <div class="ios-list-header">选择要和 TA 一起读的书 <button class="absolute right-4 text-blue-500 font-normal text-sm" @click="bookSelectModal.show = false">取消</button></div>
-                        <div class="ios-list-content p-0 bg-white">
-                            <div v-if="books.length === 0" class="p-8 text-center text-gray-400 text-sm">书架空空如也，请先去书架导入小说</div>
-                            <div v-for="book in sortedBooks" :key="book.id" @click="startReading(book.id)" class="p-4 border-b border-gray-50 flex items-center gap-3 cursor-pointer active:bg-gray-50">
-                                <div class="w-10 h-14 bg-gray-100 rounded overflow-hidden shrink-0"><img v-if="book.cover" :src="book.cover" class="w-full h-full object-cover"><div v-else class="w-full h-full bg-[#f4ecd8] border border-[#e6d8b8]"></div></div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="font-bold text-sm text-gray-900 truncate">{{ book.title }}</div>
-                                    <div class="text-xs text-gray-500 mt-1 truncate">{{ book.author }}</div>
-                                </div>
-                            </div>
+                <div v-if="bookSelectModal.show" class="fixed inset-0 z-[70000] bg-gray-50 flex flex-col">
+                    <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-100 sticky top-0 z-10">
+                        <button @click="bookSelectModal.show = false" class="text-gray-500 font-medium text-sm">取消</button>
+                        <h1 class="text-[17px] font-bold">选择要一起读的书</h1>
+                        <div class="w-8"></div>
+                    </header>
+                    <div class="flex-1 overflow-y-auto p-4">
+                        <div v-if="bookshelf.length === 0" class="text-center text-gray-400 mt-10 text-xs">书架为空，请先去发现页导入小说</div>
+                        <div v-for="book in sortedBookshelf" :key="book.id" @click="startTogetherRead(book)" class="bg-white p-3 rounded-xl mb-3 flex items-center gap-3 shadow-sm active:bg-gray-50 cursor-pointer">
+                            <div class="w-12 h-16 bg-gray-100 rounded overflow-hidden shrink-0"><img v-if="book.cover" :src="book.cover" class="w-full h-full object-cover"><div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs"><i class="fas fa-book"></i></div></div>
+                            <div class="flex-1 min-w-0"><div class="font-bold text-sm truncate">{{ book.title }}</div><div class="text-xs text-gray-400 truncate">{{ book.author }}</div></div>
+                            <button class="bg-[#07c160] text-white px-3 py-1.5 rounded-md text-xs font-bold shrink-0">开始</button>
                         </div>
                     </div>
                 </div>
@@ -2777,7 +2751,16 @@
                             <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
                         </div>
                     </div>
-                    
+                    <!-- 日记入口 -->
+                    <div @click="wechatState.activeNav = 'diary'" class="flex items-center p-4 active:bg-gray-50 cursor-pointer justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="text-base font-medium text-black">日记</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span v-if="diaries.length > 0" class="text-xs text-gray-400">new</span>
+                            <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                        </div>
+                    </div>
                     <!-- 书架入口 -->
                     <div @click="wechatState.activeNav = 'bookshelf'" class="flex items-center p-4 active:bg-gray-50 cursor-pointer justify-between">
                         <div class="flex items-center gap-3">
@@ -2786,7 +2769,8 @@
                         <div class="flex items-center gap-2">
                             <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
                         </div>
-                    </div>                    
+                    </div>
+                </div>
                 
                 <div class="mt-4 bg-white divide-y divide-gray-100">
                     <!-- Removed Scan/Search Items as requested -->
@@ -3129,6 +3113,13 @@ createApp({
             addMusicModal: { show: false, mode: 'add', id: null, title: '', artist: '', url: '', lyricType: 'file', lrcText: '', lrcFile: null, cover: '' },
             currentAudioObj: null,
             tempEditingSong: null, 
+            
+            // 一起读 (Bookshelf) 系统
+            bookshelf:[], 
+            bookshelfState: { isMulti: false, selectedIds:[] },
+            bookEditModal: { show: false, id: '', title: '', author: '', cover: '' },
+            bookSelectModal: { show: false },
+            readingState: { show: false, bookId: null, isMinimized: true, fontSize: 16, mode: 'scroll', currentSnippet: '' },
 
             // Moments
             moments: [],
@@ -3138,21 +3129,6 @@ createApp({
             mentionModal: { show: false, selectedIds: [] },
             visibilityModal: { show: false },
             visibilityTargetModal: { show: false, mode: '', selectedGroupIds: [], selectedFriendIds: [] },
-            
-            // 一起读 (Bookshelf) 系统
-            books:[], 
-            bookshelfState: { isMultiSelect: false, selectedIds:[] },
-            editBookModal: { show: false, id: null, title: '', author: '', cover: '' },
-            bookSelectModal: { show: false },
-            readingState: { 
-                isActive: false, 
-                isMinimized: true, 
-                currentBookId: null, 
-                pageIndex: 0, 
-                pageSize: 600, 
-                fontSize: 16, 
-                readMode: 'scroll' // 'scroll' 上下翻页, 'page' 左右翻页
-            },
             
             // Diary Feature (New - Immersive)
             diaries: [],
@@ -3215,15 +3191,14 @@ createApp({
         filteredStickers() {
             if(this.activeStickerGroupId === 'all') return this.stickers;
             return this.stickers.filter(s => s.groupId === this.activeStickerGroupId);
-        }
-        sortedBooks() {
-            if (!this.books) return[];
-            return [...this.books].sort((a, b) => {
-                if (a.isFavorite === b.isFavorite) return 0;
-                return a.isFavorite ? -1 : 1;
-            });
         },
-    
+    },
+        // --- 新增：书架排序（收藏的放最前） ---
+        sortedBookshelf() {
+            let arr = [...(this.bookshelf || [])];
+            arr.sort((a,b) => (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0));
+            return arr;
+        },
     mounted() { 
         this.initDevice();
         this.loadData();
@@ -3298,146 +3273,7 @@ createApp({
             const prevMsg = this.wechatState.activeSession.messages[index - 1];
             // If time diff > 5 mins (300000ms), show timestamp
             return (msg.time - prevMsg.time) > 300000;
-            // === 书架与一起读核心逻辑 ===
-        handleBookImport(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async (ev) => {
-                try {
-                    const content = ev.target.result;
-                    // 自动提取书名和作者（根据常见小说 txt 命名如 "书名 作者.txt"）
-                    let rawName = file.name.replace('.txt', '');
-                    let title = rawName;
-                    let author = '未知作者';
-                    if (rawName.includes(' ')) {
-                        const parts = rawName.split(' ');
-                        title = parts[0]; author = parts[1];
-                    } else if (rawName.includes('作者：')) {
-                        const parts = rawName.split('作者：');
-                        title = parts[0].trim(); author = parts[1].trim();
-                    }
-
-                    this.books.push({
-                        id: 'book_' + Date.now(),
-                        title: title,
-                        author: author,
-                        cover: '',
-                        content: content,
-                        isFavorite: false
-                    });
-                    this.saveData();
-                    this.showToast('小说导入成功');
-                } catch(err) {
-                    this.showToast('读取文件失败');
-                }
-            };
-            reader.readAsText(file, 'utf-8'); // 读取txt文本
-            e.target.value = '';
         },
-        
-        handleBookClick(book) {
-            if (this.bookshelfState.isMultiSelect) {
-                const idx = this.bookshelfState.selectedIds.indexOf(book.id);
-                if (idx > -1) this.bookshelfState.selectedIds.splice(idx, 1);
-                else this.bookshelfState.selectedIds.push(book.id);
-            } else {
-                // 点击书本打开编辑
-                this.editBookModal = {
-                    show: true,
-                    id: book.id,
-                    title: book.title,
-                    author: book.author,
-                    cover: book.cover
-                };
-            }
-        },
-        
-        saveBookEdit() {
-            const idx = this.books.findIndex(b => b.id === this.editBookModal.id);
-            if (idx > -1) {
-                this.books[idx].title = this.editBookModal.title;
-                this.books[idx].author = this.editBookModal.author;
-                this.books[idx].cover = this.editBookModal.cover;
-                this.saveData();
-                this.showToast('修改已保存');
-            }
-            this.editBookModal.show = false;
-        },
-        
-        deleteSelectedBooks() {
-            if(this.bookshelfState.selectedIds.length === 0) return;
-            this.showConfirm('确定删除选中的小说吗？', () => {
-                this.books = this.books.filter(b => !this.bookshelfState.selectedIds.includes(b.id));
-                if(this.bookshelfState.selectedIds.includes(this.readingState.currentBookId)) {
-                    this.readingState.isActive = false;
-                }
-                this.bookshelfState.selectedIds =[];
-                this.bookshelfState.isMultiSelect = false;
-                this.saveData();
-            });
-        },
-        
-        favoriteSelectedBooks() {
-            if(this.bookshelfState.selectedIds.length === 0) return;
-            this.books.forEach(b => {
-                if (this.bookshelfState.selectedIds.includes(b.id)) {
-                    b.isFavorite = !b.isFavorite; // 收藏/取消收藏反转
-                }
-            });
-            this.bookshelfState.selectedIds =[];
-            this.bookshelfState.isMultiSelect = false;
-            this.saveData();
-        },
-        
-        startReading(bookId) {
-            this.readingState.currentBookId = bookId;
-            this.readingState.isActive = true;
-            this.readingState.isMinimized = false; // 默认全屏打开
-            this.bookSelectModal.show = false;
-            this.saveData();
-        },
-        
-        getActiveBook() {
-            return this.books.find(b => b.id === this.readingState.currentBookId);
-        },
-        
-        getCurrentBookContent() {
-            const book = this.getActiveBook();
-            if (!book) return '';
-            if (this.readingState.readMode === 'scroll') {
-                return book.content; // 滑动模式显示全部
-            } else {
-                // 翻页模式，截取内容片段 (约600字一页)
-                const start = this.readingState.pageIndex * this.readingState.pageSize;
-                const end = start + this.readingState.pageSize;
-                return book.content.substring(start, end);
-            }
-        },
-        
-        turnBookPage(e) {
-            const book = this.getActiveBook();
-            if (!book) return;
-            const clickX = e.clientX;
-            const screenWidth = window.innerWidth;
-            const maxPage = Math.ceil(book.content.length / this.readingState.pageSize) - 1;
-            
-            if (clickX < screenWidth * 0.3) {
-                // 点击左侧30%区域，上一页
-                if (this.readingState.pageIndex > 0) this.readingState.pageIndex--;
-                else this.showToast('已经是第一页了');
-            } else {
-                // 点击右侧，下一页
-                if (this.readingState.pageIndex < maxPage) this.readingState.pageIndex++;
-                else this.showToast('已经是最后一页了');
-            }
-            this.saveData();
-        },
-        
-        changeBookFontSize(delta) {
-            this.readingState.fontSize = Math.max(12, Math.min(30, this.readingState.fontSize + delta));
-            this.saveData();
-        },       
 
         // --- Location Feature ---
         openLocationModal() {
@@ -4549,21 +4385,20 @@ createApp({
                 }
             }
             
-            // 一起读 (Novel Reading) 剧情感应
-            let novelContext = "";
-            if (this.readingState.isActive && this.readingState.currentBookId) {
-                const activeBook = this.books.find(b => b.id === this.readingState.currentBookId);
-                if (activeBook) {
-                    const currentPlot = this.getCurrentBookContent().substring(0, 300); // 截取当前页剧情片段防止超出限制
-                    novelContext = `\n[一起读模式]: 注意！你和用户当前正在一起阅读小说《${activeBook.title}》(作者: ${activeBook.author})。你们目前看到的剧情片段是：“${currentPlot}”。请在聊天中主动且自然地和用户探讨这段剧情、人物行为或后续发展，就像两个好朋友在追更一样。`;
-                }
-            }
-            
             // Diary Reading Logic (New)
             let diaryContext = "";
             // 如果用户在过去24小时内写过日记，有30%的概率AI会读到
             if (this.lastUserDiaryTime && (Date.now() - this.lastUserDiaryTime < 24 * 60 * 60 * 1000) && Math.random() < 0.3) {
                 diaryContext = `\n[User's Diary]: The user wrote a diary entry today: "${this.lastUserDiaryContent}". You can react to this, offer comfort, or share your thoughts about it naturally in conversation.`;
+            }
+            
+            // --- 一起读 (Novel Reading) 感知 ---
+            let readContext = "";
+            if (this.readingState && this.readingState.show && this.readingState.bookId) {
+                const book = this.bookshelf.find(b => b.id === this.readingState.bookId);
+                if (book && this.readingState.currentSnippet) {
+                    readContext = `\n[系统提示-一起读模式]: 你们正在一起看小说《${book.title}》(作者:${book.author})。你们当前刚好看到了这段内容：“...${this.readingState.currentSnippet}...”。请根据你的人设，围绕这段小说的剧情、主角行为或你自己的观后感，与我进行自然的讨论。不要大段复述原文！`;
+                }
             }
 
             // --- 新增：提取 AI 和 User 的身高、体重、生日信息 ---
@@ -4596,9 +4431,9 @@ createApp({
             ${momentContext}
             ${timeContext}
             ${musicContext}
-            ${novelContext}
             ${diaryContext}
             ${stickerContext}
+            ${readContext}
             
             IMPORTANT: You must output ONLY a valid JSON object. No Markdown. No other text.
             Structure:
@@ -4966,6 +4801,98 @@ createApp({
             this.showStickerPanel = false;
             this.groupSelectModal.show = false;
             this.activeMomentMenuId = null;
+        },
+        // --- 一起读 (Bookshelf) 逻辑 ---
+        triggerBookImport() { this.$refs.bookImportInput.click(); },
+        handleBookImport(e) {
+            const f = e.target.files[0]; if(!f) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                let text = ev.target.result;
+                let title = f.name.replace('.txt', '');
+                let author = '未知作者';
+                
+                // 智能正则提取作者名 (如 [张三]书名.txt 或 书名 - 张三.txt)
+                const match = title.match(/\[(.*?)\](.*)/);
+                if (match) { author = match[1].trim(); title = match[2].trim(); }
+                else if (title.includes('-')) { const p = title.split('-'); author = p[1].trim(); title = p[0].trim(); }
+
+                if (!this.bookshelf) this.bookshelf =[];
+                this.bookshelf.unshift({ id: Date.now().toString(), title, author, cover: '', content: text, isFavorite: false });
+                this.saveData();
+                this.showToast('小说导入成功');
+            };
+            reader.readAsText(f);
+            e.target.value = '';
+        },
+        toggleBookMulti() { this.bookshelfState.isMulti = !this.bookshelfState.isMulti; this.bookshelfState.selectedIds =[]; },
+        toggleSelectBook(id) {
+            const idx = this.bookshelfState.selectedIds.indexOf(id);
+            if(idx > -1) this.bookshelfState.selectedIds.splice(idx, 1);
+            else this.bookshelfState.selectedIds.push(id);
+        },
+        deleteSelectedBooks() {
+            if(this.bookshelfState.selectedIds.length===0) return;
+            this.showConfirm('删除选中的小说？', () => {
+                this.bookshelf = this.bookshelf.filter(b => !this.bookshelfState.selectedIds.includes(b.id));
+                this.bookshelfState.selectedIds =[];
+                this.bookshelfState.isMulti = false;
+                this.saveData();
+            });
+        },
+        favoriteSelectedBooks() {
+            if(this.bookshelfState.selectedIds.length===0) return;
+            this.bookshelfState.selectedIds.forEach(id => {
+                const b = this.bookshelf.find(x => x.id === id);
+                if(b) b.isFavorite = !b.isFavorite;
+            });
+            this.bookshelfState.selectedIds =[];
+            this.bookshelfState.isMulti = false;
+            this.saveData();
+        },
+        openBookEdit(book) { this.bookEditModal = { show: true, id: book.id, title: book.title, author: book.author, cover: book.cover }; },
+        saveBookEdit() {
+            const b = this.bookshelf.find(x => x.id === this.bookEditModal.id);
+            if(b) { b.title = this.bookEditModal.title; b.author = this.bookEditModal.author; b.cover = this.bookEditModal.cover; }
+            this.saveData();
+            this.bookEditModal.show = false;
+            this.showToast('已保存');
+        },
+        openBookSelectModal() { this.wechatState.showAttachMenu = false; this.bookSelectModal.show = true; },
+        startTogetherRead(book) {
+            this.bookSelectModal.show = false;
+            this.readingState = { show: true, bookId: book.id, isMinimized: true, fontSize: 16, mode: 'scroll', currentSnippet: '' };
+            const session = this.wechatState.activeSession;
+            if(session) {
+                session.messages.push({ type: 'system', content: `你们开始了一起读: 《${book.title}》`, time: Date.now() });
+                this.saveData();
+            }
+            this.$nextTick(this.updateReadingSnippet);
+        },
+        closeTogetherRead() {
+            const b = this.bookshelf.find(x => x.id === this.readingState.bookId);
+            this.readingState.show = false;
+            const session = this.wechatState.activeSession;
+            if(session && b) {
+                session.messages.push({ type: 'system', content: `退出了一起读: 《${b.title}》`, time: Date.now() });
+                this.saveData();
+            }
+        },
+        toggleReadMode() { this.readingState.mode = this.readingState.mode === 'scroll' ? 'flip' : 'scroll'; },
+        getActiveBookTitle() { const b = this.bookshelf.find(x => x.id === this.readingState.bookId); return b ? b.title : ''; },
+        getActiveBookContent() { const b = this.bookshelf.find(x => x.id === this.readingState.bookId); return b ? b.content : ''; },
+        handleReadScroll() {
+            clearTimeout(this.readScrollTimer);
+            this.readScrollTimer = setTimeout(this.updateReadingSnippet, 500);
+        },
+        updateReadingSnippet() {
+            const container = this.$refs.readingContainer;
+            const content = this.getActiveBookContent();
+            if(!container || !content) return;
+            // 获取当前滑动比例并截取当前屏幕的上下文喂给 AI (约 600 个字)
+            let ratio = this.readingState.mode === 'scroll' ? (container.scrollTop / Math.max(1, container.scrollHeight)) : (container.scrollLeft / Math.max(1, container.scrollWidth));
+            const startIdx = Math.floor(ratio * content.length);
+            this.readingState.currentSnippet = content.substring(Math.max(0, startIdx - 100), startIdx + 500);
         },
         openStatusModal() {
             if(!this.wechatState.activeSession) return;
