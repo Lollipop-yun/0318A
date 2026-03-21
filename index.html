@@ -427,7 +427,8 @@
             1. <b>纯本地运行与隐私保护：</b> 本系统采用最严格的纯本地（Local）运行架构。您输入的账号、密码、配置信息及聊天数据均加密存储于您本机的浏览器缓存中。本系统<b>没有任何云端数据库或后端服务器</b>，绝对不存在“窥屏”、上传或收集用户隐私数据的可能。<br><br>
             2. <b>第三方接口声明：</b> 您的 API Key 仅用于直接与您配置的大模型服务商（如 OpenAI、MiniMax 等）建立点对点通信，请妥善保管。<br><br>
             3. <b>免责条款：</b> 本产品仅供 UI 交互展示与娱乐模拟使用。使用者在应用内进行的一切模拟操作、AI 生成内容及由此产生的衍生行为，由使用者本人自行承担全部责任。使用者做出的任何行为均与本代码原作者（小红书：@檩因冬信）无关。<br><br>
-            4. <b>合规使用：</b> 严禁将本产品用于任何非法、诈骗或造谣用途，一经发现，由使用者独立承担全部法律后果。
+            4. <b>合规使用：</b> 严禁将本产品用于任何非法、诈骗或造谣用途，一经发现，由使用者独立承担全部法律后果。<br><br>
+            5. <b>角色导入规范：</b> 严禁导入未经授权的第三方角色卡（如酒馆等平台的他人创作）。仅允许导入使用者本人原创，或已获得原作者明确授权的角色设定，请尊重原创版权。
         </div>
         <button id="modal-agree-btn" class="modal-btn" disabled>请认真阅读 (5s)</button>
     </div>
@@ -4936,6 +4937,14 @@ createApp({
                 }
             }
             if (localStorage.getItem('onyunx_is_activated') === 'true') { this.isActivated = true; }
+
+            // --- 新增：强制重置 UI 状态，确保每次刷新都在主屏幕 ---
+            this.isAppOpen = false;       // 关闭所有 App，退回主屏幕
+            this.currentApp = null;       // 清空当前 App 标记
+            this.wechatState.activeNav = 'chat'; // 如果下次点进微信，默认显示聊天列表页
+            this.wechatState.activeSession = null; // 退出聊天室
+            this.closeAllMenus();         // 清理可能残留的下拉菜单和弹窗
+            // ---------------------------------------------------
         },
         showToast(m) { this.toast.message=m; this.toast.show=true; setTimeout(()=>{this.toast.show=false},2000); },
         showInput(t,v,p,cb, inputType = 'text', extraBtn = null) { 
