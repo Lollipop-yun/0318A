@@ -1,97 +1,114 @@
-// activation.js - 账号与激活码验证系统
+// activation.js - 账号与激活码管理逻辑
 
-document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('act-btn');
-    const agreeCheck = document.getElementById('act-agree-check');
-    const agreeLink = document.getElementById('act-disclaimer-link');
-    const modal = document.getElementById('disclaimer-modal');
-    const modalBtn = document.getElementById('disclaimer-agree-btn');
-
-    // 初始化本地模拟数据库
-    if(!localStorage.getItem('aovein_valid_codes')) localStorage.setItem('aovein_valid_codes', JSON.stringify([]));
-    if(!localStorage.getItem('aovein_revoked_codes')) localStorage.setItem('aovein_revoked_codes', JSON.stringify([]));
-    if(!localStorage.getItem('aovein_users')) localStorage.setItem('aovein_users', JSON.stringify({}));
-
-    // 免责声明弹窗逻辑
-    let timer = null;
-    agreeLink.addEventListener('click', () => {
-        modal.style.display = 'flex';
-        modalBtn.disabled = true;
-        let timeLeft = 5;
-        modalBtn.innerText = `我已阅读并同意 (${timeLeft}s)`;
-        
-        timer = setInterval(() => {
-            timeLeft--;
-            if(timeLeft > 0) {
-                modalBtn.innerText = `我已阅读并同意 (${timeLeft}s)`;
-            } else {
-                clearInterval(timer);
-                modalBtn.disabled = false;
-                modalBtn.innerText = `我已阅读并同意`;
-            }
-        }, 1000);
-    });
-
-    modalBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-        agreeCheck.checked = true;
-    });
-
-    // 登录与激活逻辑
-    btn.addEventListener('click', () => {
-        if(!agreeCheck.checked) return alert('请先阅读并勾选免责声明！');
-
-        const user = document.getElementById('act-user').value.trim();
-        const pass = document.getElementById('act-pass').value.trim();
-        const code = document.getElementById('act-code').value.trim();
-
-        if(!user || !pass) return alert('请输入账号和密码！');
-
-        // 获取数据库
-        const validCodes = JSON.parse(localStorage.getItem('aovein_valid_codes'));
-        const revokedCodes = JSON.parse(localStorage.getItem('aovein_revoked_codes'));
-        const usersDB = JSON.parse(localStorage.getItem('aovein_users'));
-
-        // 1. 如果是老账号登录
-        if (usersDB[user]) {
-            if (usersDB[user].password !== pass) return alert('密码错误！');
-            
-            const boundCode = usersDB[user].code;
-            if (revokedCodes.includes(boundCode)) {
-                return alert('登录失败：该账号绑定的激活码已被注销！');
-            }
-            
-            // 登录成功
-            successLogin();
-            return;
-        }
-
-        // 2. 如果是新账号注册绑定
-        if(!code) return alert('新账号首次登录，请输入激活码进行绑定！');
-        
-        if(!validCodes.includes(code)) return alert('激活码无效，请联系原作者获取！');
-        if(revokedCodes.includes(code)) return alert('该激活码已被注销，无法使用！');
-
-        // 检查激活码是否被别人绑定过
-        for(let u in usersDB) {
-            if(usersDB[u].code === code) return alert('该激活码已被其他账号绑定！');
-        }
-
-        // 绑定成功
-        usersDB[user] = { password: pass, code: code };
-        localStorage.setItem('aovein_users', JSON.stringify(usersDB));
-        alert('激活并绑定成功！此后仅凭账号密码即可登入。');
-        successLogin();
-    });
-
-    function successLogin() {
-        // 通知主 Vue 应用
-        localStorage.setItem('onyunx_is_activated', 'true');
-        document.getElementById('activation-screen').style.opacity = '0';
-        setTimeout(() => {
-            document.getElementById('activation-screen').style.display = 'none';
-            document.getElementById('app').style.display = 'flex';
-            if (window.vueApp) window.vueApp.isActivated = true;
-        }, 500);
+// ====== 模拟云端数据库 (实际跨设备应用需替换为 Fetch 请求后端) ======
+function getCloudDB() {
+    let db = localStorage.getItem('Aovein_CloudDB');
+    if (!db) {
+        db = { validCodes: [], revokedCodes:[], users: {} };
+        localStorage.setItem('Aovein_CloudDB', JSON.stringify(db));
+    } else {
+        db = JSON.parse(db);
     }
-});
+    return db;
+}
+function saveCloudDB(db) { localStorage.setItem('Aovein_CloudDB', JSON.stringify(db)); }
+
+// 检查本地登录态
+window.isUserLoggedIn = function() {
+    return localStorage.getItem('aovein_logged_in_user') !== null;
+};
+
+// UI 交互
+let countdownTimer = null;
+let secondsLeft = 5;
+
+function openDisclaimer() {
+    document.getElementById('disclaimer-modal').classList.remove('hidden-screen');
+    const btn = document.getElementById('disclaimer-agree-btn');
+    secondsLeft = 5;
+    btn.classList.add('disabled');
+    btn.innerText = `请认真阅读 (${secondsLeft}s)`;
+    
+    clearInterval(countdownTimer);
+    countdownTimer = setInterval(() => {
+        secondsLeft--;
+        if (secondsLeft <= 0) {
+            clearInterval(countdownTimer);
+            btn.classList.remove('disabled');
+            btn.innerText = "我已认真阅读并同意";
+        } else {
+            btn.innerText = `请认真阅读 (${secondsLeft}s)`;
+        }
+    }, 1000);
+}
+
+function acceptDisclaimer() {
+    if (secondsLeft > 0) return;
+    document.getElementById('disclaimer-modal').classList.add('hidden-screen');
+    document.getElementById('act-agree').checked = true;
+    checkAgree();
+}
+
+function checkAgree() {
+    const btn = document.getElementById('act-btn');
+    if (document.getElementById('act-agree').checked) {
+        btn.classList.remove('disabled');
+    } else {
+        btn.classList.add('disabled');
+    }
+}
+
+function showError(msg) {
+    const err = document.getElementById('act-error');
+    err.innerText = msg;
+    setTimeout(() => { err.innerText = ''; }, 3000);
+}
+
+// 核心登录/激活逻辑
+window.attemptLogin = function() {
+    if (!document.getElementById('act-agree').checked) return;
+    
+    const user = document.getElementById('act-username').value.trim();
+    const pass = document.getElementById('act-password').value.trim();
+    const code = document.getElementById('act-code').value.trim().toUpperCase();
+
+    if (!user || !pass) return showError('账号和密码不能为空');
+
+    const db = getCloudDB();
+    
+    // 1. 如果账号已存在 (老用户登录)
+    if (db.users[user]) {
+        if (db.users[user].password !== pass) {
+            return showError('密码错误');
+        }
+        // 检查该账号绑定的激活码是否已被管理员注销
+        const boundCode = db.users[user].code;
+        if (db.revokedCodes.includes(boundCode)) {
+            return showError('登录失败：该账号绑定的激活码已被注销！');
+        }
+        // 登录成功
+        localStorage.setItem('aovein_logged_in_user', user);
+        if(window.unlockApp) window.unlockApp();
+        return;
+    }
+
+    // 2. 账号不存在 (新用户注册绑定)
+    if (!code) return showError('新用户绑定设备请输入激活码');
+    
+    if (db.revokedCodes.includes(code)) return showError('该激活码已被注销作废');
+    if (!db.validCodes.includes(code)) return showError('无效的激活码');
+    
+    // 检查激活码是否已经被别的账号绑定
+    let isBound = false;
+    for (let k in db.users) {
+        if (db.users[k].code === code) isBound = true;
+    }
+    if (isBound) return showError('该激活码已被其他账号绑定');
+
+    // 绑定成功
+    db.users[user] = { password: pass, code: code };
+    saveCloudDB(db);
+    
+    localStorage.setItem('aovein_logged_in_user', user);
+    if(window.unlockApp) window.unlockApp();
+};
