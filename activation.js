@@ -57,7 +57,7 @@ function switchAuthTab(mode) {
 function handleAuthSubmit() {
     const user = document.getElementById('auth-username').value.trim();
     const pass = document.getElementById('auth-password').value.trim();
-    const code = document.getElementById('auth-code').value.trim();
+    const code = document.getElementById('auth-code').value.trim().toUpperCase();
     const agree = document.getElementById('agree-checkbox').checked;
     const errorDom = document.getElementById('auth-error');
 
