@@ -1,38 +1,37 @@
-/* activation.css */
+/* activation.css - 激活界面专属样式 */
 #activation-screen {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: #ffffff; z-index: 999990;
-    display: flex; justify-content: center; align-items: flex-start;
-    padding-top: 10vh; transition: opacity 0.4s;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+    position: fixed; inset: 0; background-color: #ffffff; z-index: 999990;
+    display: flex; flex-direction: column; align-items: center; padding-top: 100px;
+    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.6s;
 }
-.auth-container {
-    width: 85%; max-width: 360px; display: flex; flex-direction: column;
-}
-.auth-header { text-align: center; margin-bottom: 30px; }
-.auth-logo { font-size: 28px; font-weight: 800; letter-spacing: 1px; color: #000; }
-.auth-sub { font-size: 13px; color: #888; margin-top: 4px; letter-spacing: 2px; text-transform: uppercase; }
-.auth-tabs { display: flex; border-bottom: 1px solid #eee; margin-bottom: 25px; }
-.auth-tab { flex: 1; text-align: center; padding: 10px 0; font-size: 15px; color: #999; cursor: pointer; transition: all 0.2s; position: relative; }
-.auth-tab.active { color: #000; font-weight: bold; }
-.auth-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 20%; width: 60%; height: 2px; background: #000; border-radius: 2px; }
-.auth-form { display: flex; flex-direction: column; gap: 15px; }
-.auth-input { width: 100%; padding: 16px; font-size: 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 12px; outline: none; transition: all 0.2s; box-sizing: border-box; }
-.auth-input:focus { border-color: #000; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-.disclaimer-check { display: flex; items-center; font-size: 12px; color: #666; margin-top: 5px; }
-.disclaimer-check input { margin-right: 8px; transform: scale(1.1); accent-color: #000; }
-.disclaimer-link { color: #000; font-weight: bold; cursor: pointer; text-decoration: underline; }
-.auth-btn { width: 100%; background: #000; color: #fff; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; margin-top: 10px; transition: transform 0.1s; }
-.auth-btn:active { transform: scale(0.96); }
-.auth-error-msg { color: #ff4d4f; font-size: 13px; text-align: center; min-height: 18px; margin-top: -5px; }
-.auth-footer { text-align: center; font-size: 11px; color: #aaa; margin-top: 40px; }
+.act-header { text-align: center; margin-bottom: 40px; }
+.act-logo { font-size: 28px; font-weight: bold; letter-spacing: 1px; color: #000; }
+.act-sub { font-size: 13px; color: #888; margin-top: 5px; }
 
-/* 弹窗样式 */
-.disclaimer-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 999999; }
-.disclaimer-content { width: 85%; max-width: 400px; background: #fff; border-radius: 20px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-.disclaimer-content h3 { margin: 0 0 15px 0; text-align: center; font-size: 18px; }
-.disclaimer-text { max-height: 50vh; overflow-y: auto; font-size: 13px; color: #444; line-height: 1.6; padding-right: 10px; }
-.disclaimer-text p { margin-bottom: 12px; }
-.disclaimer-close-btn { width: 100%; background: #f2f2f2; color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: bold; margin-top: 20px; cursor: pointer; }
-@keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.hidden-screen { display: none !important; }
+.act-form { width: 80%; max-width: 320px; display: flex; flex-direction: column; gap: 15px; }
+.act-input { width: 100%; padding: 16px; font-size: 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 12px; outline: none; transition: 0.3s; color: #333; }
+.act-input:focus { border-color: #000; background: #fff; }
+
+.act-agreement { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #666; margin-top: 5px; }
+.act-agreement input[type="checkbox"] { width: 16px; height: 16px; accent-color: #000; cursor: pointer; }
+.act-agreement a { color: #576b95; text-decoration: none; cursor: pointer; font-weight: bold; }
+
+.act-btn { margin-top: 10px; background-color: #000; color: white; padding: 16px; border-radius: 30px; font-size: 15px; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; width: 100%; }
+.act-btn:active { transform: scale(0.96); }
+.act-btn:disabled { background-color: #ccc; cursor: not-allowed; transform: none; }
+
+.act-footer { position: absolute; bottom: 40px; text-align: center; color: #aaa; font-size: 11px; line-height: 1.8; width: 100%; }
+
+/* 免责声明弹窗 */
+#disclaimer-modal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999999;
+    display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
+}
+.disclaimer-box {
+    background: #fff; width: 85%; max-width: 340px; border-radius: 20px; padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column;
+}
+.disclaimer-box h3 { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 15px; }
+.disclaimer-content { font-size: 13px; color: #555; line-height: 1.6; max-height: 40vh; overflow-y: auto; margin-bottom: 20px; text-align: justify; }
+.disclaimer-btn { background: #000; color: #fff; padding: 14px; border-radius: 12px; text-align: center; font-size: 14px; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
+.disclaimer-btn:disabled { background: #e5e5e5; color: #999; cursor: not-allowed; }
