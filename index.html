@@ -1199,7 +1199,8 @@
 
     <!-- 世界书添加/编辑文件 Modal -->
     <transition name="scale"><div v-if="worldModal.show" class="fixed inset-0 z-[55000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl p-6 space-y-4"><h3 class="text-lg font-bold text-center text-gray-900">{{ worldModal.id ? '编辑文件' : (worldModal.type === 'folder' ? '新建文件夹' : '新建文件') }}</h3><input v-model="worldModal.name" placeholder="请输入名称" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none"><div v-if="worldModal.type === 'file'" class="space-y-4"><div class="space-y-1"><label class="text-xs text-gray-500 ml-1">归类文件夹</label><div @click="folderSelectModal.show = true" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 flex justify-between items-center cursor-pointer text-gray-700"><span :class="worldModal.parentId ? 'text-black' : 'text-gray-400'">{{ getFolderName(worldModal.parentId) }}</span><i class="fas fa-chevron-right text-xs text-gray-300"></i></div></div><textarea v-model="worldModal.content" placeholder="输入文件内容..." class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none h-32 resize-none"></textarea></div><div class="flex gap-3 pt-2"><button @click="worldModal.show = false" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold text-sm">取消</button><button @click="saveWorldItem" class="flex-1 bg-black text-white py-3 rounded-xl font-bold text-sm">保存</button></div></div></div></transition>
-    <transition name="scale"><div v-if="addContactModal.show" class="fixed inset-0 z-[55000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[90%] max-h-[85vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col animate-scale-in"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10"><button @click="addContactModal.show = false" class="text-gray-500 font-medium text-sm">取消</button><h3 class="font-bold text-lg text-gray-900">{{ newContact.id ? '编辑朋友' : '添加朋友' }}</h3><button @click="saveNewContact" class="text-black font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg">完成</button></div><div class="flex-1 overflow-y-auto p-6 space-y-5"><div class="flex flex-col items-center gap-2"><div class="w-24 h-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative cursor-pointer active:opacity-70 transition" @click="triggerAddContactAvatar"><img v-if="newContact.avatar" :src="newContact.avatar" class="w-full h-full object-cover"><div v-else class="flex flex-col items-center text-gray-400"><i class="fas fa-camera text-2xl mb-1"></i><span class="text-[10px]">上传头像</span></div></div></div><div class="space-y-4"><div><label class="text-xs text-gray-500 ml-1 mb-1 block">姓名</label><input v-model="newContact.name" placeholder="输入姓名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">备注</label><input v-model="newContact.remark" placeholder="输入备注名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><div class="flex justify-between items-center ml-1 mb-1"><label class="text-xs text-gray-500 block">网名 (ID)</label><button @click="autoFillProfile('username')" class="text-[10px] text-purple-500 font-bold active:scale-95"><i class="fas fa-magic"></i> AI填充</button></div><input v-model="newContact.username" placeholder="输入网名/微信号" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">性别</label><div class="flex gap-3"><div @click="newContact.gender = '男'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="newContact.gender==='男'?'bg-blue-50 border-blue-200 text-blue-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-mars"></i> 男</div><div @click="newContact.gender = '女'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="newContact.gender==='女'?'bg-pink-50 border-pink-200 text-pink-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-venus"></i> 女</div></div></div><div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">身高(cm)</label><input v-model="newContact.height" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">体重(kg)</label><input v-model="newContact.weight" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">生日</label><input v-model="newContact.birthday" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">拍一拍</label><input v-model="newContact.nudge" placeholder="拍一拍后缀" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><div class="flex justify-between items-center ml-1 mb-1"><label class="text-xs text-gray-500 block">个性签名</label><button @click="autoFillProfile('signature')" class="text-[10px] text-purple-500 font-bold active:scale-95"><i class="fas fa-magic"></i> AI填充</button></div><input v-model="newContact.signature" placeholder="输入个性签名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">背景资料</label><textarea v-model="newContact.bio" placeholder="输入人设、背景故事..." class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none h-24 resize-none"></textarea></div></div></div><input type="file" ref="addContactAvatarInput" accept="image/*" class="hidden" @change="handleAddContactAvatar"></div></div></transition>
+    <transition name="scale"><div v-if="addContactModal.show" class="fixed inset-0 z-[55000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[90%] max-h-[85vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col animate-scale-in"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10"><button @click="addContactModal.show = false" class="text-gray-500 font-medium text-sm">取消</button><h3 class="font-bold text-lg text-gray-900">{{ newContact.id ? '编辑朋友' : '添加朋友' }}</h3><button @click="saveNewContact" class="text-black font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg">完成</button></div><div class="flex-1 overflow-y-auto p-6 space-y-5"><div class="flex flex-col items-center gap-2"><div class="w-24 h-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative cursor-pointer active:opacity-70 transition" @click="triggerAddContactAvatar"><img v-if="newContact.avatar" :src="newContact.avatar" class="w-full h-full object-cover"><div v-else class="flex flex-col items-center text-gray-400"><i class="fas fa-camera text-2xl mb-1"></i><span class="text-[10px]">上传头像</span></div></div></div><div class="space-y-4"><div><label class="text-xs text-gray-500 ml-1 mb-1 block">姓名</label><input v-model="newContact.name" placeholder="输入姓名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">备注</label><input v-model="newContact.remark" placeholder="输入备注名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><div class="flex justify-between items-center ml-1 mb-1"><label class="text-xs text-gray-500 block">网名 (ID)</label><button @click="autoFillProfile('username')" class="text-[10px] text-purple-500 font-bold active:scale-95"><i class="fas fa-magic"></i> AI填充</button></div><input v-model="newContact.username" placeholder="输入网名/微信号" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">性别</label><div class="flex gap-3"><div @click="newContact.gender = '男'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="newContact.gender==='男'?'bg-blue-50 border-blue-200 text-blue-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-mars"></i> 男</div><div @click="newContact.gender = '女'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="newContact.gender==='女'?'bg-pink-50 border-pink-200 text-pink-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-venus"></i> 女</div></div></div><div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">身高(cm)</label><input v-model="newContact.height" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">体重(kg)</label><input v-model="newContact.weight" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div>
+<div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">年龄</label><input v-model="newContact.age" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">生日</label><input v-model="newContact.birthday" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">拍一拍</label><input v-model="newContact.nudge" placeholder="拍一拍后缀" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><div class="flex justify-between items-center ml-1 mb-1"><label class="text-xs text-gray-500 block">个性签名</label><button @click="autoFillProfile('signature')" class="text-[10px] text-purple-500 font-bold active:scale-95"><i class="fas fa-magic"></i> AI填充</button></div><input v-model="newContact.signature" placeholder="输入个性签名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">背景资料</label><textarea v-model="newContact.bio" placeholder="输入人设、背景故事..." class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none h-24 resize-none"></textarea></div></div></div><input type="file" ref="addContactAvatarInput" accept="image/*" class="hidden" @change="handleAddContactAvatar"></div></div></transition>
 
     <!-- 位置填写弹窗 -->
     <transition name="scale">
@@ -1222,7 +1223,7 @@
     </transition>
 
     <!-- 面具编辑/添加弹窗 -->
-    <transition name="scale"><div v-if="maskModal.show" class="fixed inset-0 z-[60000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[90%] max-h-[85vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col animate-scale-in"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10"><button @click="maskModal.show = false" class="text-gray-500 font-medium text-sm">取消</button><h3 class="font-bold text-lg text-gray-900">{{ maskForm.id ? '编辑面具' : '添加面具' }}</h3><button @click="saveMask" class="text-black font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg">保存</button></div><div class="flex-1 overflow-y-auto p-6 space-y-5"><div class="flex flex-col items-center gap-2"><div class="w-24 h-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative cursor-pointer active:opacity-70 transition" @click="triggerMaskAvatar"><img v-if="maskForm.avatar" :src="maskForm.avatar" class="w-full h-full object-cover"><div v-else class="flex flex-col items-center text-gray-400"><i class="fas fa-camera text-2xl mb-1"></i><span class="text-[10px]">上传头像</span></div></div></div><div class="space-y-4"><div><label class="text-xs text-gray-500 ml-1 mb-1 block">名字</label><input v-model="maskForm.name" placeholder="输入名字" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">网名 (ID)</label><input v-model="maskForm.username" placeholder="输入网名/微信号" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">性别</label><div class="flex gap-3"><div @click="maskForm.gender = '男'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="maskForm.gender==='男'?'bg-blue-50 border-blue-200 text-blue-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-mars"></i> 男</div><div @click="maskForm.gender = '女'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="maskForm.gender==='女'?'bg-pink-50 border-pink-200 text-pink-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-venus"></i> 女</div></div></div><div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">身高(cm)</label><input v-model="maskForm.height" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">体重(kg)</label><input v-model="maskForm.weight" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">生日</label><input v-model="maskForm.birthday" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">拍一拍</label><input v-model="maskForm.nudge" placeholder="拍一拍后缀" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">个性签名</label><input v-model="maskForm.signature" placeholder="输入个性签名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">背景资料 (Bio)</label><textarea v-model="maskForm.bio" placeholder="输入这个面具的人设背景..." class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none h-24 resize-none"></textarea></div><div v-if="maskForm.id" class="pt-4"><button @click="deleteMask(maskForm.id)" class="w-full py-3 bg-white text-red-500 border border-gray-200 rounded-xl font-bold text-sm">删除此面具</button></div></div></div><input type="file" ref="maskAvatarInput" accept="image/*" class="hidden" @change="handleMaskAvatar"></div></div></transition>
+    <transition name="scale"><div v-if="maskModal.show" class="fixed inset-0 z-[60000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[90%] max-h-[85vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col animate-scale-in"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10"><button @click="maskModal.show = false" class="text-gray-500 font-medium text-sm">取消</button><h3 class="font-bold text-lg text-gray-900">{{ maskForm.id ? '编辑面具' : '添加面具' }}</h3><button @click="saveMask" class="text-black font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg">保存</button></div><div class="flex-1 overflow-y-auto p-6 space-y-5"><div class="flex flex-col items-center gap-2"><div class="w-24 h-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative cursor-pointer active:opacity-70 transition" @click="triggerMaskAvatar"><img v-if="maskForm.avatar" :src="maskForm.avatar" class="w-full h-full object-cover"><div v-else class="flex flex-col items-center text-gray-400"><i class="fas fa-camera text-2xl mb-1"></i><span class="text-[10px]">上传头像</span></div></div></div><div class="space-y-4"><div><label class="text-xs text-gray-500 ml-1 mb-1 block">名字</label><input v-model="maskForm.name" placeholder="输入名字" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">网名 (ID)</label><input v-model="maskForm.username" placeholder="输入网名/微信号" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">性别</label><div class="flex gap-3"><div @click="maskForm.gender = '男'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="maskForm.gender==='男'?'bg-blue-50 border-blue-200 text-blue-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-mars"></i> 男</div><div @click="maskForm.gender = '女'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="maskForm.gender==='女'?'bg-pink-50 border-pink-200 text-pink-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-venus"></i> 女</div></div></div><div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">身高(cm)</label><input v-model="maskForm.height" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">体重(kg)</label><input v-model="maskForm.weight" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div><div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">年龄</label><input v-model="maskForm.age" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">生日</label><input v-model="maskForm.birthday" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">拍一拍</label><input v-model="maskForm.nudge" placeholder="拍一拍后缀" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">个性签名</label><input v-model="maskForm.signature" placeholder="输入个性签名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">背景资料 (Bio)</label><textarea v-model="maskForm.bio" placeholder="输入这个面具的人设背景..." class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none h-24 resize-none"></textarea></div><div v-if="maskForm.id" class="pt-4"><button @click="deleteMask(maskForm.id)" class="w-full py-3 bg-white text-red-500 border border-gray-200 rounded-xl font-bold text-sm">删除此面具</button></div></div></div><input type="file" ref="maskAvatarInput" accept="image/*" class="hidden" @change="handleMaskAvatar"></div></div></transition>
 
     <!-- 一起听音乐界面 (Music Player) -->
     <transition name="app-slide">
@@ -1877,7 +1878,8 @@
 
     <!-- 世界书添加/编辑文件 Modal -->
     <transition name="scale"><div v-if="worldModal.show" class="fixed inset-0 z-[55000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl p-6 space-y-4"><h3 class="text-lg font-bold text-center text-gray-900">{{ worldModal.id ? '编辑文件' : (worldModal.type === 'folder' ? '新建文件夹' : '新建文件') }}</h3><input v-model="worldModal.name" placeholder="请输入名称" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none"><div v-if="worldModal.type === 'file'" class="space-y-4"><div class="space-y-1"><label class="text-xs text-gray-500 ml-1">归类文件夹</label><div @click="folderSelectModal.show = true" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 flex justify-between items-center cursor-pointer text-gray-700"><span :class="worldModal.parentId ? 'text-black' : 'text-gray-400'">{{ getFolderName(worldModal.parentId) }}</span><i class="fas fa-chevron-right text-xs text-gray-300"></i></div></div><textarea v-model="worldModal.content" placeholder="输入文件内容..." class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none h-32 resize-none"></textarea></div><div class="flex gap-3 pt-2"><button @click="worldModal.show = false" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold text-sm">取消</button><button @click="saveWorldItem" class="flex-1 bg-black text-white py-3 rounded-xl font-bold text-sm">保存</button></div></div></div></transition>
-    <transition name="scale"><div v-if="addContactModal.show" class="fixed inset-0 z-[55000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[90%] max-h-[85vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col animate-scale-in"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10"><button @click="addContactModal.show = false" class="text-gray-500 font-medium text-sm">取消</button><h3 class="font-bold text-lg text-gray-900">{{ newContact.id ? '编辑朋友' : '添加朋友' }}</h3><button @click="saveNewContact" class="text-black font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg">完成</button></div><div class="flex-1 overflow-y-auto p-6 space-y-5"><div class="flex flex-col items-center gap-2"><div class="w-24 h-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative cursor-pointer active:opacity-70 transition" @click="triggerAddContactAvatar"><img v-if="newContact.avatar" :src="newContact.avatar" class="w-full h-full object-cover"><div v-else class="flex flex-col items-center text-gray-400"><i class="fas fa-camera text-2xl mb-1"></i><span class="text-[10px]">上传头像</span></div></div></div><div class="space-y-4"><div><label class="text-xs text-gray-500 ml-1 mb-1 block">姓名</label><input v-model="newContact.name" placeholder="输入姓名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">备注</label><input v-model="newContact.remark" placeholder="输入备注名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><div class="flex justify-between items-center ml-1 mb-1"><label class="text-xs text-gray-500 block">网名 (ID)</label><button @click="autoFillProfile('username')" class="text-[10px] text-purple-500 font-bold active:scale-95"><i class="fas fa-magic"></i> AI填充</button></div><input v-model="newContact.username" placeholder="输入网名/微信号" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">性别</label><div class="flex gap-3"><div @click="newContact.gender = '男'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="newContact.gender==='男'?'bg-blue-50 border-blue-200 text-blue-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-mars"></i> 男</div><div @click="newContact.gender = '女'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="newContact.gender==='女'?'bg-pink-50 border-pink-200 text-pink-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-venus"></i> 女</div></div></div><div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">身高(cm)</label><input v-model="newContact.height" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">体重(kg)</label><input v-model="newContact.weight" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">生日</label><input v-model="newContact.birthday" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">拍一拍</label><input v-model="newContact.nudge" placeholder="拍一拍后缀" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><div class="flex justify-between items-center ml-1 mb-1"><label class="text-xs text-gray-500 block">个性签名</label><button @click="autoFillProfile('signature')" class="text-[10px] text-purple-500 font-bold active:scale-95"><i class="fas fa-magic"></i> AI填充</button></div><input v-model="newContact.signature" placeholder="输入个性签名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">背景资料</label><textarea v-model="newContact.bio" placeholder="输入人设、背景故事..." class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none h-24 resize-none"></textarea></div></div></div><input type="file" ref="addContactAvatarInput" accept="image/*" class="hidden" @change="handleAddContactAvatar"></div></div></transition>
+    <transition name="scale"><div v-if="addContactModal.show" class="fixed inset-0 z-[55000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[90%] max-h-[85vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col animate-scale-in"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10"><button @click="addContactModal.show = false" class="text-gray-500 font-medium text-sm">取消</button><h3 class="font-bold text-lg text-gray-900">{{ newContact.id ? '编辑朋友' : '添加朋友' }}</h3><button @click="saveNewContact" class="text-black font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg">完成</button></div><div class="flex-1 overflow-y-auto p-6 space-y-5"><div class="flex flex-col items-center gap-2"><div class="w-24 h-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative cursor-pointer active:opacity-70 transition" @click="triggerAddContactAvatar"><img v-if="newContact.avatar" :src="newContact.avatar" class="w-full h-full object-cover"><div v-else class="flex flex-col items-center text-gray-400"><i class="fas fa-camera text-2xl mb-1"></i><span class="text-[10px]">上传头像</span></div></div></div><div class="space-y-4"><div><label class="text-xs text-gray-500 ml-1 mb-1 block">姓名</label><input v-model="newContact.name" placeholder="输入姓名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">备注</label><input v-model="newContact.remark" placeholder="输入备注名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><div class="flex justify-between items-center ml-1 mb-1"><label class="text-xs text-gray-500 block">网名 (ID)</label><button @click="autoFillProfile('username')" class="text-[10px] text-purple-500 font-bold active:scale-95"><i class="fas fa-magic"></i> AI填充</button></div><input v-model="newContact.username" placeholder="输入网名/微信号" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">性别</label><div class="flex gap-3"><div @click="newContact.gender = '男'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="newContact.gender==='男'?'bg-blue-50 border-blue-200 text-blue-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-mars"></i> 男</div><div @click="newContact.gender = '女'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="newContact.gender==='女'?'bg-pink-50 border-pink-200 text-pink-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-venus"></i> 女</div></div></div><div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">身高(cm)</label><input v-model="newContact.height" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">体重(kg)</label><input v-model="newContact.weight" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div>
+<div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">年龄</label><input v-model="newContact.age" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">生日</label><input v-model="newContact.birthday" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">拍一拍</label><input v-model="newContact.nudge" placeholder="拍一拍后缀" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><div class="flex justify-between items-center ml-1 mb-1"><label class="text-xs text-gray-500 block">个性签名</label><button @click="autoFillProfile('signature')" class="text-[10px] text-purple-500 font-bold active:scale-95"><i class="fas fa-magic"></i> AI填充</button></div><input v-model="newContact.signature" placeholder="输入个性签名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">背景资料</label><textarea v-model="newContact.bio" placeholder="输入人设、背景故事..." class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none h-24 resize-none"></textarea></div></div></div><input type="file" ref="addContactAvatarInput" accept="image/*" class="hidden" @change="handleAddContactAvatar"></div></div></transition>
 
     <!-- 状态栏 -->
     <transition name="fade">
@@ -2304,7 +2306,7 @@
                             </div>
                             <div class="flex flex-col max-w-[70%]" :class="msg.isSelf ? 'items-end' : 'items-start'">
                                 <!-- 语音气泡：动态宽度 -->
-                                <div class="chat-bubble" :class="[msg.isSelf ? 'chat-bubble-user' : 'chat-bubble-ai', msg.type === 'voice' ? 'chat-bubble-voice' : '', msg.type === 'image' || msg.type === 'fake_image' ? 'chat-bubble-image' : '', msg.type === 'red_packet' || msg.type === 'transfer' ? 'chat-bubble-finance' : '', msg.type === 'transfer' ? 'chat-bubble-transfer' : '', msg.type === 'red_packet' ? 'chat-bubble-redpacket' : '', msg.type === 'qinmi_invite' ? 'chat-bubble-qinmi' : '', msg.type === 'moment' ? 'chat-bubble-moment' : '', msg.type === 'location' ? 'chat-bubble-location' : '', msg.isReceived ? 'received' : '']" 
+                                <div class="chat-bubble" :class="[msg.isSelf ? 'chat-bubble-user' : 'chat-bubble-ai', msg.type === 'voice' ? 'chat-bubble-voice' : '', msg.type === 'image' || msg.type === 'fake_image' || msg.type === 'sticker' ? 'chat-bubble-image' : '', msg.type === 'red_packet' || msg.type === 'transfer' ? 'chat-bubble-finance' : '', msg.type === 'transfer' ? 'chat-bubble-transfer' : '', msg.type === 'red_packet' ? 'chat-bubble-redpacket' : '', msg.type === 'qinmi_invite' ? 'chat-bubble-qinmi' : '', msg.type === 'moment' ? 'chat-bubble-moment' : '', msg.type === 'location' ? 'chat-bubble-location' : '', msg.isReceived ? 'received' : '']" 
                                      :style="msg.type === 'voice' ? { width: (60 + Math.min(msg.duration, 60) * 4) + 'px' } : {}"
                                      @click="handleChatBubbleClick(msg)"
                                      @touchstart="longPressStart($event, msg, i)" @touchend="longPressEnd" @contextmenu.prevent="showChatContextMenu($event, msg, i)">
@@ -2320,8 +2322,8 @@
                                         <span class="font-bold text-xs whitespace-nowrap">{{ msg.duration }}"</span>
                                         <div v-if="!msg.isSelf && !msg.isRead" class="w-2 h-2 rounded-full bg-red-500 ml-1"></div>
                                     </div>
-                                    <!-- 图片消息 (Vision Support) -->
-                                    <img v-else-if="msg.type === 'image'" :src="msg.content" class="block">
+                                    <!-- 图片/表情包消息 -->
+                                    <img v-else-if="msg.type === 'image' || msg.type === 'sticker'" :src="msg.content" class="block">
                                     <!-- 灰色图片 (Fake Image - Click to Reveal) -->
                                     <div v-else-if="msg.type === 'fake_image'" class="chat-bubble-fake-image">
                                         <transition name="fade">
@@ -2930,8 +2932,8 @@ createApp({
             expandedGroups: ['all'],
             groupSelectModal: { show: false },
             addContactModal: { show: false }, chatWizard: { show: false, step: 1, type: 'single', selectedContacts: [], selectedMask: null },
-            newContact: { name: '', remark: '', username: '', gender: '男', height: '', weight: '', birthday: '', bio: '', nudge: '', signature: '', avatar: '' },
-            masks:[], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', height: '', weight: '', birthday: '', bio: '', nudge: '', signature: '', avatar: '' },
+            newContact: { name: '', remark: '', username: '', gender: '男', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: '' },
+            masks:[], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: '' },
             masks: [], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', bio: '', nudge: '', signature: '', avatar: '' },
             worldData: [], expandedFolders: [], worldModal: { show: false, type: 'folder', name: '', content: '', parentId: '' }, viewFileModal: { show: false, data: {} },
             worldBinderModal: { show: false },
@@ -4272,17 +4274,26 @@ createApp({
             }
 
             // --- 新增：提取 AI 和 User 的身高、体重、生日信息 ---
+            // --- 提取 AI 和 User 的身体信息与年龄 ---
             let friendExtra = '';
             if (friend) {
-                if(friend.height) friendExtra += ` 身高:${friend.height}`;
-                if(friend.weight) friendExtra += ` 体重:${friend.weight}`;
+                if(friend.height) friendExtra += ` 身高:${friend.height}cm`;
+                if(friend.weight) friendExtra += ` 体重:${friend.weight}kg`;
+                if(friend.age) friendExtra += ` 年龄:${friend.age}岁`;
                 if(friend.birthday) friendExtra += ` 生日:${friend.birthday}`;
             }
-            
             let maskExtra = '';
-            if(mask.height) maskExtra += ` 身高:${mask.height}`;
-            if(mask.weight) maskExtra += ` 体重:${mask.weight}`;
+            if(mask.height) maskExtra += ` 身高:${mask.height}cm`;
+            if(mask.weight) maskExtra += ` 体重:${mask.weight}kg`;
+            if(mask.age) maskExtra += ` 年龄:${mask.age}岁`;
             if(mask.birthday) maskExtra += ` 生日:${mask.birthday}`;
+
+            // --- 构建表情包库感知 ---
+            let stickerContext = "";
+            if (this.stickers && this.stickers.length > 0) {
+                const availableStickers = this.stickers.map((s, idx) => `[ID:${idx} 描述:${s.desc}]`).join(', ');
+                stickerContext = `\n[你的表情包库]: 如果你想发表情包，请在返回JSON的 "sticker_id" 中填入你想发的表情ID。可用表情列表: ${availableStickers}`;
+            }
 
             let contextMessages =[];
             let systemPrompt = `Roleplay Game. 
@@ -4293,6 +4304,7 @@ createApp({
             ${timeContext}
             ${musicContext}
             ${diaryContext}
+            ${stickerContext}
             
             IMPORTANT: You must output ONLY a valid JSON object. No Markdown. No other text.
             Structure:
@@ -4301,16 +4313,17 @@ createApp({
               "action": "current action description",
               "thought": "internal thoughts",
               "outfit": "current clothing",
-              "note": "short diary note (0-100 words)",
+              "note": "short diary note",
               "fake_image": "OPTIONAL: description of a photo you want to send",
               "red_packet": { "amount": "8.88", "note": "Happy Day" },
               "transfer": { "amount": "52.00", "note": "For you" },
               "location": { "name": "Place Name", "address": "Detailed Address" },
-              "qinmi_reply": "accept" OR "reject" (Optional),
-              "music_control": "next" OR "prev" OR "stop" (Optional),
-              "nudge": "user" OR "self" (Optional, you can playfully nudge the user or yourself),
+              "qinmi_reply": "accept" OR "reject",
+              "music_control": "next" OR "prev" OR "stop",
+              "nudge": "user" OR "self",
               "html_widget": "OPTIONAL: Valid HTML string using Tailwind CSS...",
-              "change_avatar": "OPTIONAL: 如果用户发了图片要求你换头像，或者你根据上下文决定采纳刚才发来的图片作为你的新头像，请在这里输出那张图片的完整 URL 链接。"
+              "change_avatar": true OR false (OPTIONAL: 仅当用户刚发了一张图片且明确要求你换头像时，将此值设为 true，系统会自动提取那张图为你换上),
+              "sticker_id": "OPTIONAL: 填入你想发的表情包的纯数字 ID"
             }
             "reply" is an array of strings. Split long text into natural short messages.`;
             
@@ -4325,10 +4338,12 @@ createApp({
                          contextMessages.push({ 
                              role: m.isSelf ? 'user' : 'assistant', 
                              content:[
-                                 { type: "text", text: `[用户发送了图片, 链接为: ${m.content}]` },
+                                 { type: "text", text: `[发送了图片。若你要用此图换头像，请输出 change_avatar: true]` },
                                  { type: "image_url", image_url: { url: m.content } }
                              ] 
                          });
+                    } else if (m.type === 'sticker') {
+                         contextMessages.push({ role: m.isSelf ? 'user' : 'assistant', content: `[发送了表情包: ${m.desc || '未命名'}]` });
                     } else if (m.type === 'moment') { 
                         contextMessages.push({ role: m.isSelf ? 'user' : 'assistant', content: `[Shared a moment: ${m.momentData.content}]` });
                     } else if (m.type === 'fake_image') {
@@ -4404,19 +4419,35 @@ createApp({
                     session.lastMessage = '[互动卡片]';
                 }
                 // --- 解析 AI 更换头像指令 ---
-                if (parsed.change_avatar) {
-                    const newAvatar = parsed.change_avatar;
-                    session.avatar = newAvatar;
-                    session.customAvatarTarget = ''; // 自动解除自定义头像锁定
-                    
-                    // 同步更新通讯录
-                    if (friend) friend.avatar = newAvatar;
-                    
-                    session.messages.push({ 
-                        type: 'system', 
-                        content: `${session.name} 已更换了头像`, 
-                        time: Date.now() 
+                // --- 解析 AI 表情包发送 ---
+                if (parsed.sticker_id !== undefined && this.stickers[parsed.sticker_id]) {
+                    const s = this.stickers[parsed.sticker_id];
+                    session.messages.push({
+                        type: 'sticker',
+                        content: s.url,
+                        desc: s.desc,
+                        isSelf: false,
+                        time: Date.now(),
+                        avatar: session.avatar
                     });
+                    session.lastMessage = '[表情包]';
+                }
+
+                // --- 解析 AI 更换头像指令 (修复 Base64 乱码 Bug) ---
+                if (parsed.change_avatar === true) {
+                    // 往前寻找用户最新发送的一张图片
+                    const lastImageMsg = session.messages.slice().reverse().find(msg => msg.type === 'image' && msg.isSelf);
+                    if (lastImageMsg) {
+                        session.avatar = lastImageMsg.content;
+                        session.customAvatarTarget = ''; 
+                        if (friend) friend.avatar = lastImageMsg.content;
+                        
+                        session.messages.push({ 
+                            type: 'system', 
+                            content: `${session.name} 已更换了头像`, 
+                            time: Date.now() 
+                        });
+                    }
                 }
 
                 if (parsed.location) {
@@ -4691,7 +4722,7 @@ createApp({
         },
         getCurrentSessionId() { const friend = this.wechatState.friendList.find(f => f.id === this.wechatState.activeSession?.targetId); return friend ? (friend.username || friend.id) : 'unknown'; },
         getCurrentSessionBio() { const friend = this.wechatState.friendList.find(f => f.id === this.wechatState.activeSession?.targetId); return friend ? (friend.signature || '暂无个性签名') : ''; },
-        openAddContactModal() { this.newContact = { name: '', remark: '', username: '', gender: '男', height: '', weight: '', birthday: '', bio: '', nudge: '', signature: '', avatar: '' }; this.addContactModal.show = true; },
+        openAddContactModal() { this.newContact = { name: '', remark: '', username: '', gender: '男', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: '' }; this.addContactModal.show = true; },
         editFriend(friend) { this.newContact = { ...friend }; this.addContactModal.show = true; },
         triggerAddContactAvatar() { this.$refs.addContactAvatarInput.click(); },
         async handleAddContactAvatar(e) { const f = e.target.files[0]; if(!f) return; try { this.newContact.avatar = await compressImage(f, 300); } catch(e){} },
@@ -4717,8 +4748,8 @@ createApp({
                 if (!url.endsWith('/v1')) url += '/v1';
                 
                 let prompt = field === 'username' 
-                    ? `请根据以下角色背景，生成一个符合该人设的微信网名(ID)，长度在2到8个字，不要标点符号。角色名：${name}，背景：${bio}`
-                    : `请根据以下角色背景，生成一句符合该人设的微信个性签名，长度在5到25个字之间。角色名：${name}，背景：${bio}`;
+                    ? `你现在的身份是：${name}。背景设定：${bio}。请完全代入你的人设、性格和行为习惯，为自己起一个微信网名(ID)。长度在1到8个字，不要标点符号。只输出网名本身，不要解释。`
+                    : `你现在的身份是：${name}。背景设定：${bio}。请完全代入你的人设、性格和行为习惯，为自己写一句微信个性签名。长度在5到25个字。只输出签名本身，不要有双引号和多余解释。`;
                     
                 const res = await fetch(`${url}/chat/completions`, {
                     method: 'POST',
@@ -4751,7 +4782,7 @@ createApp({
                 this.maskForm = { ...mask }; 
             } else { 
                 this.maskForm = { 
-                    id: null, name: '', remark: '', username: '', gender: '女', height: '', weight: '', birthday: '', bio: '', nudge: '', signature: '', avatar: '' 
+                    id: null, name: '', remark: '', username: '', gender: '女', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: '' 
                 }; 
             } 
             this.maskModal.show = true; 
@@ -5273,8 +5304,9 @@ createApp({
         },
         sendSticker(sticker) {
             const msg = {
-                type: 'image',
+                type: 'sticker',
                 content: sticker.url,
+                desc: sticker.desc, // 记录表情包描述，方便喂给AI
                 isSelf: true,
                 time: Date.now(),
                 avatar: this.getMaskById(this.wechatState.activeSession.maskId).avatar
@@ -5303,7 +5335,6 @@ createApp({
                 this.wechatState.showAttachMenu = false;
                 this.scrollToBottom();
                 this.saveData();
-                this.triggerReceive();
             } catch(e) {}
             e.target.value = '';
         },
