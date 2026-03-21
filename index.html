@@ -18,13 +18,15 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>    
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     
+
     <!-- 引入深层数据防丢失脚本 -->
     <script src="./persist-storage.js"></script>
     
-    <!-- 👇 新增：引入激活界面的专属样式 👇 -->
+    <!-- 👇 新增：账户与激活鉴权系统 👇 -->
     <link rel="stylesheet" href="./activation.css">
+    <script src="./activation.js"></script>
     
     <style>
         /* ==================== 全局配置 ==================== */
@@ -388,57 +390,50 @@
     </div>
 </div>
 
-<!-- 激活与登录界面 -->
+<!-- 账号登录与激活界面 -->
 <div id="activation-screen" class="hidden-screen">
-    <div class="act-container">
-        <div class="activation-header">
-            <div class="activation-logo">Aovein OS</div>
-            <div class="activation-sub">身份鉴权与设备绑定</div>
+    <div class="auth-container">
+        <div class="auth-header">
+            <div class="auth-logo">Aovein OS</div>
+            <div class="auth-sub">Terminal Login</div>
         </div>
         
-        <div class="act-form">
-            <div class="input-box">
-                <i class="fas fa-user"></i>
-                <input type="text" id="act-username" placeholder="设置你的账号 / 已绑定直接输入">
-            </div>
-            <div class="input-box">
-                <i class="fas fa-lock"></i>
-                <input type="password" id="act-password" placeholder="设置你的密码 / 已绑定直接输入">
-            </div>
-            <div class="input-box">
-                <i class="fas fa-key"></i>
-                <input type="text" id="act-code" placeholder="输入管理员发你的激活码 (首次必填)">
-            </div>
-            
-            <!-- 免责声明勾选 -->
-            <div class="disclaimer-check">
-                <input type="checkbox" id="agree-check">
-                <label for="agree-check">我已阅读并同意 <span class="link-text" onclick="openDisclaimerModal()">《免责声明与隐私协议》</span></label>
-            </div>
-            <div id="act-error-msg" class="act-error"></div>
-            
-            <button id="act-submit-btn" class="act-btn disabled" onclick="handleAoveinAuth()">立即进入系统</button>
+        <!-- 选项卡 -->
+        <div class="auth-tabs">
+            <div class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">账号登录</div>
+            <div class="auth-tab" id="tab-activate" onclick="switchAuthTab('activate')">新激活码绑定</div>
         </div>
-        
-        <div class="act-footer">
-            <p>原作者小红书：@檩因冬信 | 售前群：168635248</p>
-        </div>
-    </div>
-</div>
 
-<!-- 免责声明弹窗 -->
-<div id="disclaimer-modal" class="act-modal-overlay" style="display: none;">
-    <div class="act-modal-box">
-        <h3>Aovein小手机 免责声明与隐私协议</h3>
-        <div class="act-modal-content">
-            <p>欢迎使用 Aovein小手机（以下简称“本程序”）。在您开始使用前，请务必仔细阅读以下条款：</p>
-            <p><strong>1. 隐私保护声明：</strong><br>本程序采用纯本地架构运行。您的所有聊天记录、自定义人设、图片及相关数据均<strong>完全保存在您的本地浏览器中</strong>。本程序没有任何隐蔽的后端数据库，<strong>绝对不会窥探、收集、上传或泄露您的任何个人隐私数据</strong>。您的数据只属于您自己。</p>
-            <p><strong>2. 责任自负条款：</strong><br>本程序仅供UI展示、本地娱乐与前端技术交流使用。您知悉并同意：使用本程序生成的任何虚拟对话、截图及衍生内容，均由您自行生成。因您传播、分享这些内容而引发的任何法律纠纷、名誉损害或经济损失，<strong>均由使用者本人自行承担全部责任</strong>。</p>
-            <p><strong>3. 知识产权与免责：</strong><br>本程序按“原样”提供。原作者（小红书：@檩因冬信）不对程序的长期稳定性做绝对保证。对于因浏览器清理、设备损坏导致的数据丢失，或因使用本程序造成的任何直接或间接后果，原作者概不负责。</p>
-            <p><strong>4. 严禁非法用途：</strong><br>严禁将本程序用于电信诈骗、造谣生事、伪造法律证据等任何违法违规行为。一经发现，由此产生的法律后果由违规者独立承担。</p>
-            <p>点击“我已阅读并同意”即代表您已充分理解并接受以上全部条款。</p>
+        <!-- 表单区 -->
+        <div class="auth-form">
+            <input type="text" id="auth-username" class="auth-input" placeholder="输入账号" maxlength="20">
+            <input type="password" id="auth-password" class="auth-input" placeholder="输入密码" maxlength="20">
+            <input type="text" id="auth-code" class="auth-input" placeholder="输入激活码 (登录无需填写)" style="display: none;" maxlength="20">
+            
+            <div class="disclaimer-check">
+                <input type="checkbox" id="agree-checkbox">
+                <label for="agree-checkbox">我已阅读并同意 <span class="disclaimer-link" onclick="showDisclaimer()">《免责声明》</span></label>
+            </div>
+
+            <button class="auth-btn" id="auth-submit-btn" onclick="handleAuthSubmit()">登 录</button>
+            <div id="auth-error" class="auth-error-msg"></div>
         </div>
-        <button class="act-modal-close" onclick="closeDisclaimerModal()">我已了解</button>
+        
+        <div class="auth-footer">原作者小红书：@檩因冬信 | 售前群：168635248</div>
+    </div>
+
+    <!-- 免责声明弹窗 -->
+    <div id="disclaimer-modal" class="disclaimer-modal">
+        <div class="disclaimer-content">
+            <h3>免责声明</h3>
+            <div class="disclaimer-text">
+                <p>欢迎使用 Aovein OS！在您使用本产品前，请务必仔细阅读并理解以下条款。勾选同意即代表您完全接受本声明的全部内容：</p>
+                <p><strong>1. 数据隐私与安全：</strong><br>本程序为本地化运行的前端单页面应用。您在使用过程中产生的所有聊天记录、图片、角色设定、世界书等敏感数据，均严格且仅存储于您本机的浏览器本地缓存（IndexedDB/localStorage）中。本程序<strong>绝对不存在</strong>任何后台窥屏、窃取、上传或收集用户隐私数据的行为。请您妥善保管您的设备，若因设备遗失或自行清理浏览器数据导致的数据泄露或丢失，原作者概不负责。</p>
+                <p><strong>2. AI 生成内容声明：</strong><br>本程序本身不包含任何模型实体，仅提供连接第三方大模型（API）的交互界面。AI 生成的所有文字、语音及图片内容，均由第三方模型提供，<strong>完全不代表原作者的立场与观点</strong>。使用者需自行对 AI 生成的内容进行分辨与判断。</p>
+                <p><strong>3. 使用者责任：</strong><br>使用者利用本程序进行的一切行为（包括但不限于对外的传播、分享、二次创作等）以及由此产生的任何法律纠纷、API 费用消耗等一切后果，均由使用者自行独立承担，与原作者无关。</p>
+            </div>
+            <button class="disclaimer-close-btn" onclick="closeDisclaimer()">我已了解</button>
+        </div>
     </div>
 </div>
 
@@ -3097,18 +3092,24 @@ createApp({
         // 设定 2000ms (2秒) 的等待时间
             setTimeout(() => {
                 const loader = document.getElementById('loading-screen');
-                if (loader) loader.style.opacity = '0';
+                if (loader) loader.style.opacity = '0'; // 触发渐隐动画
                 
-                // === 修改：检查新的登录状态变量 ===
-                if (localStorage.getItem('aovein_is_logged_in') === 'true') {
+                // 判断是否已激活
+                if (this.isActivated) {
+                    // 已激活：直接显示主屏幕，彻底隐藏激活界面
                     document.getElementById('app').style.display = 'flex';
                     document.getElementById('activation-screen').style.display = 'none'; 
                 } else {
+                    // 未激活：隐藏主屏幕，显示激活界面
                     document.getElementById('app').style.display = 'none';
                     document.getElementById('activation-screen').classList.remove('hidden-screen');
                 }
 
-                setTimeout(() => { if (loader) loader.style.display = 'none'; }, 800);
+                // 800ms 渐隐动画结束后，彻底移除加载页的占位
+                setTimeout(() => { 
+                    if (loader) loader.style.display = 'none'; 
+                }, 800);
+                
             }, 2000);
 
         this.updateTime(); this.timer = setInterval(this.updateTime, 1000); this.initBattery();
@@ -3116,40 +3117,7 @@ createApp({
         if(this.themeConfig.fontUrl && this.themeConfig.fontFamily) { 
             this.loadFont(this.themeConfig.fontUrl, this.themeConfig.fontFamily); 
             document.body.style.fontFamily = this.themeConfig.fontFamily;
-        }
-        window.attemptActivate = this.attemptActivate; 
-    },
-    unmounted() { clearInterval(this.timer); },
-    watch: {
-        'wechatState.activeNav'(newVal) {
-            if (newVal === 'room') {
-                this.scrollToBottom();
-            } else if (newVal === 'moments') {
-                this.$nextTick(() => {
-                    const m = document.querySelector('.moments-scroll-fix');
-                    if (m) m.scrollTop = 0;
-                });
-            }
-        },
-        'wechatState.activeSession': {
-            handler(newVal) {
-                if (newVal) {
-                    this.currentStatus = newVal.status || {};
-                    this.currentStatusHistory = newVal.statusHistory || [];
-                }
-            }, deep: true
-        },
-        'beautifyConfig.activeBubbleCSS'() { this.updateDynamicStyles(); },
-        'beautifyConfig.activeThemeCSS'() { this.updateDynamicStyles(); },
-        'themesPage'(newVal) {
-            if(newVal === 'beautify') {
-                this.beautifyConfig.tempCode = '';
-            }
-        },
-        'beautifyConfig.currentTab'() {
-            this.beautifyConfig.tempCode = '';
-        }
-    },
+        }        
     methods: {
         // --- Core Chat Logic ---
         getCurrentChatTitle() {
@@ -3946,49 +3914,7 @@ createApp({
             document.execCommand('copy');
             document.body.removeChild(el);
         },
-
-        initDevice() {
-            let did = localStorage.getItem('onyunx_device_id');
-            if(!did) {
-                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-                const rand = (l) => Array.from({length:l}, ()=>chars[Math.floor(Math.random()*chars.length)]).join('');
-                did = `${rand(3)}-${rand(4)}-${rand(4)}`;
-                localStorage.setItem('onyunx_device_id', did);
-            }
-            this.deviceId = did;
-            document.getElementById('device-id-display').innerText = did;
-            const clean = did.replace(/-/g, '').toUpperCase();
-            const map = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'; 
-            let res = '';
-            for(let i = 0; i < clean.length; i++) {
-                let code = clean.charCodeAt(i);
-                let mixed = (code * 7 + i * 13 + 99) % 36;
-                res += map[mixed];
-            }
-            const validCode = `${res.substring(0,3)}-${res.substring(3,7)}-${res.substring(7,11)}`;
-            console.log(`%c 🔑 [ADMIN] 当前设备激活码: ${validCode} `, 'background: #222; color: #bada55; font-size: 16px; padding: 10px;');
-            this.validCode = validCode;
-        },
-        attemptActivate() {
-            if (localStorage.getItem('onyunx_is_activated') === 'true') {
-                this.isActivated = true; return;
-            }
-            const input = document.getElementById('activation-code');
-            const err = document.getElementById('activation-error');
-            const val = input.value.trim().toUpperCase();
-            if(val === this.validCode) {
-                this.isActivated = true;
-                localStorage.setItem('onyunx_is_activated', 'true');
-                this.saveData();
-                const screen = document.getElementById('activation-screen');
-                screen.style.transform = 'scale(1.1)'; screen.style.opacity = '0';
-                setTimeout(() => { screen.classList.add('hidden-screen'); document.getElementById('app').style.display = 'flex'; }, 600);
-            } else {
-                input.classList.add('error'); err.classList.add('show');
-                setTimeout(() => { input.classList.remove('error'); err.classList.remove('show'); }, 1000);
-            }
-        },
-
+        
         openApp(name) { this.currentApp = name; this.isAppOpen = true; this.settingsPage = 'main'; this.themesPage = 'main'; },
         closeApp() { 
             this.isAppOpen = false; 
@@ -6196,7 +6122,5 @@ if ('serviceWorker' in navigator) {
     });
 }
 </script>
-<!-- 👇 新增：引入激活界面的专属逻辑 👇 -->
-    <script src="./activation.js"></script>
 </body>
 </html>
