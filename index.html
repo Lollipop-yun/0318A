@@ -18,10 +18,13 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>    
     
     <!-- 引入深层数据防丢失脚本 -->
     <script src="./persist-storage.js"></script>
+    
+    <!-- 👇 新增：引入激活界面的专属样式 👇 -->
+    <link rel="stylesheet" href="./activation.css">
     
     <style>
         /* ==================== 全局配置 ==================== */
@@ -385,17 +388,57 @@
     </div>
 </div>
 
-<!-- 激活界面 -->
+<!-- 激活与登录界面 -->
 <div id="activation-screen" class="hidden-screen">
-    <div class="activation-header"><div class="activation-logo">Aovein OS</div><div class="activation-sub">设备激活</div></div>
-    <div class="device-id-box"><span class="device-label">DEVICE ID</span><span id="device-id-display">...</span></div>
-    <div class="code-input-group"><input type="text" id="activation-code" class="code-input" placeholder="XXX-XXXX-XXXX" maxlength="13"><div id="activation-error" class="error-msg">激活码错误</div></div>
-    <div class="activate-btn" onclick="attemptActivate()">立即激活</div>
-    
-    <!-- 下方为新增的版权及免责声明 -->
-    <div style="position: absolute; bottom: 50px; text-align: center; color: #999; font-size: 12px; line-height: 1.8; width: 100%; padding: 0 20px; box-sizing: border-box;">
-        <p>原作者小红书：@檩因冬信 | 售前群交流：168635248</p>
-        <p style="font-size: 10px; margin-top: 6px; color: #aaa;">免责声明：使用者需自行承担使用本产品后的一切后果，<br>使用者做出的一切行为与原作者无关。</p>
+    <div class="act-container">
+        <div class="activation-header">
+            <div class="activation-logo">Aovein OS</div>
+            <div class="activation-sub">身份鉴权与设备绑定</div>
+        </div>
+        
+        <div class="act-form">
+            <div class="input-box">
+                <i class="fas fa-user"></i>
+                <input type="text" id="act-username" placeholder="请输入账号">
+            </div>
+            <div class="input-box">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="act-password" placeholder="请输入密码">
+            </div>
+            <div class="input-box">
+                <i class="fas fa-key"></i>
+                <input type="text" id="act-code" placeholder="激活码 (已绑定设备可留空)">
+            </div>
+            
+            <!-- 免责声明勾选 -->
+            <div class="disclaimer-check">
+                <input type="checkbox" id="agree-check">
+                <label for="agree-check">我已阅读并同意 <span class="link-text" onclick="openDisclaimerModal()">《免责声明与隐私协议》</span></label>
+            </div>
+            <div id="act-error-msg" class="act-error"></div>
+            
+            <button id="act-submit-btn" class="act-btn disabled" onclick="handleAoveinAuth()">立即进入系统</button>
+        </div>
+        
+        <div class="act-footer">
+            <p>原作者小红书：@檩因冬信 | 售前群：168635248</p>
+        </div>
+    </div>
+</div>
+
+<!-- 免责声明弹窗 -->
+<div id="disclaimer-modal" class="act-modal-overlay" style="display: none;">
+    <div class="act-modal-box">
+        <h3>Aovein小手机 免责声明与隐私协议</h3>
+        <div class="act-modal-content">
+            <p>欢迎使用 Aovein小手机（以下简称“本程序”）。在您开始使用前，请务必仔细阅读以下条款：</p>
+            <p><strong>1. 隐私保护声明：</strong><br>本程序采用纯本地架构运行。您的所有聊天记录、自定义人设、图片及相关数据均<strong>完全保存在您的本地浏览器中</strong>。本程序没有任何隐蔽的后端数据库，<strong>绝对不会窥探、收集、上传或泄露您的任何个人隐私数据</strong>。您的数据只属于您自己。</p>
+            <p><strong>2. 责任自负条款：</strong><br>本程序仅供UI展示、本地娱乐与前端技术交流使用。您知悉并同意：使用本程序生成的任何虚拟对话、截图及衍生内容，均由您自行生成。因您传播、分享这些内容而引发的任何法律纠纷、名誉损害或经济损失，<strong>均由使用者本人自行承担全部责任</strong>。</p>
+            <p><strong>3. 知识产权与免责：</strong><br>本程序按“原样”提供。原作者（小红书：@檩因冬信）不对程序的长期稳定性做绝对保证。对于因浏览器清理、设备损坏导致的数据丢失，或因使用本程序造成的任何直接或间接后果，原作者概不负责。</p>
+            <p><strong>4. 严禁非法用途：</strong><br>严禁将本程序用于电信诈骗、造谣生事、伪造法律证据等任何违法违规行为。一经发现，由此产生的法律后果由违规者独立承担。</p>
+            <p>点击“我已阅读并同意”即代表您已充分理解并接受以上全部条款。</p>
+        </div>
+        <button class="act-modal-close" onclick="closeDisclaimerModal()">我已了解</button>
     </div>
 </div>
 
@@ -3054,24 +3097,18 @@ createApp({
         // 设定 2000ms (2秒) 的等待时间
             setTimeout(() => {
                 const loader = document.getElementById('loading-screen');
-                if (loader) loader.style.opacity = '0'; // 触发渐隐动画
+                if (loader) loader.style.opacity = '0';
                 
-                // 判断是否已激活
-                if (this.isActivated) {
-                    // 已激活：直接显示主屏幕，彻底隐藏激活界面
+                // === 修改：检查新的登录状态变量 ===
+                if (localStorage.getItem('aovein_is_logged_in') === 'true') {
                     document.getElementById('app').style.display = 'flex';
                     document.getElementById('activation-screen').style.display = 'none'; 
                 } else {
-                    // 未激活：隐藏主屏幕，显示激活界面
                     document.getElementById('app').style.display = 'none';
                     document.getElementById('activation-screen').classList.remove('hidden-screen');
                 }
 
-                // 800ms 渐隐动画结束后，彻底移除加载页的占位
-                setTimeout(() => { 
-                    if (loader) loader.style.display = 'none'; 
-                }, 800);
-                
+                setTimeout(() => { if (loader) loader.style.display = 'none'; }, 800);
             }, 2000);
 
         this.updateTime(); this.timer = setInterval(this.updateTime, 1000); this.initBattery();
@@ -6159,5 +6196,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 </script>
+<!-- 👇 新增：引入激活界面的专属逻辑 👇 -->
+    <script src="./activation.js"></script>
 </body>
 </html>
