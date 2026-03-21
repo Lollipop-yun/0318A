@@ -407,7 +407,7 @@
     </div>
 
     <label class="disclaimer-check">
-        <input type="checkbox" id="agree-check"> 
+        <input type="checkbox" id="agree-check" disabled onclick="alert('请先点击右侧文字，认真阅读《免责声明及隐私协议》')"> 
         <span>我已阅读并完全同意 <a id="show-disclaimer">《免责声明及隐私协议》</a></span>
     </label>
 
@@ -2274,35 +2274,38 @@
                     </div>
                 </header>
                 
-                <!-- 一起读 阅读器 (小窗/全屏) -->
+                <!-- 一起读 阅读器 (分页+拖拽极速版) -->
                 <transition name="fade">
                     <div v-if="readTogetherState.show" 
-                         class="absolute z-[40] bg-[#f4ecd8] border border-[#d3cbb8] shadow-2xl flex flex-col transition-all duration-300"
-                         :class="readTogetherState.isMinimized ? 'top-16 right-4 w-28 h-36 rounded-xl cursor-pointer opacity-90 hover:opacity-100 hover:scale-105 overflow-hidden' : 'inset-0 w-full h-full z-[100] pb-safe'">
+                         class="fixed z-[40] bg-[#f4ecd8] border border-[#d3cbb8] shadow-2xl flex flex-col transition-all"
+                         :class="readTogetherState.isMinimized ? 'rounded-2xl overflow-hidden' : 'inset-0 w-full h-full z-[100] pb-safe'"
+                         :style="readTogetherState.isMinimized ? { width: '150px', height: '210px', left: readTogetherState.x + 'px', top: readTogetherState.y + 'px', transition: readTogetherState.isDragging ? 'none' : 'all 0.3s ease' } : {}">
                          
-                         <!-- 顶部控制栏 -->
-                         <div class="flex justify-between items-center bg-[#e8deca] text-[#5c5346] shrink-0 z-10 shadow-sm" :class="readTogetherState.isMinimized ? 'px-2 py-1 text-[10px]' : 'h-[60px] px-4 text-sm pt-safe'">
+                         <!-- 顶部控制栏 (拖拽区) -->
+                         <div class="flex justify-between items-center bg-[#e8deca] text-[#5c5346] shrink-0 z-10 shadow-sm select-none" 
+                              :class="readTogetherState.isMinimized ? 'px-3 py-2 text-xs cursor-move' : 'h-[60px] px-4 text-sm pt-safe'"
+                              @touchstart.stop="startDragNovel" @touchmove.stop.prevent="onDragNovel" @touchend.stop="stopDragNovel"
+                              @mousedown.stop="startDragNovel" @mousemove.stop.prevent="onDragNovel" @mouseup.stop="stopDragNovel" @mouseleave.stop="stopDragNovel">
                              <span class="font-bold truncate max-w-[65%]">{{ getActiveBook()?.title }}</span>
                              <div class="flex gap-3 items-center">
-                                 <i v-if="readTogetherState.isMinimized" class="fas fa-expand cursor-pointer" @click.stop="readTogetherState.isMinimized = false"></i>
-                                 <i v-else class="fas fa-compress cursor-pointer text-lg" @click.stop="readTogetherState.isMinimized = true"></i>
-                                 <i class="fas fa-times cursor-pointer text-lg" @click.stop="closeReadTogether"></i>
+                                 <i v-if="readTogetherState.isMinimized" class="fas fa-expand cursor-pointer active:scale-95" @click.stop="readTogetherState.isMinimized = false"></i>
+                                 <i v-else class="fas fa-compress cursor-pointer text-lg active:scale-95" @click.stop="readTogetherState.isMinimized = true"></i>
+                                 <i class="fas fa-times cursor-pointer text-lg active:scale-95" @click.stop="closeReadTogether"></i>
                              </div>
                          </div>
 
-                         <!-- 阅读内容区 -->
-                         <div class="flex-1 relative bg-[#f4ecd8]" @click="readTogetherState.isMinimized = false">
-                             <div class="w-full h-full p-4 text-[#3a3327] font-serif leading-relaxed" 
-                                  :style="{
-                                      fontSize: (getActiveBook()?.fontSize || 16) + 'px', 
-                                      columnWidth: getActiveBook()?.readMode === 'page' ? '100vw' : 'auto',
-                                      columnGap: getActiveBook()?.readMode === 'page' ? '2rem' : 'normal',
-                                      overflowX: getActiveBook()?.readMode === 'page' ? 'auto' : 'hidden',
-                                      overflowY: getActiveBook()?.readMode === 'page' ? 'hidden' : 'auto',
-                                      whiteSpace: 'pre-wrap',
-                                      wordBreak: 'break-all'
-                                  }">
-                                 {{ getActiveBook()?.content }}
+                         <!-- 阅读内容区 (单页切片，彻底告别卡顿) -->
+                         <div class="flex-1 relative bg-[#f4ecd8] flex flex-col" @click.stop="readTogetherState.isMinimized = false">
+                             <div class="flex-1 p-4 text-[#3a3327] font-serif leading-relaxed overflow-hidden" 
+                                  :style="{ fontSize: (getActiveBook()?.fontSize || 16) + 'px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }">
+                                 {{ getPaginatedContent() }}
+                             </div>
+                             
+                             <!-- 翻页控制区 -->
+                             <div class="h-10 bg-[#e8deca]/50 flex justify-between items-center px-4 shrink-0 text-xs text-[#5c5346] font-bold">
+                                 <button @click.stop="prevNovelPage" class="px-2 py-1 active:bg-[#d3cbb8] rounded">上一页</button>
+                                 <span>第 {{ (getActiveBook()?.currentPage || 0) + 1 }} 页</span>
+                                 <button @click.stop="nextNovelPage" class="px-2 py-1 active:bg-[#d3cbb8] rounded">下一页</button>
                              </div>
                          </div>
                     </div>
@@ -2355,6 +2358,22 @@
                                         </div>
                                         <span class="font-bold text-xs whitespace-nowrap">{{ msg.duration }}"</span>
                                         <div v-if="!msg.isSelf && !msg.isRead" class="w-2 h-2 rounded-full bg-red-500 ml-1"></div>
+                                    </div>
+                                    <!-- 音乐邀请专属卡片 -->
+                                    <div v-else-if="msg.type === 'music_invite'" class="bg-white border border-gray-100 rounded-xl p-3 w-[220px] shadow-sm relative overflow-hidden">
+                                        <div class="absolute top-0 right-0 w-16 h-16 bg-pink-50 rounded-bl-full -z-0 opacity-50"></div>
+                                        <div class="flex items-center gap-2 mb-2 relative z-10">
+                                            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-pink-400 to-purple-400 text-white flex items-center justify-center shrink-0 shadow-md"><i class="fas fa-music"></i></div>
+                                            <span class="text-sm font-bold text-gray-800 truncate">邀请你一起听歌</span>
+                                        </div>
+                                        <div class="text-xs text-gray-500 mb-3 truncate relative z-10">《{{ msg.songName }}》</div>
+                                        <div class="flex gap-2 relative z-10" v-if="msg.status === 'pending'">
+                                            <button @click.stop="acceptMusicInvite(msg)" class="flex-1 bg-black text-white py-1.5 rounded text-xs font-bold active:scale-95 shadow-sm">加入</button>
+                                            <button @click.stop="rejectMusicInvite(msg)" class="flex-1 bg-gray-100 text-gray-600 py-1.5 rounded text-xs font-bold active:scale-95">拒绝</button>
+                                        </div>
+                                        <div v-else class="text-center text-xs py-1.5 bg-gray-50 rounded-lg font-bold relative z-10" :class="msg.status === 'accepted' ? 'text-green-500' : 'text-gray-400'">
+                                            {{ msg.status === 'accepted' ? '✓ 你已加入，正在播放' : '已拒绝' }}
+                                        </div>
                                     </div>
                                     <!-- 图片/表情包消息 -->
                                     <img v-else-if="msg.type === 'image' || msg.type === 'sticker'" :src="msg.content" class="block">
@@ -3133,7 +3152,7 @@ createApp({
             bookshelf:[],
             bookshelfState: { isMulti: false, selectedIds:[], showEdit: false, editingBook: null },
             readTogetherSelectModal: { show: false },
-            readTogetherState: { show: false, isMinimized: true, activeBookId: null },
+            readTogetherState: { show: false, isMinimized: true, activeBookId: null, x: 20, y: 80, isDragging: false, startX: 0, startY: 0, initialX: 0, initialY: 0 },
             addMusicModal: { show: false, mode: 'add', id: null, title: '', artist: '', url: '', lyricType: 'file', lrcText: '', lrcFile: null, cover: '' },
             currentAudioObj: null,
             tempEditingSong: null, 
@@ -3289,6 +3308,60 @@ createApp({
             const prevMsg = this.wechatState.activeSession.messages[index - 1];
             // If time diff > 5 mins (300000ms), show timestamp
             return (msg.time - prevMsg.time) > 300000;
+        },
+        // --- 音乐邀请处理 ---
+        acceptMusicInvite(msg) {
+            if (this.musicPlaylist.length === 0) {
+                return this.showToast('你的本地音乐库为空，请先去右上角设置里导入音乐');
+            }
+            msg.status = 'accepted';
+            
+            // 模糊匹配歌名，找不到就随机播一首
+            let song = this.musicPlaylist.find(s => s.title.includes(msg.songName) || msg.songName.includes(s.title));
+            if (!song) song = this.musicPlaylist[Math.floor(Math.random() * this.musicPlaylist.length)];
+            
+            this.saveData();
+            
+            // 启动播放器和灵动岛
+            this.musicModal.show = true;
+            this.playSong(song);
+            
+            // 延迟 800ms 后自动收起到顶部灵动岛
+            setTimeout(() => {
+                this.musicModal.isMinimized = true;
+                this.musicModal.show = false;
+            }, 800);
+            
+            // 自动发一条回复给 AI 推动剧情
+            const replyMsg = {
+                content: `我加入了你的听歌邀请，正在听《${song.title}》，很好听！`,
+                isSelf: true,
+                time: Date.now(),
+                avatar: this.getMaskById(this.wechatState.activeSession.maskId).avatar
+            };
+            this.wechatState.activeSession.messages.push(replyMsg);
+            this.scrollToBottom();
+            this.saveData();
+            
+            // 触发 AI 的感动回复
+            setTimeout(() => { this.triggerReceive(); }, 1500);
+        },
+        rejectMusicInvite(msg) {
+            msg.status = 'rejected';
+            this.saveData();
+            
+            const replyMsg = {
+                content: `抱歉，我现在不想听歌。`,
+                isSelf: true,
+                time: Date.now(),
+                avatar: this.getMaskById(this.wechatState.activeSession.maskId).avatar
+            };
+            this.wechatState.activeSession.messages.push(replyMsg);
+            this.scrollToBottom();
+            this.saveData();
+            
+            // 触发 AI 的委屈回复
+            setTimeout(() => { this.triggerReceive(); }, 1500);
         },
 
         // --- Location Feature ---
@@ -4475,7 +4548,9 @@ createApp({
               "nudge": "user" OR "self",
               "html_widget": "OPTIONAL: Valid HTML string using Tailwind CSS...",
               "change_avatar": true OR false (OPTIONAL: 仅当用户刚发了一张图片且明确要求你换头像时，将此值设为 true，系统会自动提取那张图为你换上),
-              "sticker_id": "OPTIONAL: 填入你想发的表情包的纯数字 ID"
+              "change_avatar": true OR false (OPTIONAL),
+              "music_invite": "OPTIONAL: 填入你想邀请用户一起听的歌名(如: 晴天)。如果你想邀请用户听歌，请输出此字段。",
+              "sticker_id": "OPTIONAL: 填入你想发的表情包的纯数字 ID"                     
             }
             "reply" is an array of strings. Split long text into natural short messages.`;
             
@@ -4571,6 +4646,18 @@ createApp({
                     session.lastMessage = '[互动卡片]';
                 }
                 // --- 解析 AI 更换头像指令 ---
+                // --- 解析 AI 听歌邀请 ---
+                if (parsed.music_invite) {
+                    session.messages.push({
+                        type: 'music_invite',
+                        songName: parsed.music_invite,
+                        status: 'pending', // pending(待处理), accepted(已加入), rejected(已拒绝)
+                        isSelf: false,
+                        time: Date.now(),
+                        avatar: session.avatar
+                    });
+                    session.lastMessage = '[邀请一起听歌]';
+                }
                 // --- 解析 AI 表情包发送 ---
                 if (parsed.sticker_id !== undefined && this.stickers[parsed.sticker_id]) {
                     const s = this.stickers[parsed.sticker_id];
@@ -5154,14 +5241,14 @@ createApp({
         saveData() { 
             try { 
                 const dataStr = JSON.stringify(this.$data);
-                // 1. 常规保存
-                localStorage.setItem('onyunx_hybrid_v40', dataStr); 
-                // 2. 深层备份到 IndexedDB（防止因图片太多撑爆 localStorage 而丢失）
+                // 1. 先存入深层无限数据库，保证绝不丢失
                 if (window.saveToSafeStorage) {
                     window.saveToSafeStorage('onyunx_hybrid_v40', dataStr);
                 }
+                // 2. 再存浅层（即便超载报错被 catch 拦截，底层也已经存好了）
+                localStorage.setItem('onyunx_hybrid_v40', dataStr); 
             } catch(e) {
-                console.warn("常规存储可能已满，正依赖深层存储", e);
+                console.warn("常规存储可能已满，仅依赖深层存储", e);
             } 
         },
         async loadData() { 
@@ -6582,6 +6669,48 @@ createApp({
             return this.bookshelf.find(b => b.id === this.readTogetherState.activeBookId);
         }
     }
+    // --- 阅读器辅助功能 (分页引擎与拖拽引擎) ---
+        getPaginatedContent() {
+            const book = this.getActiveBook();
+            if (!book || !book.content) return '';
+            const pageSize = 800; // 每页固定渲染 800 字，彻底根除渲染卡顿
+            const start = (book.currentPage || 0) * pageSize;
+            return book.content.substring(start, start + pageSize);
+        },
+        nextNovelPage() {
+            const book = this.getActiveBook();
+            if (!book) return;
+            if (!book.currentPage) book.currentPage = 0;
+            const maxPage = Math.ceil(book.content.length / 800) - 1;
+            if (book.currentPage < maxPage) book.currentPage++;
+            this.saveData();
+        },
+        prevNovelPage() {
+            const book = this.getActiveBook();
+            if (!book) return;
+            if (book.currentPage > 0) book.currentPage--;
+            this.saveData();
+        },
+        startDragNovel(e) {
+            if (!this.readTogetherState.isMinimized) return;
+            this.readTogetherState.isDragging = true;
+            const touch = e.type.includes('touch') ? e.touches[0] : e;
+            this.readTogetherState.startX = touch.clientX;
+            this.readTogetherState.startY = touch.clientY;
+            this.readTogetherState.initialX = this.readTogetherState.x;
+            this.readTogetherState.initialY = this.readTogetherState.y;
+        },
+        onDragNovel(e) {
+            if (!this.readTogetherState.isDragging) return;
+            const touch = e.type.includes('touch') ? e.touches[0] : e;
+            const dx = touch.clientX - this.readTogetherState.startX;
+            const dy = touch.clientY - this.readTogetherState.startY;
+            this.readTogetherState.x = this.readTogetherState.initialX + dx;
+            this.readTogetherState.y = this.readTogetherState.initialY + dy;
+        },
+        stopDragNovel() {
+            this.readTogetherState.isDragging = false;
+        },
 }).mount('#app');
 </script>
 <script>
