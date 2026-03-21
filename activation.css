@@ -1,37 +1,29 @@
-/* activation.css - 激活界面专属样式 */
-#activation-screen {
-    position: fixed; inset: 0; background-color: #ffffff; z-index: 999990;
-    display: flex; flex-direction: column; align-items: center; padding-top: 100px;
-    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.6s;
-}
-.act-header { text-align: center; margin-bottom: 40px; }
-.act-logo { font-size: 28px; font-weight: bold; letter-spacing: 1px; color: #000; }
-.act-sub { font-size: 13px; color: #888; margin-top: 5px; }
+/* activation.css */
+#activation-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #f7f7f7; z-index: 999990; display: flex; justify-content: center; align-items: center; transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.login-container { background: #fff; width: 85%; max-width: 360px; padding: 40px 30px; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); }
+.activation-header { text-align: center; margin-bottom: 30px; }
+.activation-logo { font-size: 26px; font-weight: 700; letter-spacing: 1px; color: #000; margin-bottom: 4px; }
+.activation-sub { font-size: 13px; color: #888; }
+.input-group { margin-bottom: 16px; }
+.input-group label { display: block; font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px; margin-left: 4px; }
+.input-group input { w-full; width: 100%; box-sizing: border-box; padding: 14px 16px; font-size: 14px; border: 1.5px solid #eee; border-radius: 12px; outline: none; transition: border-color 0.3s; background: #fafafa; }
+.input-group input:focus { border-color: #000; background: #fff; }
+.input-group input.error { border-color: #ff4d4f; }
+.checkbox-group { display: flex; items-center; margin: 20px 0; font-size: 12px; color: #666; }
+.checkbox-group input { margin-right: 8px; width: 16px; height: 16px; accent-color: #000; }
+.checkbox-group a { color: #000; font-weight: bold; text-decoration: underline; }
+.error-msg { color: #ff4d4f; font-size: 12px; height: 16px; text-align: center; margin-bottom: 10px; }
+.activate-btn { background-color: #000; color: white; padding: 14px 0; border-radius: 12px; font-size: 15px; font-weight: bold; text-align: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+.activate-btn.disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
+.activate-btn:not(.disabled):active { transform: scale(0.96); }
 
-.act-form { width: 80%; max-width: 320px; display: flex; flex-direction: column; gap: 15px; }
-.act-input { width: 100%; padding: 16px; font-size: 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 12px; outline: none; transition: 0.3s; color: #333; }
-.act-input:focus { border-color: #000; background: #fff; }
-
-.act-agreement { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #666; margin-top: 5px; }
-.act-agreement input[type="checkbox"] { width: 16px; height: 16px; accent-color: #000; cursor: pointer; }
-.act-agreement a { color: #576b95; text-decoration: none; cursor: pointer; font-weight: bold; }
-
-.act-btn { margin-top: 10px; background-color: #000; color: white; padding: 16px; border-radius: 30px; font-size: 15px; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; width: 100%; }
-.act-btn:active { transform: scale(0.96); }
-.act-btn:disabled { background-color: #ccc; cursor: not-allowed; transform: none; }
-
-.act-footer { position: absolute; bottom: 40px; text-align: center; color: #aaa; font-size: 11px; line-height: 1.8; width: 100%; }
-
-/* 免责声明弹窗 */
-#disclaimer-modal {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999999;
-    display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
-}
-.disclaimer-box {
-    background: #fff; width: 85%; max-width: 340px; border-radius: 20px; padding: 25px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column;
-}
-.disclaimer-box h3 { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 15px; }
-.disclaimer-content { font-size: 13px; color: #555; line-height: 1.6; max-height: 40vh; overflow-y: auto; margin-bottom: 20px; text-align: justify; }
-.disclaimer-btn { background: #000; color: #fff; padding: 14px; border-radius: 12px; text-align: center; font-size: 14px; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
-.disclaimer-btn:disabled { background: #e5e5e5; color: #999; cursor: not-allowed; }
+/* Modal */
+#disclaimer-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+.disclaimer-box { background: #fff; width: 85%; max-width: 340px; border-radius: 20px; overflow: hidden; display: flex; flex-col; }
+.disclaimer-box h3 { text-align: center; padding: 20px; margin: 0; border-bottom: 1px solid #eee; font-size: 16px; color: #000; }
+.disclaimer-content { padding: 20px; font-size: 13px; color: #444; line-height: 1.6; max-height: 50vh; overflow-y: auto; }
+.disclaimer-content p { margin-bottom: 12px; text-align: justify; }
+#disclaimer-agree-btn { width: 100%; border: none; padding: 16px; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+#disclaimer-agree-btn.disabled { background: #f5f5f5; color: #aaa; }
+#disclaimer-agree-btn:not(.disabled) { background: #000; color: #fff; }
+.hidden-screen { display: none !important; }
