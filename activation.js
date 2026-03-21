@@ -1,114 +1,71 @@
-// activation.js - 账号与激活码管理逻辑
+// activation.js - 模拟云端验证系统与设备指纹
 
-// ====== 模拟云端数据库 (实际跨设备应用需替换为 Fetch 请求后端) ======
-function getCloudDB() {
-    let db = localStorage.getItem('Aovein_CloudDB');
-    if (!db) {
-        db = { validCodes: [], revokedCodes:[], users: {} };
-        localStorage.setItem('Aovein_CloudDB', JSON.stringify(db));
-    } else {
-        db = JSON.parse(db);
-    }
-    return db;
-}
-function saveCloudDB(db) { localStorage.setItem('Aovein_CloudDB', JSON.stringify(db)); }
-
-// 检查本地登录态
-window.isUserLoggedIn = function() {
-    return localStorage.getItem('aovein_logged_in_user') !== null;
-};
-
-// UI 交互
-let countdownTimer = null;
-let secondsLeft = 5;
-
-function openDisclaimer() {
-    document.getElementById('disclaimer-modal').classList.remove('hidden-screen');
-    const btn = document.getElementById('disclaimer-agree-btn');
-    secondsLeft = 5;
-    btn.classList.add('disabled');
-    btn.innerText = `请认真阅读 (${secondsLeft}s)`;
-    
-    clearInterval(countdownTimer);
-    countdownTimer = setInterval(() => {
-        secondsLeft--;
-        if (secondsLeft <= 0) {
-            clearInterval(countdownTimer);
-            btn.classList.remove('disabled');
-            btn.innerText = "我已认真阅读并同意";
-        } else {
-            btn.innerText = `请认真阅读 (${secondsLeft}s)`;
-        }
-    }, 1000);
+// 获取设备唯一指纹 (通过 Canvas 渲染差异获取跨浏览器弱指纹)
+function getDeviceFingerprint() {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.textBaseline = "top"; ctx.font = "14px 'Arial'"; ctx.fillText("Aovein-Device-Lock", 2, 2);
+    const hw = navigator.hardwareConcurrency || 1;
+    const res = `${screen.width}x${screen.height}-${hw}-${canvas.toDataURL()}`;
+    let hash = 0;
+    for (let i = 0; i < res.length; i++) hash = ((hash << 5) - hash) + res.charCodeAt(i);
+    return `DEV-${Math.abs(hash)}`;
 }
 
-function acceptDisclaimer() {
-    if (secondsLeft > 0) return;
-    document.getElementById('disclaimer-modal').classList.add('hidden-screen');
-    document.getElementById('act-agree').checked = true;
-    checkAgree();
-}
+// 模拟云端数据库 (对接真实后端时，将下方逻辑替换为 fetch 请求即可)
+const DB_KEY = 'Aovein_Cloud_MockDB';
+function getCloudDB() { return JSON.parse(localStorage.getItem(DB_KEY) || '{"codes":{}, "users":{}}'); }
+function saveCloudDB(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
 
-function checkAgree() {
-    const btn = document.getElementById('act-btn');
-    if (document.getElementById('act-agree').checked) {
-        btn.classList.remove('disabled');
-    } else {
-        btn.classList.add('disabled');
-    }
-}
+// 验证登录逻辑
+window.verifyActivation = function(account, pwd, codeInput) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => { // 模拟网络延迟
+            const db = getCloudDB();
+            const currentDevice = getDeviceFingerprint();
 
-function showError(msg) {
-    const err = document.getElementById('act-error');
-    err.innerText = msg;
-    setTimeout(() => { err.innerText = ''; }, 3000);
-}
+            // 1. 如果输入了激活码
+            if (codeInput) {
+                const codeRecord = db.codes[codeInput];
+                if (!codeRecord) return reject("激活码不存在");
+                if (codeRecord.status === 'revoked') return reject("该激活码已被注销封禁");
+                
+                // 首次绑定
+                if (codeRecord.status === 'unused') {
+                    if (db.users[account]) return reject("该账号已被注册，请直接登录");
+                    // 绑定信息
+                    db.codes[codeInput] = { status: 'used', account: account };
+                    db.users[account] = { pwd: pwd, code: codeInput, deviceId: currentDevice };
+                    saveCloudDB(db);
+                    return resolve("激活并绑定成功");
+                }
+                
+                // 已绑定的激活码
+                if (codeRecord.status === 'used') {
+                    if (codeRecord.account !== account) return reject("激活码绑定的账号不匹配");
+                    if (db.users[account].pwd !== pwd) return reject("密码错误");
+                    // 更新设备记录（换设备重新绑定的情况）
+                    db.users[account].deviceId = currentDevice;
+                    saveCloudDB(db);
+                    return resolve("新设备验证成功");
+                }
+            } 
+            // 2. 没有输入激活码，尝试账号密码直登
+            else {
+                const user = db.users[account];
+                if (!user) return reject("账号不存在，新用户请输入激活码");
+                if (user.pwd !== pwd) return reject("密码错误");
+                
+                // 检查该账号绑定的激活码是否被注销
+                const boundCode = db.codes[user.code];
+                if (boundCode && boundCode.status === 'revoked') return reject("您的激活权限已被注销");
 
-// 核心登录/激活逻辑
-window.attemptLogin = function() {
-    if (!document.getElementById('act-agree').checked) return;
-    
-    const user = document.getElementById('act-username').value.trim();
-    const pass = document.getElementById('act-password').value.trim();
-    const code = document.getElementById('act-code').value.trim().toUpperCase();
-
-    if (!user || !pass) return showError('账号和密码不能为空');
-
-    const db = getCloudDB();
-    
-    // 1. 如果账号已存在 (老用户登录)
-    if (db.users[user]) {
-        if (db.users[user].password !== pass) {
-            return showError('密码错误');
-        }
-        // 检查该账号绑定的激活码是否已被管理员注销
-        const boundCode = db.users[user].code;
-        if (db.revokedCodes.includes(boundCode)) {
-            return showError('登录失败：该账号绑定的激活码已被注销！');
-        }
-        // 登录成功
-        localStorage.setItem('aovein_logged_in_user', user);
-        if(window.unlockApp) window.unlockApp();
-        return;
-    }
-
-    // 2. 账号不存在 (新用户注册绑定)
-    if (!code) return showError('新用户绑定设备请输入激活码');
-    
-    if (db.revokedCodes.includes(code)) return showError('该激活码已被注销作废');
-    if (!db.validCodes.includes(code)) return showError('无效的激活码');
-    
-    // 检查激活码是否已经被别的账号绑定
-    let isBound = false;
-    for (let k in db.users) {
-        if (db.users[k].code === code) isBound = true;
-    }
-    if (isBound) return showError('该激活码已被其他账号绑定');
-
-    // 绑定成功
-    db.users[user] = { password: pass, code: code };
-    saveCloudDB(db);
-    
-    localStorage.setItem('aovein_logged_in_user', user);
-    if(window.unlockApp) window.unlockApp();
+                // 检查设备指纹
+                if (user.deviceId !== currentDevice) {
+                    return reject("检测到更换设备或浏览器，为了安全，请重新填写您的激活码进行验证");
+                }
+                return resolve("身份验证成功，欢迎回来");
+            }
+        }, 500);
+    });
 };
