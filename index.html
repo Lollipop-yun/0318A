@@ -407,7 +407,7 @@
     </div>
 
     <label class="disclaimer-check">
-        <input type="checkbox" id="agree-check"> 
+        <input type="checkbox" id="agree-check" disabled> 
         <span>我已阅读并完全同意 <a id="show-disclaimer">《免责声明及隐私协议》</a></span>
     </label>
 
@@ -2274,37 +2274,42 @@
                     </div>
                 </header>
                 
-                <!-- 一起读 阅读器 (小窗/全屏/防卡顿分页版) -->
+                <!-- 一起读 阅读器 (拖拽/分页/防卡顿版) -->
                 <transition name="fade">
                     <div v-if="readTogetherState.show" 
-                         class="absolute z-[40] bg-[#f4ecd8] border border-[#d3cbb8] shadow-2xl flex flex-col transition-all duration-300"
-                         :class="readTogetherState.isMinimized ? 'rounded-xl overflow-hidden' : 'inset-0 w-full h-full z-[100] pb-safe'"
-                         :style="readTogetherState.isMinimized ? { top: readTogetherState.y + 'px', left: readTogetherState.x + 'px', width: '130px', height: '170px' } : {}">
+                         class="fixed z-[90000] bg-[#f4ecd8] border border-[#d3cbb8] shadow-2xl flex flex-col transition-all duration-300"
+                         :style="readTogetherState.isMinimized ? { top: readTogetherState.drag.y + 'px', left: readTogetherState.drag.x + 'px', width: '130px', height: '180px' } : { top: '0px', left: '0px', width: '100%', height: '100%' }"
+                         :class="readTogetherState.isMinimized ? 'rounded-2xl overflow-hidden' : 'pb-safe'">
                          
-                         <!-- 顶部控制栏 (绑定拖拽事件) -->
+                         <!-- 顶部控制栏 (绑定了拖拽事件) -->
                          <div class="flex justify-between items-center bg-[#e8deca] text-[#5c5346] shrink-0 z-10 shadow-sm" 
                               :class="readTogetherState.isMinimized ? 'px-2 py-1.5 text-[11px] cursor-move' : 'h-[60px] px-4 text-sm pt-safe'"
-                              @touchstart="startDragNovel" @touchmove.prevent="onDragNovel" @touchend="endDragNovel">
-                             <span class="font-bold truncate max-w-[60%]">{{ getActiveBook()?.title }}</span>
-                             <div class="flex gap-3 items-center">
-                                 <i v-if="readTogetherState.isMinimized" class="fas fa-expand cursor-pointer active:scale-90" @click.stop="readTogetherState.isMinimized = false"></i>
-                                 <i v-else class="fas fa-compress cursor-pointer text-lg active:scale-90" @click.stop="readTogetherState.isMinimized = true"></i>
-                                 <i class="fas fa-times cursor-pointer text-lg active:scale-90 text-red-400" @click.stop="closeReadTogether"></i>
+                              @touchstart="startDragBook" @mousedown="startDragBook">
+                             <span class="font-bold truncate max-w-[65%] pointer-events-none">{{ getActiveBook()?.title }}</span>
+                             <div class="flex gap-2 items-center">
+                                 <i v-if="readTogetherState.isMinimized" class="fas fa-expand cursor-pointer active:scale-95" @click.stop="readTogetherState.isMinimized = false"></i>
+                                 <i v-else class="fas fa-compress cursor-pointer text-lg active:scale-95" @click.stop="readTogetherState.isMinimized = true"></i>
+                                 <i class="fas fa-times cursor-pointer text-lg active:scale-95" @click.stop="closeReadTogether"></i>
                              </div>
                          </div>
 
-                         <!-- 阅读内容区 (切片渲染，绝不卡顿) -->
+                         <!-- 阅读内容区 -->
                          <div class="flex-1 relative bg-[#f4ecd8] flex flex-col" @click="readTogetherState.isMinimized = false">
-                             <div class="flex-1 p-4 text-[#3a3327] font-serif leading-relaxed overflow-y-auto" 
-                                  :style="{ fontSize: (getActiveBook()?.fontSize || 16) + 'px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }">
-                                 {{ getNovelPageContent() }}
+                             <div class="flex-1 p-4 text-[#3a3327] font-serif leading-relaxed overflow-y-auto" ref="bookContentContainer"
+                                  :style="{
+                                      fontSize: (getActiveBook()?.fontSize || 16) + 'px', 
+                                      whiteSpace: 'pre-wrap',
+                                      wordBreak: 'break-all'
+                                  }">
+                                 <!-- 改用分页截取渲染，彻底解决卡顿 -->
+                                 {{ getPaginatedContent() }}
                              </div>
                              
-                             <!-- 翻页控制条 (全屏时显示) -->
-                             <div v-if="!readTogetherState.isMinimized" class="h-[50px] bg-[#e8deca] flex justify-between items-center px-6 shrink-0 text-sm font-bold text-[#5c5346] shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-                                 <button @click.stop="prevNovelPage" class="active:text-blue-500 py-2"><i class="fas fa-chevron-left mr-1"></i> 上一页</button>
-                                 <span class="text-xs opacity-70">第 {{ readTogetherState.currentPage + 1 }} 页</span>
-                                 <button @click.stop="nextNovelPage" class="active:text-blue-500 py-2">下一页 <i class="fas fa-chevron-right ml-1"></i></button>
+                             <!-- 底部翻页控制台 (仅全屏显示) -->
+                             <div v-if="!readTogetherState.isMinimized" class="flex justify-between items-center px-4 py-3 bg-[#e8deca]/50 border-t border-[#d3cbb8] text-xs text-[#5c5346]">
+                                 <button @click.stop="prevBookPage" class="px-4 py-2 bg-white/60 rounded-lg shadow-sm font-bold active:scale-95" :disabled="readTogetherState.currentPage === 0">上一页</button>
+                                 <span class="font-bold opacity-70">第 {{ readTogetherState.currentPage + 1 }} 页</span>
+                                 <button @click.stop="nextBookPage" class="px-4 py-2 bg-white/60 rounded-lg shadow-sm font-bold active:scale-95">下一页</button>
                              </div>
                          </div>
                     </div>
@@ -2396,6 +2401,20 @@
                                             <i class="fas fa-chevron-right text-xs"></i>
                                         </div>
                                     </div>
+                                    <!-- 音乐邀请卡片 -->
+                                    <div v-else-if="msg.type === 'music_invite'" class="bg-white border border-gray-100 rounded-xl p-3 shadow-sm w-[220px]">
+                                        <div class="flex items-center gap-3 mb-3">
+                                            <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-100"><img :src="msg.avatar" class="w-full h-full object-cover"></div>
+                                            <div class="flex-1">
+                                                <div class="text-sm font-bold text-gray-800">邀请你一起听歌</div>
+                                                <div class="text-xs text-gray-400 mt-0.5">Aovein Music</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <button @click.stop="acceptMusicInvite(msg)" class="flex-1 bg-black text-white text-xs font-bold py-2 rounded-lg active:scale-95" :disabled="msg.isAccepted">{{ msg.isAccepted ? '已加入' : '加入' }}</button>
+                                            <button v-if="!msg.isAccepted" @click.stop="msg.isAccepted=true; showToast('已拒绝')" class="flex-1 bg-gray-100 text-gray-500 text-xs font-bold py-2 rounded-lg active:scale-95">拒绝</button>
+                                        </div>
+                                    </div>
                                     <!-- 定位卡片 (New) -->
                                     <div v-else-if="msg.type === 'location'">
                                         <div class="location-header">
@@ -2421,22 +2440,6 @@
                                             <div v-if="msg.momentData.images && msg.momentData.images.length>0" class="moment-card-thumb"><img :src="msg.momentData.images[0]" class="w-full h-full object-cover"></div>
                                             <div class="moment-card-text">{{ msg.momentData.content || '[图片动态]' }}</div>
                                         </div>
-                                    </div>
-                                    
-                                    <!-- AI 邀请听歌卡片 -->
-                                    <div v-else-if="msg.type === 'music_invite'" class="bg-white border border-gray-100 rounded-xl p-3 w-64 shadow-sm flex flex-col gap-3">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-500 shrink-0"><i class="fas fa-music"></i></div>
-                                            <div class="flex-1 min-w-0">
-                                                <div class="font-bold text-sm text-gray-800 truncate">邀请你一起听歌</div>
-                                                <div class="text-xs text-gray-400 truncate">{{ msg.songName }} - {{ msg.artist }}</div>
-                                            </div>
-                                        </div>
-                                        <div v-if="!msg.isResponded" class="flex gap-2 border-t border-gray-50 pt-2">
-                                            <button @click.stop="acceptMusicInvite(msg)" class="flex-1 bg-black text-white text-xs font-bold py-2 rounded-lg active:scale-95">加入</button>
-                                            <button @click.stop="rejectMusicInvite(msg)" class="flex-1 bg-gray-100 text-gray-500 text-xs font-bold py-2 rounded-lg active:scale-95">拒绝</button>
-                                        </div>
-                                        <div v-else class="text-center text-xs text-gray-400 pt-1">已处理该邀请</div>
                                     </div>
                                     
                                     <!-- 动态交互卡片 (HTML UI) -->
@@ -3147,12 +3150,11 @@ createApp({
                 isMinimized: false 
             },
             musicManager: { show: false, isMulti: false, selectedIds: [] },
-            musicPlaylist:[], 
-            // --- 书架与一起读 ---
+            musicPlaylist: [], 
             bookshelf:[],
             bookshelfState: { isMulti: false, selectedIds:[], showEdit: false, editingBook: null },
             readTogetherSelectModal: { show: false },
-            readTogetherState: { show: false, isMinimized: true, activeBookId: null, currentPage: 0, x: 200, y: 80, isDragging: false, startX: 0, startY: 0 },
+            readTogetherState: { show: false, isMinimized: true, activeBookId: null, currentPage: 0, pageSize: 600, drag: { x: 20, y: 100, isDragging: false, startX: 0, startY: 0 } },
             addMusicModal: { show: false, mode: 'add', id: null, title: '', artist: '', url: '', lyricType: 'file', lrcText: '', lrcFile: null, cover: '' },
             currentAudioObj: null,
             tempEditingSong: null, 
@@ -3309,31 +3311,6 @@ createApp({
             // If time diff > 5 mins (300000ms), show timestamp
             return (msg.time - prevMsg.time) > 300000;
         },
-        // --- AI 音乐邀请处理 ---
-        acceptMusicInvite(msg) {
-            msg.isResponded = true;
-            this.showToast('已加入一起听');
-            const song = {
-                id: Date.now().toString(),
-                title: msg.songName,
-                artist: msg.artist,
-                url: msg.url || 'https://downsc.chinaz.net/Files/DownLoad/sound1/201906/11582.mp3', // 兜底试听曲
-                lyrics: '', cover: '', playCount: 0
-            };
-            this.musicPlaylist.push(song);
-            this.saveData();
-            
-            this.musicModal.show = true;
-            this.musicModal.isMinimized = true; // 开启灵动岛
-            this.playSong(song); // 直接播放
-        },
-        rejectMusicInvite(msg) {
-            msg.isResponded = true;
-            this.showToast('已拒绝');
-            const session = this.wechatState.activeSession;
-            session.messages.push({ type: 'system', content: `你拒绝了 ${session.name} 的一起听歌邀请`, time: Date.now() });
-            this.saveData();
-        }
 
         // --- Location Feature ---
         openLocationModal() {
@@ -4174,7 +4151,7 @@ createApp({
                 this.favoritesModal.show = false;
                 this.qinmiSelectModal.show = false;
                 this.musicModal.show = false;
-                        this.musicManager.show = false;
+                this.musicManager.show = false;
                 this.diaryState.showGenerate = false;
                 this.diaryState.isWriting = false;
                 this.locationInputModal.show = false;
@@ -4518,10 +4495,10 @@ createApp({
               "music_control": "next" OR "prev" OR "stop",
               "nudge": "user" OR "self",
               "html_widget": "OPTIONAL: Valid HTML string using Tailwind CSS...",
-              "music_invite": { "songName": "歌名", "artist": "歌手名", "url": "纯音乐URL后缀(可选)" } (OPTIONAL: 当你想主动邀请用户听歌时输出此对象),
               "change_avatar": true OR false (OPTIONAL: 仅当用户刚发了一张图片且明确要求你换头像时，将此值设为 true，系统会自动提取那张图为你换上),
               "sticker_id": "OPTIONAL: 填入你想发的表情包的纯数字 ID"
-            }
+              "invite_music": true OR false (OPTIONAL: 如果你想邀请用户一起听歌，将其设为 true)
+            }            
             "reply" is an array of strings. Split long text into natural short messages.`;
             
             contextMessages.push({ role: 'system', content: systemPrompt });
@@ -4632,18 +4609,15 @@ createApp({
 
                 // --- 解析 AI 更换头像指令 (修复 Base64 乱码 Bug) ---
                 if (parsed.change_avatar === true) {
-                // --- 解析 AI 音乐邀请 ---
-                if (parsed.music_invite) {
-                    session.messages.push({ 
-                        type: 'music_invite', 
-                        songName: parsed.music_invite.songName || '未知歌曲',
-                        artist: parsed.music_invite.artist || '未知歌手',
-                        url: parsed.music_invite.url || '',
-                        isResponded: false,
-                        isSelf: false, 
-                        time: Date.now(), 
-                        avatar: session.avatar 
-                    }); 
+                // --- 解析 AI 邀请一起听歌 ---
+                if (parsed.invite_music === true) {
+                    session.messages.push({
+                        type: 'music_invite',
+                        isSelf: false,
+                        time: Date.now(),
+                        avatar: session.avatar,
+                        isAccepted: false
+                    });
                     session.lastMessage = '[音乐邀请]';
                 }
                     // 往前寻找用户最新发送的一张图片
@@ -5213,17 +5187,18 @@ createApp({
         saveData() { 
             try { 
                 const dataStr = JSON.stringify(this.$data);
-                saveData() { 
-            try { 
-                const dataStr = JSON.stringify(this.$data);
-                // 优先执行深层防丢备份（异步安全）
+                try {
+                    // 1. 尝试常规保存，如果太大报错就跳过
+                    localStorage.setItem('onyunx_hybrid_v40', dataStr); 
+                } catch(e) {
+                    console.warn("常规存储已满");
+                }
+                // 2. 无视常规报错，强制进行深层大容量备份
                 if (window.saveToSafeStorage) {
                     window.saveToSafeStorage('onyunx_hybrid_v40', dataStr);
                 }
-                // 再执行浅层缓存
-                localStorage.setItem('onyunx_hybrid_v40', dataStr); 
             } catch(e) {
-                console.warn("常规存储可能已满，正依赖深层存储保护数据安全");
+                console.warn("保存失败", e);
             } 
         },
         async loadData() { 
@@ -6628,6 +6603,7 @@ createApp({
         },
         startReadTogether(book) {
             this.readTogetherState.activeBookId = book.id;
+            this.readTogetherState.currentPage = 0; // 重置页码
             this.readTogetherState.isMinimized = true;
             this.readTogetherState.show = true;
             this.readTogetherSelectModal.show = false;
@@ -6643,75 +6619,67 @@ createApp({
         getActiveBook() {
             return this.bookshelf.find(b => b.id === this.readTogetherState.activeBookId);
         },
-        
-        // --- 书架拖拽与分页核心 ---
-        startDragNovel(e) {
-            if(!this.readTogetherState.isMinimized) return;
-            this.readTogetherState.isDragging = true;
-            const touch = e.touches ? e.touches[0] : e;
-            this.readTogetherState.startX = touch.clientX - this.readTogetherState.x;
-            this.readTogetherState.startY = touch.clientY - this.readTogetherState.y;
-        },
-        onDragNovel(e) {
-            if(!this.readTogetherState.isDragging || !this.readTogetherState.isMinimized) return;
-            const touch = e.touches ? e.touches[0] : e;
-            let newX = touch.clientX - this.readTogetherState.startX;
-            let newY = touch.clientY - this.readTogetherState.startY;
-            this.readTogetherState.x = Math.max(0, Math.min(newX, window.innerWidth - 130));
-            this.readTogetherState.y = Math.max(40, Math.min(newY, window.innerHeight - 170));
-        },
-        endDragNovel() { this.readTogetherState.isDragging = false; },
-        
-        getNovelPageContent() {
+        // --- 一起读 分页与拖拽 ---
+        getPaginatedContent() {
             const book = this.getActiveBook();
             if(!book || !book.content) return '';
-            const pageSize = 1200; 
-            const start = this.readTogetherState.currentPage * pageSize;
-            return book.content.substring(start, start + pageSize);
+            const start = this.readTogetherState.currentPage * this.readTogetherState.pageSize;
+            return book.content.substring(start, start + this.readTogetherState.pageSize);
         },
-        nextNovelPage() {
+        nextBookPage() {
             const book = this.getActiveBook();
-            const maxPage = Math.ceil((book?.content?.length || 0) / 1200) - 1;
-            if (this.readTogetherState.currentPage < maxPage) {
+            if(book && (this.readTogetherState.currentPage + 1) * this.readTogetherState.pageSize < book.content.length) {
                 this.readTogetherState.currentPage++;
-                this.saveData();
+                if(this.$refs.bookContentContainer) this.$refs.bookContentContainer.scrollTop = 0;
             }
         },
-        prevNovelPage() {
-            if (this.readTogetherState.currentPage > 0) {
+        prevBookPage() {
+            if(this.readTogetherState.currentPage > 0) {
                 this.readTogetherState.currentPage--;
-                this.saveData();
+                if(this.$refs.bookContentContainer) this.$refs.bookContentContainer.scrollTop = 0;
             }
         },
-
-        // --- AI 音乐邀请处理 ---
+        startDragBook(e) {
+            if(!this.readTogetherState.isMinimized) return;
+            this.readTogetherState.drag.isDragging = true;
+            const touch = e.touches ? e.touches[0] : e;
+            this.readTogetherState.drag.startX = touch.clientX - this.readTogetherState.drag.x;
+            this.readTogetherState.drag.startY = touch.clientY - this.readTogetherState.drag.y;
+            document.addEventListener('mousemove', this.doDragBook);
+            document.addEventListener('touchmove', this.doDragBook, {passive: false});
+            document.addEventListener('mouseup', this.stopDragBook);
+            document.addEventListener('touchend', this.stopDragBook);
+        },
+        doDragBook(e) {
+            if(!this.readTogetherState.drag.isDragging) return;
+            e.preventDefault(); 
+            const touch = e.touches ? e.touches[0] : e;
+            this.readTogetherState.drag.x = touch.clientX - this.readTogetherState.drag.startX;
+            this.readTogetherState.drag.y = touch.clientY - this.readTogetherState.drag.startY;
+        },
+        stopDragBook() {
+            this.readTogetherState.drag.isDragging = false;
+            document.removeEventListener('mousemove', this.doDragBook);
+            document.removeEventListener('touchmove', this.doDragBook);
+            document.removeEventListener('mouseup', this.stopDragBook);
+            document.removeEventListener('touchend', this.stopDragBook);
+        },
+        
+        // --- 接受 AI 听歌邀请 ---
         acceptMusicInvite(msg) {
-            msg.isResponded = true;
-            this.showToast('已加入一起听');
-            const song = {
-                id: Date.now().toString(),
-                title: msg.songName,
-                artist: msg.artist,
-                url: msg.url || 'https://downsc.chinaz.net/Files/DownLoad/sound1/201906/11582.mp3',
-                lyrics: '', cover: '', playCount: 0
-            };
-            this.musicPlaylist.push(song);
+            msg.isAccepted = true;
             this.saveData();
-            
-            this.musicModal.show = true;
-            this.musicModal.isMinimized = true; 
-            this.playSong(song); 
-        },
-        rejectMusicInvite(msg) {
-            msg.isResponded = true;
-            this.showToast('已拒绝');
-            const session = this.wechatState.activeSession;
-            if (session) {
-                session.messages.push({ type: 'system', content: `你拒绝了 ${session.name} 的一起听歌邀请`, time: Date.now() });
-                this.saveData();
+            if (this.musicPlaylist.length === 0) {
+                this.showToast('本地音乐列表为空，请先添加音乐');
+                return;
             }
-        }       
-    },
+            const randomIdx = Math.floor(Math.random() * this.musicPlaylist.length);
+            this.musicModal.show = true;
+            this.musicModal.isMinimized = true;
+            this.playSong(this.musicPlaylist[randomIdx]);
+            this.showToast('已加入一起听');
+        }
+    }
 }).mount('#app');
 </script>
 <script>
