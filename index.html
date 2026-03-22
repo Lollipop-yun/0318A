@@ -461,18 +461,17 @@
             </div>
         </div>
     </transition>
-
-    <!-- 一起读 阅读器 (拖拽/分页/防卡顿版) -->
+    <!-- 一起读 阅读器 (全能版：拖拽/缩放/触控翻页) -->
     <transition name="fade">
         <div v-if="readTogetherState.show" 
-             class="fixed z-[99000] bg-[#f4ecd8] border border-[#d3cbb8] shadow-2xl flex flex-col transition-all duration-300"
-             :style="readTogetherState.isMinimized ? { top: (readTogetherState.drag ? readTogetherState.drag.y : 100) + 'px', left: (readTogetherState.drag ? readTogetherState.drag.x : 20) + 'px', width: '130px', height: '180px' } : { top: '0px', left: '0px', width: '100%', height: '100%' }"
+             class="fixed z-[99000] bg-[#f4ecd8] border border-[#d3cbb8] shadow-2xl flex flex-col transition-all"
+             :style="readTogetherState.isMinimized ? { top: (readTogetherState.drag ? readTogetherState.drag.y : 100) + 'px', left: (readTogetherState.drag ? readTogetherState.drag.x : 20) + 'px', width: (readTogetherState.drag ? readTogetherState.drag.width : 130) + 'px', height: (readTogetherState.drag ? readTogetherState.drag.height : 180) + 'px', transitionDuration: readTogetherState.drag.isDragging || readTogetherState.drag.isResizing ? '0s' : '0.3s' } : { top: '0px', left: '0px', width: '100%', height: '100%', transitionDuration: '0.3s' }"
              :class="readTogetherState.isMinimized ? 'rounded-2xl overflow-hidden' : 'pb-safe'">
              
              <!-- 顶部控制栏 (绑定了拖拽事件) -->
-             <div class="flex justify-between items-center bg-[#e8deca] text-[#5c5346] shrink-0 z-10 shadow-sm" 
+             <div class="flex justify-between items-center bg-[#e8deca] text-[#5c5346] shrink-0 z-20 shadow-sm" 
                   :class="readTogetherState.isMinimized ? 'px-2 py-1.5 text-[11px] cursor-move' : 'h-[60px] px-4 text-sm pt-safe'"
-                  @touchstart="startDragBook" @mousedown="startDragBook">
+                  @touchstart.prevent="startDragBook" @mousedown.prevent="startDragBook">
                  <span class="font-bold truncate max-w-[65%] pointer-events-none">{{ getActiveBook()?.title }}</span>
                  <div class="flex gap-2 items-center">
                      <i v-if="readTogetherState.isMinimized" class="fas fa-expand cursor-pointer active:scale-95" @click.stop="readTogetherState.isMinimized = false"></i>
@@ -482,15 +481,30 @@
              </div>
 
              <!-- 阅读内容区 -->
-             <div class="flex-1 relative bg-[#f4ecd8] flex flex-col" @click="readTogetherState.isMinimized = false">
+             <div class="flex-1 relative bg-[#f4ecd8] flex flex-col overflow-hidden">
                  <div class="flex-1 p-4 text-[#3a3327] font-serif leading-relaxed overflow-y-auto scrollbar-hide" ref="bookContentContainer"
                       :style="{ fontSize: (getActiveBook()?.fontSize || 16) + 'px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }">
                      <!-- 极速分页渲染 -->
                      {{ getPaginatedContent() }}
                  </div>
                  
+                 <!-- 触控翻页透明遮罩 (无论小窗还是全屏都生效，左滑右滑点击) -->
+                 <div class="absolute inset-0 z-10 flex">
+                     <div class="w-1/3 h-full" @click.stop="prevBookPage"></div>
+                     <div class="w-1/3 h-full" @click.stop="readTogetherState.isMinimized = false"></div>
+                     <div class="w-1/3 h-full" @click.stop="nextBookPage"></div>
+                 </div>
+
+                 <!-- 拖拽缩放手柄 (仅小窗模式右下角显示) -->
+                 <div v-if="readTogetherState.isMinimized" 
+                      class="absolute bottom-0 right-0 w-8 h-8 z-30 flex items-end justify-end p-1.5"
+                      style="cursor: se-resize;"
+                      @touchstart.stop.prevent="startResizeBook" @mousedown.stop.prevent="startResizeBook">
+                     <div class="w-3 h-3 border-r-[3px] border-b-[3px] border-gray-400 opacity-60 rounded-br-sm"></div>
+                 </div>
+                 
                  <!-- 底部翻页控制台 (全屏时显示) -->
-                 <div v-if="!readTogetherState.isMinimized" class="flex justify-between items-center px-4 py-3 bg-[#e8deca]/50 border-t border-[#d3cbb8] text-xs text-[#5c5346] shrink-0 pb-safe">
+                 <div v-if="!readTogetherState.isMinimized" class="relative z-20 flex justify-between items-center px-4 py-3 bg-[#e8deca]/50 border-t border-[#d3cbb8] text-xs text-[#5c5346] shrink-0 pb-safe">
                      <button @click.stop="prevBookPage" class="px-4 py-2 bg-white/60 rounded-lg shadow-sm font-bold active:scale-95" :disabled="readTogetherState.currentPage === 0">上一页</button>
                      <span class="font-bold opacity-70">第 {{ readTogetherState.currentPage + 1 }} 页</span>
                      <button @click.stop="nextBookPage" class="px-4 py-2 bg-white/60 rounded-lg shadow-sm font-bold active:scale-95">下一页</button>
@@ -498,6 +512,7 @@
              </div>
         </div>
     </transition>
+    
     <!-- ==================================================== -->
     <transition name="scale">
         <div v-if="inputModal.show" class="fixed inset-0 z-[90000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -2332,49 +2347,8 @@
                         <button class="w-8 h-8 flex items-center justify-center text-gray-800" @click="groupSelectModal.show = true"><i class="fas fa-folder-open"></i></button>
                         <button class="w-8 h-8 flex items-center justify-center text-gray-800" @click="goToChatDetails"><i class="fas fa-ellipsis-h"></i></button>
                     </div>
-                </header>
-                
-                <!-- 一起读 阅读器 (拖拽/分页/防卡顿版) -->
-                <transition name="fade">
-                    <div v-if="readTogetherState.show" 
-                         class="fixed z-[90000] bg-[#f4ecd8] border border-[#d3cbb8] shadow-2xl flex flex-col transition-all duration-300"
-                         :style="readTogetherState.isMinimized ? { top: (readTogetherState.drag ? readTogetherState.drag.y : 100) + 'px', left: (readTogetherState.drag ? readTogetherState.drag.x : 20) + 'px', width: '130px', height: '180px' } : { top: '0px', left: '0px', width: '100%', height: '100%' }"
-                         :class="readTogetherState.isMinimized ? 'rounded-2xl overflow-hidden' : 'pb-safe'">
-                         
-                         <!-- 顶部控制栏 (绑定了拖拽事件) -->
-                         <div class="flex justify-between items-center bg-[#e8deca] text-[#5c5346] shrink-0 z-10 shadow-sm" 
-                              :class="readTogetherState.isMinimized ? 'px-2 py-1.5 text-[11px] cursor-move' : 'h-[60px] px-4 text-sm pt-safe'"
-                              @touchstart="startDragBook" @mousedown="startDragBook">
-                             <span class="font-bold truncate max-w-[65%] pointer-events-none">{{ getActiveBook()?.title }}</span>
-                             <div class="flex gap-2 items-center">
-                                 <i v-if="readTogetherState.isMinimized" class="fas fa-expand cursor-pointer active:scale-95" @click.stop="readTogetherState.isMinimized = false"></i>
-                                 <i v-else class="fas fa-compress cursor-pointer text-lg active:scale-95" @click.stop="readTogetherState.isMinimized = true"></i>
-                                 <i class="fas fa-times cursor-pointer text-lg active:scale-95" @click.stop="closeReadTogether"></i>
-                             </div>
-                         </div>
-
-                         <!-- 阅读内容区 -->
-                         <div class="flex-1 relative bg-[#f4ecd8] flex flex-col" @click="readTogetherState.isMinimized = false">
-                             <div class="flex-1 p-4 text-[#3a3327] font-serif leading-relaxed overflow-y-auto" ref="bookContentContainer"
-                                  :style="{
-                                      fontSize: (getActiveBook()?.fontSize || 16) + 'px', 
-                                      whiteSpace: 'pre-wrap',
-                                      wordBreak: 'break-all'
-                                  }">
-                                 <!-- 改用分页截取渲染，彻底解决卡顿 -->
-                                 {{ getPaginatedContent() }}
-                             </div>
-                             
-                             <!-- 底部翻页控制台 (仅全屏显示) -->
-                             <div v-if="!readTogetherState.isMinimized" class="flex justify-between items-center px-4 py-3 bg-[#e8deca]/50 border-t border-[#d3cbb8] text-xs text-[#5c5346]">
-                                 <button @click.stop="prevBookPage" class="px-4 py-2 bg-white/60 rounded-lg shadow-sm font-bold active:scale-95" :disabled="readTogetherState.currentPage === 0">上一页</button>
-                                 <span class="font-bold opacity-70">第 {{ readTogetherState.currentPage + 1 }} 页</span>
-                                 <button @click.stop="nextBookPage" class="px-4 py-2 bg-white/60 rounded-lg shadow-sm font-bold active:scale-95">下一页</button>
-                             </div>
-                         </div>
-                    </div>
-                </transition>
-                                
+                </header>                               
+                                               
                 <!-- 聊天容器：支持自定义背景图 -->
                 <div class="flex-1 overflow-y-auto p-4 space-y-2 bg-[#fdfdfd] bg-cover bg-center" ref="chatContainer" @click="closeChatMenus"
                      :style="{ backgroundImage: wechatState.activeSession.wallpaper ? 'url(' + wechatState.activeSession.wallpaper + ')' : '' }">
@@ -2795,7 +2769,7 @@
                     <h1 class="font-bold text-[17px]">我的书架</h1>
                     <div class="flex items-center gap-3">
                         <button @click="bookshelfState.isMulti = !bookshelfState.isMulti; bookshelfState.selectedIds =[];" :class="bookshelfState.isMulti ? 'text-red-500' : 'text-black'"><i class="fas fa-check-square text-lg"></i></button>
-                        <button @click="$refs.txtImportInput.click()" class="text-black"><i class="fas fa-file-import text-lg"></i></button>
+                        <button @click="$refs.txtImportInput.click()" class="text-black flex items-center gap-1 bg-white px-3 py-1 rounded-lg border border-gray-200 shadow-sm active:bg-gray-50"><i class="fas fa-plus"></i><span class="text-sm font-bold">导入</span></button>
                     </div>
                 </header>
                 <div class="flex-1 overflow-y-auto p-4">
@@ -4523,7 +4497,7 @@ createApp({
               "html_widget": "OPTIONAL: Valid HTML string using Tailwind CSS...",
               "change_avatar": true OR false (OPTIONAL: 仅当用户刚发了一张图片且明确要求你换头像时，将此值设为 true，系统会自动提取那张图为你换上),
               "sticker_id": "OPTIONAL: 填入你想发的表情包的纯数字 ID"
-              "invite_music": true OR false (OPTIONAL: 如果你想邀请用户一起听歌，将其设为 true)
+              "invite_music": true (OPTIONAL: 注意！当用户明确要求“一起听歌/听音乐”时，或者你想主动分享音乐时，必须且只能输出布尔值 true，不可遗漏！)
             }            
             "reply" is an array of strings. Split long text into natural short messages.`;
             
@@ -4636,7 +4610,7 @@ createApp({
                 // --- 解析 AI 更换头像指令 (修复 Base64 乱码 Bug) ---
                 if (parsed.change_avatar === true) {
                 // --- 解析 AI 邀请一起听歌 ---
-                if (parsed.invite_music === true) {
+                if (parsed.invite_music === true || parsed.invite_music === "true") {
                     session.messages.push({
                         type: 'music_invite',
                         isSelf: false,
@@ -6621,9 +6595,9 @@ createApp({
             this.wechatState.showAttachMenu = false;
         },
         startReadTogether(book) {
-            // 强行修复补丁：防止旧版本浏览器缓存覆盖了新加的 drag 和 pageSize 对象
-            if (!this.readTogetherState.drag) {
-                this.readTogetherState.drag = { x: 20, y: 100, isDragging: false, startX: 0, startY: 0 };
+            // 强行修复补丁：确保带有缩放尺寸状态
+            if (!this.readTogetherState.drag || this.readTogetherState.drag.width === undefined) {
+                this.readTogetherState.drag = { x: 20, y: 100, width: 130, height: 180, isDragging: false, isResizing: false, startX: 0, startY: 0, startW: 0, startH: 0 };
             }
             if (!this.readTogetherState.pageSize) {
                 this.readTogetherState.pageSize = 600;
@@ -6691,6 +6665,37 @@ createApp({
             document.removeEventListener('touchmove', this.doDragBook);
             document.removeEventListener('mouseup', this.stopDragBook);
             document.removeEventListener('touchend', this.stopDragBook);
+        },
+        startResizeBook(e) {
+            if(!this.readTogetherState.isMinimized) return;
+            this.readTogetherState.drag.isResizing = true;
+            const touch = e.touches ? e.touches[0] : e;
+            this.readTogetherState.drag.startX = touch.clientX;
+            this.readTogetherState.drag.startY = touch.clientY;
+            this.readTogetherState.drag.startW = this.readTogetherState.drag.width || 130;
+            this.readTogetherState.drag.startH = this.readTogetherState.drag.height || 180;
+            document.addEventListener('mousemove', this.doResizeBook);
+            document.addEventListener('touchmove', this.doResizeBook, {passive: false});
+            document.addEventListener('mouseup', this.stopResizeBook);
+            document.addEventListener('touchend', this.stopResizeBook);
+        },
+        doResizeBook(e) {
+            if(!this.readTogetherState.drag.isResizing) return;
+            e.preventDefault(); 
+            const touch = e.touches ? e.touches[0] : e;
+            const dx = touch.clientX - this.readTogetherState.drag.startX;
+            const dy = touch.clientY - this.readTogetherState.drag.startY;
+            // 限制最小宽高为 100px
+            this.readTogetherState.drag.width = Math.max(100, this.readTogetherState.drag.startW + dx);
+            this.readTogetherState.drag.height = Math.max(100, this.readTogetherState.drag.startH + dy);
+        },
+        stopResizeBook() {
+            this.readTogetherState.drag.isResizing = false;
+            document.removeEventListener('mousemove', this.doResizeBook);
+            document.removeEventListener('touchmove', this.doResizeBook);
+            document.removeEventListener('mouseup', this.stopResizeBook);
+            document.removeEventListener('touchend', this.stopResizeBook);
+            this.saveData();
         },
         
         // --- 接受 AI 听歌邀请 ---
