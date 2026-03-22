@@ -75,11 +75,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let countdown = 5;
     let timer = null;
 
-    // 勾选免责声明才能输入
+    // 拦截点击，强制必须先阅读
+    agreeCheck.addEventListener('click', (e) => {
+        if (!window.hasReadDisclaimer) {
+            e.preventDefault(); // 阻止勾选
+            alert("请先点击蓝色链接《免责声明及隐私协议》进行阅读！");
+        }
+    });
+
     agreeCheck.addEventListener('change', (e) => {
-        activateBtn.disabled = !e.target.checked;
-        const inputs = document.querySelectorAll('.form-input');
-        inputs.forEach(input => input.disabled = !e.target.checked);
+        if (window.hasReadDisclaimer) {
+            activateBtn.disabled = !e.target.checked;
+            const inputs = document.querySelectorAll('.form-input');
+            inputs.forEach(input => input.disabled = !e.target.checked);
+        }
     });
 
     // 打开弹窗
@@ -105,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 关闭弹窗
     modalBtn.addEventListener('click', () => {
         modal.classList.remove('show');
-        agreeCheck.disabled = false; // 必须加上这行解除禁用
+        window.hasReadDisclaimer = true; // 标记已读
         agreeCheck.checked = true;
         activateBtn.disabled = false;
         document.querySelectorAll('.form-input').forEach(input => input.disabled = false);
