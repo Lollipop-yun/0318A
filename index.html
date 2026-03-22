@@ -19,9 +19,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    
-    <!-- 引入深层数据防丢失脚本 -->
-    <script src="./persist-storage.js"></script>
+        
     <link rel="stylesheet" href="./activation.css">
     <script src="./activation.js"></script>
     
@@ -2986,33 +2984,35 @@
 
 <script>
 const { createApp } = Vue;
-// --- 终极内置数据防丢引擎 (无需外部文件) ---
-const DB_NAME = 'Aovein_SafeDB';
-function initSafeDB() {
-    return new Promise((resolve) => {
-        const req = indexedDB.open(DB_NAME, 1);
-        req.onupgradeneeded = (e) => {
-            if (!e.target.result.objectStoreNames.contains('store')) {
-                e.target.result.createObjectStore('store');
-            }
-        };
-        req.onsuccess = (e) => resolve(e.target.result);
-        req.onerror = () => resolve(null);
-    });
-}
-window.saveToSafeStorage = async (k, v) => {
-    const db = await initSafeDB();
-    if(db) db.transaction('store', 'readwrite').objectStore('store').put(v, k);
-};
-window.loadFromSafeStorage = async (k) => {
-    const db = await initSafeDB();
-    if(!db) return null;
-    return new Promise(res => {
-        const req = db.transaction('store', 'readonly').objectStore('store').get(k);
-        req.onsuccess = () => res(req.result);
-        req.onerror = () => res(null);
-    });
-};
+// --- 终极内置数据防丢引擎 (安全隔离版) ---
+(function(){
+    const SAFE_DB_NAME = 'Aovein_SafeDB';
+    function initSafeDB() {
+        return new Promise((resolve) => {
+            const req = indexedDB.open(SAFE_DB_NAME, 1);
+            req.onupgradeneeded = (e) => {
+                if (!e.target.result.objectStoreNames.contains('store')) {
+                    e.target.result.createObjectStore('store');
+                }
+            };
+            req.onsuccess = (e) => resolve(e.target.result);
+            req.onerror = () => resolve(null);
+        });
+    }
+    window.saveToSafeStorage = async (k, v) => {
+        const db = await initSafeDB();
+        if(db) db.transaction('store', 'readwrite').objectStore('store').put(v, k);
+    };
+    window.loadFromSafeStorage = async (k) => {
+        const db = await initSafeDB();
+        if(!db) return null;
+        return new Promise(res => {
+            const req = db.transaction('store', 'readonly').objectStore('store').get(k);
+            req.onsuccess = () => res(req.result);
+            req.onerror = () => res(null);
+        });
+    };
+})();
 // ------------------------------------------
 
 const compressImage = (file, maxWidth = 800, quality = 0.8) => {
