@@ -2984,12 +2984,13 @@
 
 <script>
 const { createApp } = Vue;
-// --- 终极内置数据防丢引擎 (安全隔离版) ---
-(function(){
-    const SAFE_DB_NAME = 'Aovein_SafeDB';
-    function initSafeDB() {
-        return new Promise((resolve) => {
-            const req = indexedDB.open(SAFE_DB_NAME, 1);
+
+// --- 终极内置数据防丢引擎 (极度安全版) ---
+window.AoveinSafeDBName = 'Aovein_SafeDB_V2';
+window.initSafeDB = function() {
+    return new Promise((resolve) => {
+        try {
+            const req = indexedDB.open(window.AoveinSafeDBName, 1);
             req.onupgradeneeded = (e) => {
                 if (!e.target.result.objectStoreNames.contains('store')) {
                     e.target.result.createObjectStore('store');
@@ -2997,22 +2998,26 @@ const { createApp } = Vue;
             };
             req.onsuccess = (e) => resolve(e.target.result);
             req.onerror = () => resolve(null);
-        });
+        } catch(err) { resolve(null); }
+    });
+};
+window.saveToSafeStorage = async (k, v) => {
+    const db = await window.initSafeDB();
+    if(db) {
+        try { db.transaction('store', 'readwrite').objectStore('store').put(v, k); } catch(e){}
     }
-    window.saveToSafeStorage = async (k, v) => {
-        const db = await initSafeDB();
-        if(db) db.transaction('store', 'readwrite').objectStore('store').put(v, k);
-    };
-    window.loadFromSafeStorage = async (k) => {
-        const db = await initSafeDB();
-        if(!db) return null;
-        return new Promise(res => {
+};
+window.loadFromSafeStorage = async (k) => {
+    const db = await window.initSafeDB();
+    if(!db) return null;
+    return new Promise(res => {
+        try {
             const req = db.transaction('store', 'readonly').objectStore('store').get(k);
             req.onsuccess = () => res(req.result);
             req.onerror = () => res(null);
-        });
-    };
-})();
+        } catch(e) { res(null); }
+    });
+};
 // ------------------------------------------
 
 const compressImage = (file, maxWidth = 800, quality = 0.8) => {
@@ -3279,20 +3284,38 @@ createApp({
         this.imageUploadInput.accept = 'image/*';
         this.imageUploadInput.onchange = this.handleImageUploadForChat;
         
-        // 设定 2000ms (2秒) 的等待时间
-            setTimeout(() => {
+        setTimeout(() => {
             const loader = document.getElementById('loading-screen');
-            if (loader) loader.style.opacity = '0';
+            if(loader) loader.style.opacity = '0';
             
-            // 调用 activation.js 中的跨浏览器指纹验证逻辑
-            if (typeof window.checkActivationState === 'function') {
-                window.checkActivationState();
+            // --- 终极防卡死加载逻辑 ---
+            try {
+                if (typeof window.checkActivationState === 'function') {
+                    window.checkActivationState();
+                } else {
+                    // 如果 activation.js 没加载成功，直接强行按本地状态判断进入！
+                    if (this.isActivated) {
+                        document.getElementById('app').style.display = 'flex';
+                        const scr = document.getElementById('activation-screen');
+                        if (scr) scr.style.display = 'none';
+                    } else {
+                        document.getElementById('app').style.display = 'none';
+                        const scr = document.getElementById('activation-screen');
+                        if (scr) scr.classList.remove('hidden-screen');
+                    }
+                }
+            } catch(e) {
+                console.error("加载错误", e);
+                document.getElementById('app').style.display = 'flex';
             }
-            
+            // ------------------------
+
             setTimeout(() => { if (loader) loader.style.display = 'none'; }, 800);
         }, 2000);
 
-        this.updateTime(); this.timer = setInterval(this.updateTime, 1000); this.initBattery();
+        this.updateTime(); 
+        this.timer = setInterval(this.updateTime, 1000); 
+        this.initBattery();
         document.addEventListener("fullscreenchange", () => { this.isFullScreen = !!document.fullscreenElement; });
         if(this.themeConfig.fontUrl && this.themeConfig.fontFamily) { 
             this.loadFont(this.themeConfig.fontUrl, this.themeConfig.fontFamily); 
