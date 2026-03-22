@@ -471,7 +471,7 @@
              <!-- 顶部控制栏 (绑定了拖拽事件) -->
              <div class="flex justify-between items-center bg-[#e8deca] text-[#5c5346] shrink-0 z-20 shadow-sm" 
                   :class="readTogetherState.isMinimized ? 'px-2 py-1.5 text-[11px] cursor-move' : 'h-[60px] px-4 text-sm pt-safe'"
-                  @touchstart.prevent="startDragBook" @mousedown.prevent="startDragBook">
+                  @touchstart="startDragBook" @mousedown="startDragBook">
                  <span class="font-bold truncate max-w-[65%] pointer-events-none">{{ getActiveBook()?.title }}</span>
                  <div class="flex gap-2 items-center">
                      <i v-if="readTogetherState.isMinimized" class="fas fa-expand cursor-pointer active:scale-95" @click.stop="readTogetherState.isMinimized = false"></i>
@@ -483,7 +483,7 @@
              <!-- 阅读内容区 -->
              <div class="flex-1 relative bg-[#f4ecd8] flex flex-col overflow-hidden">
                  <div class="flex-1 p-4 text-[#3a3327] font-serif leading-relaxed overflow-y-auto scrollbar-hide" ref="bookContentContainer"
-                      :style="{ fontSize: (getActiveBook()?.fontSize || 16) + 'px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }">
+                      :style="{ fontSize: readTogetherState.isMinimized ? ((getActiveBook()?.fontSize || 16) * ((readTogetherState.drag ? readTogetherState.drag.width : 130) / 250)) + 'px' : (getActiveBook()?.fontSize || 16) + 'px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }">
                      <!-- 极速分页渲染 -->
                      {{ getPaginatedContent() }}
                  </div>
@@ -2768,7 +2768,7 @@
                     <button @click="wechatState.activeNav = 'discover'" class="w-8 h-8 flex items-center justify-center"><i class="fas fa-chevron-left text-lg text-black"></i></button>
                     <h1 class="font-bold text-[17px]">我的书架</h1>
                     <div class="flex items-center gap-3">
-                        <button @click="bookshelfState.isMulti = !bookshelfState.isMulti; bookshelfState.selectedIds =[];" :class="bookshelfState.isMulti ? 'text-red-500' : 'text-black'"><i class="fas fa-check-square text-lg"></i></button>
+                        <button @click="bookshelfState.isMulti = !bookshelfState.isMulti; bookshelfState.selectedIds =[];" class="flex items-center gap-1 px-3 py-1 rounded-lg border shadow-sm active:bg-gray-50 transition" :class="bookshelfState.isMulti ? 'bg-red-50 text-red-500 border-red-200' : 'bg-white text-black border-gray-200'"><i class="fas fa-check-square"></i><span class="text-sm font-bold">{{ bookshelfState.isMulti ? '取消' : '多选' }}</span></button>
                         <button @click="$refs.txtImportInput.click()" class="text-black flex items-center gap-1 bg-white px-3 py-1 rounded-lg border border-gray-200 shadow-sm active:bg-gray-50"><i class="fas fa-plus"></i><span class="text-sm font-bold">导入</span></button>
                     </div>
                 </header>
@@ -4609,8 +4609,15 @@ createApp({
 
                 // --- 解析 AI 更换头像指令 (修复 Base64 乱码 Bug) ---
                 if (parsed.change_avatar === true) {
-                // --- 解析 AI 邀请一起听歌 ---
-                if (parsed.invite_music === true || parsed.invite_music === "true") {
+                // --- 解析 AI 邀请一起听歌 (加入双重保险) ---
+                let isInvitingMusic = parsed.invite_music === true || parsed.invite_music === "true";
+                // 关键词双重保险：如果AI忘记输出JSON指令，但回答里包含了一起听歌，强制触发卡片
+                const replyString = JSON.stringify(parsed.reply || "");
+                if (replyString.includes("一起听") || replyString.includes("听歌") || replyString.includes("放首歌")) {
+                    isInvitingMusic = true;
+                }
+                
+                if (isInvitingMusic) {
                     session.messages.push({
                         type: 'music_invite',
                         isSelf: false,
