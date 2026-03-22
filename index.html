@@ -2381,18 +2381,18 @@
                     <div v-if="wechatState.activeSession.messages.length === 0" class="text-center text-xs text-gray-300 py-4">星期日 13:42</div>
                     
                     <div v-for="(msg, i) in wechatState.activeSession.messages" :key="i">
-                        <!-- 时间旁白 (新增) -->
+                        <!-- 时间旁白 -->
                         <div v-if="shouldShowTime(msg, i)" class="chat-timestamp-divider">
                             <span>{{ formatChatTime(msg.time) }}</span>
                         </div>
 
-                        <!-- 系统旁白消息 (如：拍一拍) -->
+                        <!-- 系统旁白消息 (如：拍一拍、换头像) -->
                         <div v-if="msg.type === 'system'" class="chat-timestamp-divider">
                             <span>{{ msg.content }}</span>
                         </div>
 
                         <!-- 正常消息 -->
-                        <div v-else-if="!msg.isRecalled" class="flex w-full gap-3 mb-2 mt-2" :class="msg.isSelf ? 'flex-row-reverse' : 'flex-row'" @contextmenu.prevent="showChatContextMenu($event, msg, i)" @touchstart="longPressStart($event, msg, i)" @touchend="longPressEnd">
+                        <div v-else-if="!msg.isRecalled" class="flex w-full gap-3 mb-2 mt-2" :class="msg.isSelf ? 'flex-row-reverse' : 'flex-row'" @contextmenu.prevent="showChatContextMenu($event, msg, i)">
                             <!-- 复选框 -->
                             <div v-if="isMultiSelectMode" class="self-center" @click.stop="toggleSelectMessage(msg)">
                                 <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center transition" :class="selectedMessageIds.includes(msg) ? 'bg-black border-black' : 'bg-white'">
@@ -2400,20 +2400,21 @@
                                 </div>
                             </div>
                             
-                            <!-- 绑定了双击拍一拍事件 -->
-                            <div class="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-gray-100" @dblclick="handleAvatarDblClick(msg)" @touchstart="longPressStart($event, msg, i)" @touchend="longPressEnd" @contextmenu.prevent="showChatContextMenu($event, msg, i)">
-                                <!-- Dynamic Avatar Logic -->
+                            <!-- 头像 (双击触发拍一拍) -->
+                            <div class="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-gray-100" @dblclick="handleAvatarDblClick(msg)" @contextmenu.prevent="showChatContextMenu($event, msg, i)">
                                 <img :src="getChatAvatar(msg)" class="w-full h-full object-cover">
                             </div>
+                            
                             <div class="flex flex-col max-w-[70%]" :class="msg.isSelf ? 'items-end' : 'items-start'">
-                                <!-- 语音气泡：动态宽度 -->
+                                <!-- 气泡核心 -->
                                 <div class="chat-bubble" :class="[msg.isSelf ? 'chat-bubble-user' : 'chat-bubble-ai', msg.type === 'voice' ? 'chat-bubble-voice' : '', msg.type === 'image' || msg.type === 'fake_image' || msg.type === 'sticker' ? 'chat-bubble-image' : '', msg.type === 'red_packet' || msg.type === 'transfer' ? 'chat-bubble-finance' : '', msg.type === 'transfer' ? 'chat-bubble-transfer' : '', msg.type === 'red_packet' ? 'chat-bubble-redpacket' : '', msg.type === 'qinmi_invite' ? 'chat-bubble-qinmi' : '', msg.type === 'moment' ? 'chat-bubble-moment' : '', msg.type === 'location' ? 'chat-bubble-location' : '', msg.isReceived ? 'received' : '']" 
                                      :style="msg.type === 'voice' ? { width: (60 + Math.min(msg.duration, 60) * 4) + 'px' } : {}"
                                      @click="handleChatBubbleClick(msg)"
-                                     @touchstart="longPressStart($event, msg, i)" @touchend="longPressEnd" @contextmenu.prevent="showChatContextMenu($event, msg, i)">
+                                     @contextmenu.prevent="showChatContextMenu($event, msg, i)">
+                                     
                                     <div v-if="msg.quote" class="quote-block"><span class="font-bold mr-1">{{ msg.quote.name }}:</span>{{ msg.quote.content }}</div>
                                     
-                                    <!-- 语音消息 (改进版：声波竖条) -->
+                                    <!-- 语音消息 -->
                                     <div v-if="msg.type === 'voice'" class="flex items-center justify-between w-full">
                                         <div class="voice-wave-container" :class="msg.isSelf ? 'order-last' : ''">
                                             <div class="voice-wave-bar"></div>
@@ -2423,15 +2424,16 @@
                                         <span class="font-bold text-xs whitespace-nowrap">{{ msg.duration }}"</span>
                                         <div v-if="!msg.isSelf && !msg.isRead" class="w-2 h-2 rounded-full bg-red-500 ml-1"></div>
                                     </div>
+                                    
                                     <!-- 图片/表情包消息 -->
                                     <img v-else-if="msg.type === 'image' || msg.type === 'sticker'" :src="msg.content" class="block">
-                                    <!-- 灰色图片 (Fake Image - Click to Reveal) -->
+                                    
+                                    <!-- 灰色图片 -->
                                     <div v-else-if="msg.type === 'fake_image'" class="chat-bubble-fake-image">
-                                        <transition name="fade">
-                                            <div v-if="msg.isRevealed" class="fake-image-text">{{ msg.content }}</div>
-                                        </transition>
+                                        <transition name="fade"><div v-if="msg.isRevealed" class="fake-image-text">{{ msg.content }}</div></transition>
                                     </div>
-                                    <!-- 红包消息 (Updated UI) -->
+                                    
+                                    <!-- 红包消息 -->
                                     <div v-else-if="msg.type === 'red_packet'" class="finance-content-wrapper">
                                         <div class="finance-content">
                                             <div class="redpacket-icon-box finance-icon-box"><i class="fas fa-wallet"></i></div>
@@ -2439,7 +2441,8 @@
                                         </div>
                                         <div class="finance-footer">微信红包</div>
                                     </div>
-                                    <!-- 转账消息 (Updated UI) -->
+                                    
+                                    <!-- 转账消息 -->
                                     <div v-else-if="msg.type === 'transfer'" class="finance-content-wrapper">
                                         <div class="finance-content">
                                             <div class="finance-icon-box"><i class="fas fa-exchange-alt"></i></div>
@@ -2447,20 +2450,38 @@
                                         </div>
                                         <div class="finance-footer">微信转账</div>
                                     </div>
-                                    <!-- 亲密付邀请 (Updated UI) -->
+                                    
+                                    <!-- 亲密付邀请 -->
                                     <div v-else-if="msg.type === 'qinmi_invite'" class="qinmi-content-wrapper">
-                                        <div class="qinmi-header">
-                                            <i class="fas fa-heart qinmi-icon"></i>
-                                            <span class="font-bold">{{ msg.inviteType === 'give' ? '亲密付' : '亲密付求助' }}</span>
-                                        </div>
-                                        <div class="qinmi-body">
-                                            {{ msg.inviteType === 'give' ? '我想为你开通亲密付' : '能帮我开通亲密付吗？' }}
-                                        </div>
-                                        <div class="qinmi-footer">
-                                            <span>微信亲密付</span>
-                                            <i class="fas fa-chevron-right text-xs"></i>
+                                        <div class="qinmi-header"><i class="fas fa-heart qinmi-icon"></i><span class="font-bold">{{ msg.inviteType === 'give' ? '亲密付' : '亲密付求助' }}</span></div>
+                                        <div class="qinmi-body">{{ msg.inviteType === 'give' ? '我想为你开通亲密付' : '能帮我开通亲密付吗？' }}</div>
+                                        <div class="qinmi-footer"><span>微信亲密付</span><i class="fas fa-chevron-right text-xs"></i></div>
+                                    </div>
+                                    
+                                    <!-- 定位卡片 -->
+                                    <div v-else-if="msg.type === 'location'">
+                                        <div class="location-header"><div class="location-title">{{ msg.name }}</div><div class="location-desc">{{ msg.address }}</div></div>
+                                        <div class="location-map"><i class="fas fa-map-marker-alt location-pin"></i></div>
+                                    </div>
+                                    
+                                    <!-- 转发卡片 -->
+                                    <div v-else-if="msg.type === 'forward'" class="forward-card">
+                                        <div class="forward-title">聊天记录</div>
+                                        <div class="forward-content">{{ msg.content }}</div>
+                                    </div>
+                                    
+                                    <!-- 朋友圈转发卡片 -->
+                                    <div v-else-if="msg.type === 'moment'" class="moment-card-wrapper">
+                                        <div class="moment-card-header"><img :src="msg.momentData.avatar" class="w-4 h-4 rounded-sm"><span>{{ msg.momentData.name }}</span></div>
+                                        <div class="moment-card-content mt-2">
+                                            <div v-if="msg.momentData.images && msg.momentData.images.length>0" class="moment-card-thumb"><img :src="msg.momentData.images[0]" class="w-full h-full object-cover"></div>
+                                            <div class="moment-card-text">{{ msg.momentData.content || '[图片动态]' }}</div>
                                         </div>
                                     </div>
+                                    
+                                    <!-- 动态交互卡片 (HTML UI) -->
+                                    <div v-else-if="msg.type === 'html'" class="w-full min-w-[220px] rounded-lg overflow-hidden" v-html="msg.content"></div>
+                                    
                                     <!-- 音乐邀请卡片 -->
                                     <div v-else-if="msg.type === 'music_invite'" class="bg-white border border-gray-100 rounded-xl p-3 shadow-sm w-[220px]">
                                         <div class="flex items-center gap-3 mb-3">
@@ -2475,41 +2496,11 @@
                                             <button v-if="!msg.isAccepted" @click.stop="msg.isAccepted=true; showToast('已拒绝')" class="flex-1 bg-gray-100 text-gray-500 text-xs font-bold py-2 rounded-lg active:scale-95">拒绝</button>
                                         </div>
                                     </div>
-                                    <!-- 定位卡片 (New) -->
-                                    <div v-else-if="msg.type === 'location'">
-                                        <div class="location-header">
-                                            <div class="location-title">{{ msg.name }}</div>
-                                            <div class="location-desc">{{ msg.address }}</div>
-                                        </div>
-                                        <div class="location-map">
-                                            <i class="fas fa-map-marker-alt location-pin"></i>
-                                        </div>
-                                    </div>
-                                    <!-- 转发卡片 -->
-                                    <div v-else-if="msg.type === 'forward'" class="forward-card">
-                                        <div class="forward-title">聊天记录</div>
-                                        <div class="forward-content">{{ msg.content }}</div>
-                                    </div>
-                                    <!-- 朋友圈转发卡片 (NEW) -->
-                                    <div v-else-if="msg.type === 'moment'" class="moment-card-wrapper">
-                                        <div class="moment-card-header">
-                                            <img :src="msg.momentData.avatar" class="w-4 h-4 rounded-sm">
-                                            <span>{{ msg.momentData.name }}</span>
-                                        </div>
-                                        <div class="moment-card-content mt-2">
-                                            <div v-if="msg.momentData.images && msg.momentData.images.length>0" class="moment-card-thumb"><img :src="msg.momentData.images[0]" class="w-full h-full object-cover"></div>
-                                            <div class="moment-card-text">{{ msg.momentData.content || '[图片动态]' }}</div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- 动态交互卡片 (HTML UI) -->
-                                    <div v-else-if="msg.type === 'html'" class="w-full min-w-[220px] rounded-lg overflow-hidden" v-html="msg.content"></div>
-                                    
-                                   <!-- 文本消息 (含后台预翻译功能) -->
+
+                                    <!-- 文本消息 (含后台预翻译功能) -->
                                     <div v-else class="flex flex-col">
                                         <span>{{ msg.content }}</span>
                                         <transition name="fade">
-                                            <!-- @click.stop 用于阻止冒泡，实现点击翻译文本即可收起 -->
                                             <div v-if="msg.showTranslation && (msg.isTranslating || msg.translation)" @click.stop="msg.showTranslation = false; saveData()" class="mt-2 pt-2 border-t border-gray-400/20 text-[13px] opacity-90 cursor-pointer active:opacity-50">
                                                 <div v-if="msg.isTranslating" class="flex items-center gap-1 text-gray-400"><i class="fas fa-spinner fa-spin"></i> 提前为您翻译中...</div>
                                                 <div v-else-if="msg.translation === '翻译失败'" class="text-red-400"><i class="fas fa-exclamation-circle"></i> 翻译失败，点击上方气泡重试</div>
@@ -2523,7 +2514,8 @@
                                 <span class="chat-timestamp-small" :class="wechatState.activeSession.wallpaper ? 'text-white/60 drop-shadow-sm' : 'text-gray-300'">{{ formatChatTime(msg.time) }} Read</span>
                             </div>
                         </div>
-                        <!-- 撤回提示 (旁白弹窗) -->
+                        
+                        <!-- 撤回提示 -->
                         <div v-else class="system-recall-tip">
                             <div class="bg-gray-100/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs text-gray-500 shadow-sm flex items-center gap-2">
                                 <span>{{ msg.isSelf ? '你' : wechatState.activeSession.name }} 撤回了一条消息</span>
