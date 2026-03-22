@@ -439,6 +439,66 @@
 
     <!-- 全局弹窗 (Z-Index 调高) -->
     <transition name="fade"><div v-if="toast.show" class="fixed inset-0 z-[90000] flex items-center justify-center pointer-events-none"><div class="bg-black/70 text-white px-5 py-3 rounded-xl shadow-lg backdrop-blur-sm text-sm font-medium">{{ toast.message }}</div></div></transition>
+    <!-- ================= 移至全局的一起读组件 ================= -->
+    <!-- 一起读选择小说弹窗 -->
+    <transition name="scale">
+        <div v-if="readTogetherSelectModal.show" class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div class="bg-white w-[85%] max-h-[70vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0">
+                    <h3 class="font-bold text-lg">选择一起读的小说</h3>
+                    <button @click="readTogetherSelectModal.show = false" class="text-blue-500 text-sm">取消</button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 grid grid-cols-3 gap-4">
+                    <div v-if="bookshelf.length === 0" class="col-span-3 text-center text-gray-400 text-sm mt-10">书架为空，请先去发现页导入小说</div>
+                    <div v-for="book in sortedBookshelf" :key="book.id" class="flex flex-col items-center cursor-pointer active:scale-95 transition" @click="startReadTogether(book)">
+                        <div class="w-16 h-20 bg-gray-200 rounded-md mb-2 overflow-hidden border border-gray-300 shadow-sm relative">
+                            <img v-if="book.cover" :src="book.cover" class="w-full h-full object-cover">
+                            <div v-else class="w-full h-full flex items-center justify-center bg-[#f0ede6] text-[#8b7e66] text-[10px] p-1 text-center font-bold">{{ book.title }}</div>
+                        </div>
+                        <span class="text-xs font-bold truncate w-full text-center">{{ book.title }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </transition>
+
+    <!-- 一起读 阅读器 (拖拽/分页/防卡顿版) -->
+    <transition name="fade">
+        <div v-if="readTogetherState.show" 
+             class="fixed z-[99000] bg-[#f4ecd8] border border-[#d3cbb8] shadow-2xl flex flex-col transition-all duration-300"
+             :style="readTogetherState.isMinimized ? { top: readTogetherState.drag.y + 'px', left: readTogetherState.drag.x + 'px', width: '130px', height: '180px' } : { top: '0px', left: '0px', width: '100%', height: '100%' }"
+             :class="readTogetherState.isMinimized ? 'rounded-2xl overflow-hidden' : 'pb-safe'">
+             
+             <!-- 顶部控制栏 (绑定了拖拽事件) -->
+             <div class="flex justify-between items-center bg-[#e8deca] text-[#5c5346] shrink-0 z-10 shadow-sm" 
+                  :class="readTogetherState.isMinimized ? 'px-2 py-1.5 text-[11px] cursor-move' : 'h-[60px] px-4 text-sm pt-safe'"
+                  @touchstart="startDragBook" @mousedown="startDragBook">
+                 <span class="font-bold truncate max-w-[65%] pointer-events-none">{{ getActiveBook()?.title }}</span>
+                 <div class="flex gap-2 items-center">
+                     <i v-if="readTogetherState.isMinimized" class="fas fa-expand cursor-pointer active:scale-95" @click.stop="readTogetherState.isMinimized = false"></i>
+                     <i v-else class="fas fa-compress cursor-pointer text-lg active:scale-95" @click.stop="readTogetherState.isMinimized = true"></i>
+                     <i class="fas fa-times cursor-pointer text-lg active:scale-95" @click.stop="closeReadTogether"></i>
+                 </div>
+             </div>
+
+             <!-- 阅读内容区 -->
+             <div class="flex-1 relative bg-[#f4ecd8] flex flex-col" @click="readTogetherState.isMinimized = false">
+                 <div class="flex-1 p-4 text-[#3a3327] font-serif leading-relaxed overflow-y-auto scrollbar-hide" ref="bookContentContainer"
+                      :style="{ fontSize: (getActiveBook()?.fontSize || 16) + 'px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }">
+                     <!-- 极速分页渲染 -->
+                     {{ getPaginatedContent() }}
+                 </div>
+                 
+                 <!-- 底部翻页控制台 (全屏时显示) -->
+                 <div v-if="!readTogetherState.isMinimized" class="flex justify-between items-center px-4 py-3 bg-[#e8deca]/50 border-t border-[#d3cbb8] text-xs text-[#5c5346] shrink-0 pb-safe">
+                     <button @click.stop="prevBookPage" class="px-4 py-2 bg-white/60 rounded-lg shadow-sm font-bold active:scale-95" :disabled="readTogetherState.currentPage === 0">上一页</button>
+                     <span class="font-bold opacity-70">第 {{ readTogetherState.currentPage + 1 }} 页</span>
+                     <button @click.stop="nextBookPage" class="px-4 py-2 bg-white/60 rounded-lg shadow-sm font-bold active:scale-95">下一页</button>
+                 </div>
+             </div>
+        </div>
+    </transition>
+    <!-- ==================================================== -->
     <transition name="scale">
         <div v-if="inputModal.show" class="fixed inset-0 z-[90000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
             <div class="bg-white w-[80%] max-w-xs rounded-2xl overflow-hidden shadow-2xl transform transition-all">
@@ -2796,27 +2856,7 @@
                         </div>
                     </div>
                 </div>
-            </transition>
-
-            <!-- 一起读选择小说弹窗 -->
-            <transition name="app-slide">
-                <div v-if="readTogetherSelectModal.show" class="fixed inset-0 z-[70000]">
-                    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="readTogetherSelectModal.show = false"></div>
-                    <div class="ios-list-modal h-[70vh]">
-                        <div class="ios-list-header">选择要一起读的小说 <button class="absolute right-4 text-blue-500 font-normal text-sm" @click="readTogetherSelectModal.show = false">取消</button></div>
-                        <div class="ios-list-content p-4 grid grid-cols-3 gap-4">
-                            <div v-if="bookshelf.length === 0" class="col-span-3 text-center text-gray-400 text-sm mt-10">书架为空，请先去发现页导入小说</div>
-                            <div v-for="book in sortedBookshelf" :key="book.id" class="flex flex-col items-center cursor-pointer" @click="startReadTogether(book)">
-                                <div class="w-16 h-20 bg-gray-200 rounded-md mb-2 overflow-hidden border border-gray-300 shadow-sm relative">
-                                    <img v-if="book.cover" :src="book.cover" class="w-full h-full object-cover">
-                                    <div v-else class="w-full h-full flex items-center justify-center bg-[#f0ede6] text-[#8b7e66] text-[10px] p-1 text-center font-bold">{{ book.title }}</div>
-                                </div>
-                                <span class="text-xs font-bold truncate w-full text-center">{{ book.title }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </transition>
+            </transition>            
             
             <!-- 我 -->
             <main v-if="wechatState.activeNav === 'me'" class="flex-1 overflow-y-auto bg-white">
@@ -3155,8 +3195,7 @@ createApp({
             bookshelfState: { isMulti: false, selectedIds:[], showEdit: false, editingBook: null },
             readTogetherSelectModal: { show: false },
             readTogetherState: { show: false, isMinimized: true, activeBookId: null, currentPage: 0, pageSize: 600, drag: { x: 20, y: 100, isDragging: false, startX: 0, startY: 0 } },
-            addMusicModal: { show: false, mode: 'add', id: null, title: '', artist: '', url: '', lyricType: 'file', lrcText: '', lrcFile: null, cover: '' },
-            currentAudioObj: null,
+            addMusicModal: { show: false, mode: 'add', id: null, title: '', artist: '', url: '', lyricType: 'file', lrcText: '', lrcFile: null, cover: '' },            
             tempEditingSong: null, 
 
             // Moments
@@ -3760,12 +3799,11 @@ createApp({
 
         playSong(song) {
             if (this.musicManager.isMulti) return; 
-            if (this.currentAudioObj) {
-                this.currentAudioObj.pause();
-                this.currentAudioObj = null;
+            if (window._globalAudio) {
+                window._globalAudio.pause();
+                window._globalAudio = null;
             }
             song.playCount = (song.playCount || 0) + 1;
-            this.saveData();
             
             this.musicModal.currentId = song.id;
             this.musicModal.songTitle = song.title;
@@ -3780,38 +3818,35 @@ createApp({
             
             this.parseLyrics(song.lyrics);
             
-            this.currentAudioObj = new Audio(song.url);
-            this.currentAudioObj.loop = (this.musicModal.playMode === 'single'); 
+            window._globalAudio = new Audio(song.url);
+            window._globalAudio.loop = (this.musicModal.playMode === 'single'); 
             
-            this.currentAudioObj.play().catch(e => console.error("Play error", e));
+            window._globalAudio.play().catch(e => console.error("Play error", e));
             
-            this.currentAudioObj.onloadedmetadata = () => {
-                this.musicModal.durationSec = this.currentAudioObj.duration;
-                this.musicModal.duration = this.formatTime(this.currentAudioObj.duration);
+            window._globalAudio.onloadedmetadata = () => {
+                this.musicModal.durationSec = window._globalAudio.duration;
+                this.musicModal.duration = this.formatTime(window._globalAudio.duration);
             };
             
-            this.currentAudioObj.onended = () => {
+            window._globalAudio.onended = () => {
                 if (this.musicModal.playMode === 'single') {
-                    this.currentAudioObj.currentTime = 0;
-                    this.currentAudioObj.play();
+                    window._globalAudio.currentTime = 0;
+                    window._globalAudio.play();
                 } else {
                     this.nextSong();
                 }
             };
             
-            this.currentAudioObj.ontimeupdate = () => {
-                 if (!this.currentAudioObj) return;
-                 const cur = this.currentAudioObj.currentTime;
+            window._globalAudio.ontimeupdate = () => {
+                 if (!window._globalAudio) return;
+                 const cur = window._globalAudio.currentTime;
                  this.musicModal.currentSec = cur;
                  this.musicModal.current = this.formatTime(cur);
                  if (this.musicModal.currentLyrics.length > 0) {
                      let activeIdx = -1;
                      for (let i = 0; i < this.musicModal.currentLyrics.length; i++) {
-                         if (cur >= this.musicModal.currentLyrics[i].time) {
-                             activeIdx = i;
-                         } else {
-                             break;
-                         }
+                         if (cur >= this.musicModal.currentLyrics[i].time) activeIdx = i;
+                         else break;
                      }
                      if (activeIdx !== this.musicModal.activeLyricIndex) {
                          this.musicModal.activeLyricIndex = activeIdx;
@@ -3819,12 +3854,11 @@ createApp({
                      }
                  }
             };
+            this.saveData();
         },
         
         seekAudio() {
-            if (this.currentAudioObj) {
-                this.currentAudioObj.currentTime = this.musicModal.currentSec;
-            }
+            if (window._globalAudio) window._globalAudio.currentTime = this.musicModal.currentSec;
         },
 
         parseLyrics(lrc) {
@@ -3875,12 +3909,12 @@ createApp({
         },
 
         toggleMusicPlay() {
-            if (this.currentAudioObj) {
-                if (this.currentAudioObj.paused) {
-                    this.currentAudioObj.play();
+            if (window._globalAudio) {
+                if (window._globalAudio.paused) {
+                    window._globalAudio.play();
                     this.musicModal.isPlaying = true;
                 } else {
-                    this.currentAudioObj.pause();
+                    window._globalAudio.pause();
                     this.musicModal.isPlaying = false;
                 }
             } else if (this.musicPlaylist.length > 0) {
@@ -3918,15 +3952,15 @@ createApp({
             this.showConfirm('确定删除选中的音乐？', () => {
                 this.musicPlaylist = this.musicPlaylist.filter(s => !this.musicManager.selectedIds.includes(s.id));
                 if (this.musicManager.selectedIds.includes(this.musicModal.currentId)) {
-                    if(this.currentAudioObj) {
-                        this.currentAudioObj.pause();
-                        this.currentAudioObj = null;
+                    if (window._globalAudio) {
+                        window._globalAudio.pause();
+                        window._globalAudio = null;
                     }
                     this.musicModal.isPlaying = false;
                     this.musicModal.songTitle = '---';
                     this.musicModal.artist = '---';
                 }
-                this.musicManager.selectedIds = [];
+                this.musicManager.selectedIds =[];
                 this.musicManager.isMulti = false;
                 this.saveData();
                 this.showToast('删除成功');
@@ -3943,9 +3977,8 @@ createApp({
             if(this.musicModal.playMode === 'loop') this.musicModal.playMode = 'single';
             else if(this.musicModal.playMode === 'single') this.musicModal.playMode = 'random';
             else this.musicModal.playMode = 'loop';
-            if(this.currentAudioObj) {
-                this.currentAudioObj.loop = (this.musicModal.playMode === 'single');
-            }
+            if(window._globalAudio) window._globalAudio.loop = (this.musicModal.playMode === 'single');
+            this.saveData();
         },
         getPlayModeName() {
             if(this.musicModal.playMode === 'loop') return '列表循环';
@@ -3956,13 +3989,14 @@ createApp({
             this.musicModal.showPlaylist = !this.musicModal.showPlaylist;
         },
         stopListenTogether() {
-             if(this.currentAudioObj) {
-                 this.currentAudioObj.pause();
-                 this.currentAudioObj = null;
+             if(window._globalAudio) {
+                 window._globalAudio.pause();
+                 window._globalAudio = null;
              }
              this.musicModal.isPlaying = false;
              this.musicModal.show = false;
              this.musicModal.isMinimized = false; 
+             this.saveData();
         },
         minimizeMusic() {
             this.musicModal.show = false;
@@ -5185,21 +5219,14 @@ createApp({
         triggerWidgetImageUpload(i) { this.editingWidgetId=i; if(this.$refs.widgetImageInput)this.$refs.widgetImageInput.click(); },
         async handleWidgetImageChange(e) { const f=e.target.files[0]; if(!f)return; try { this.customWidgets[this.editingWidgetId].image = await compressImage(f); this.saveData(); } catch(e){} },
         saveData() { 
-            try { 
-                const dataStr = JSON.stringify(this.$data);
-                try {
-                    // 1. 尝试常规保存，如果太大报错就跳过
-                    localStorage.setItem('onyunx_hybrid_v40', dataStr); 
-                } catch(e) {
-                    console.warn("常规存储已满");
-                }
-                // 2. 无视常规报错，强制进行深层大容量备份
-                if (window.saveToSafeStorage) {
-                    window.saveToSafeStorage('onyunx_hybrid_v40', dataStr);
-                }
-            } catch(e) {
-                console.warn("保存失败", e);
-            } 
+            if (window._saveTimer) clearTimeout(window._saveTimer);
+            window._saveTimer = setTimeout(() => {
+                try { 
+                    const dataStr = JSON.stringify(this.$data);
+                    try { localStorage.setItem('onyunx_hybrid_v40', dataStr); } catch(e) { console.warn("表层存储已满"); }
+                    if (window.saveToSafeStorage) { window.saveToSafeStorage('onyunx_hybrid_v40', dataStr); }
+                } catch(e) { console.warn("保存失败", e); } 
+            }, 1500); // 延迟1.5秒后台静默保存，彻底消除打字和点击卡顿
         },
         async loadData() { 
             const s = localStorage.getItem('onyunx_hybrid_v40'); 
