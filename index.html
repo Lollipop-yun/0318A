@@ -482,7 +482,8 @@
 
              <!-- 阅读内容区 -->
              <div class="flex-1 relative bg-[#f4ecd8] flex flex-col overflow-hidden">
-                 <div class="flex-1 p-5 text-[#3a3327] font-serif leading-relaxed overflow-y-auto scrollbar-hide" ref="bookContentContainer"
+                 <!-- 强制隐藏滚动条 (overflow-hidden)，增加底部边距防遮挡 (pb-16) -->
+                 <div class="flex-1 p-5 pb-16 text-[#3a3327] font-serif leading-relaxed overflow-hidden" ref="bookContentContainer"
                       :style="{ fontSize: (getActiveBook()?.fontSize || 16) + 'px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }">
                      {{ getPaginatedContent() }}
                  </div>
@@ -494,8 +495,8 @@
                      <div class="w-1/3 h-full" @click.stop="nextBookPage"></div>
                  </div>
                  
-                 <!-- 底部翻页控制台 (全屏时显示) -->
-                 <div v-if="!readTogetherState.isMinimized" class="relative z-20 flex justify-between items-center px-4 py-3 bg-[#e8deca]/50 border-t border-[#d3cbb8] text-xs text-[#5c5346] shrink-0 pb-safe">
+                 <!-- 底部翻页控制台 (全屏时显示，悬浮在最底部) -->
+                 <div v-if="!readTogetherState.isMinimized" class="absolute bottom-0 left-0 w-full z-20 flex justify-between items-center px-4 py-3 bg-[#e8deca]/90 backdrop-blur-sm border-t border-[#d3cbb8] text-xs text-[#5c5346] shrink-0 pb-safe">
                      <button @click.stop="prevBookPage" class="px-4 py-2 bg-white/60 rounded-lg shadow-sm font-bold active:scale-95" :disabled="readTogetherState.currentPage === 0">上一页</button>
                      <span class="font-bold opacity-70">第 {{ readTogetherState.currentPage + 1 }} 页</span>
                      <button @click.stop="nextBookPage" class="px-4 py-2 bg-white/60 rounded-lg shadow-sm font-bold active:scale-95">下一页</button>
@@ -3736,7 +3737,6 @@ createApp({
                     playCount: 0
                 };
                 this.musicPlaylist.push(newSong);
-                this.showToast('添加成功');
             } else {
                 const idx = this.musicPlaylist.findIndex(s => s.id === this.addMusicModal.id);
                 if (idx !== -1) {
@@ -3748,11 +3748,17 @@ createApp({
                          this.musicModal.artist = this.musicPlaylist[idx].artist;
                          this.parseLyrics(this.musicPlaylist[idx].lyrics);
                     }
-                    this.showToast('修改成功');
                 }
             }
-            this.saveData();
+            
             this.addMusicModal.show = false;
+            this.showToast('正在将大型音频安全存入底层硬盘，请勿刷新...');
+            
+            // 确保大文件完整写入后再提示成功
+            setTimeout(async () => {
+                await this.saveDataNow();
+                this.showToast('✨ 音乐保存成功！现在刷新也不会丢失了');
+            }, 300);
         },
 
         playSong(song) {
@@ -4601,7 +4607,7 @@ createApp({
 
                 // --- 解析 AI 更换头像指令 (修复 Base64 乱码 Bug) ---
                 if (parsed.change_avatar === true) {
-                // --- 解析 AI 邀请一起听歌 (瞬间触发) ---
+                // --- 解析 AI 邀请一起听歌 (压轴触发) ---
                 let isInvitingMusic = parsed.invite_music === true || parsed.invite_music === "true";
                 const replyText = (parsed.reply ||[]).join("");
                 
@@ -4609,16 +4615,21 @@ createApp({
                     isInvitingMusic = true;
                 }
                 
-                // 如果判定为邀请听歌，直接紧随文字消息压入气泡！
                 if (isInvitingMusic) {
-                    session.messages.push({
-                        type: 'music_invite',
-                        isSelf: false,
-                        time: Date.now() + 10,
-                        avatar: session.avatar,
-                        isAccepted: false
-                    });
-                    session.lastMessage = '[音乐邀请]';
+                    // 等待所有文字消息发送完毕后（根据文字段落数量计算延迟），再压轴弹出音乐卡片
+                    const totalDelay = (segments.length * 1000) + 2000;
+                    setTimeout(() => {
+                        session.messages.push({
+                            type: 'music_invite',
+                            isSelf: false,
+                            time: Date.now(),
+                            avatar: session.avatar,
+                            isAccepted: false
+                        });
+                        session.lastMessage = '[音乐邀请]';
+                        this.scrollToBottom();
+                        this.saveDataNow(); 
+                    }, totalDelay);
                 }
                     // 往前寻找用户最新发送的一张图片
                     const lastImageMsg = session.messages.slice().reverse().find(msg => msg.type === 'image' && msg.isSelf);
@@ -5188,11 +5199,12 @@ createApp({
             if (window._saveTimer) clearTimeout(window._saveTimer);
             window._saveTimer = setTimeout(() => { this.saveDataNow(); }, 1500); 
         },
-        saveDataNow() {
+        async saveDataNow() {
             try { 
                 const dataStr = JSON.stringify(this.$data);
                 try { localStorage.setItem('onyunx_hybrid_v40', dataStr); } catch(e) {}
-                if (window.saveToSafeStorage) { window.saveToSafeStorage('onyunx_hybrid_v40', dataStr); }
+                // 强制等待深层数据库写入完毕
+                if (window.saveToSafeStorage) { await window.saveToSafeStorage('onyunx_hybrid_v40', dataStr); }
             } catch(e) { console.warn("保存失败", e); } 
         },
         async loadData() { 
@@ -6627,7 +6639,7 @@ createApp({
         getPaginatedContent() {
             const book = this.getActiveBook();
             if(!book || !book.content) return '';
-            const pageSize = 450; // 固定每次加载450字，适合半屏显示
+            const pageSize = 150; // 绝对死守150字，一字不多一字不少，彻底解决遮挡与不连贯
             let start = (this.readTogetherState.currentPage || 0) * pageSize;
             return book.content.substring(start, start + pageSize);
         },
