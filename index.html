@@ -481,24 +481,25 @@
              </div>
 
              <!-- 阅读内容区 -->
-             <div class="flex-1 relative bg-[#f4ecd8] flex flex-col overflow-hidden">
+             <div class="flex-1 relative bg-[#f4ecd8] flex flex-col overflow-hidden" @click="readTogetherState.isMinimized = false">
                  
-                 <!-- 文字显示区：flex-1 自动撑满剩余空间，不会被底栏遮挡 -->
-                 <!-- 文字显示区：增加 pb-12 底部安全边距，绝对防止被底栏遮挡 -->
-                 <div class="flex-1 px-5 pt-5 pb-12 text-[#3a3327] font-serif leading-relaxed overflow-hidden" ref="bookContentContainer"
+                 <!-- 极致防遮挡：文字区采用绝对定位，底部强行留出 70px 的空白边界 -->
+                 <div class="absolute inset-0 overflow-y-auto scrollbar-hide text-[#3a3327] font-serif leading-relaxed"
+                      :class="readTogetherState.isMinimized ? 'p-4' : 'p-5 pb-[70px]'"
+                      ref="bookContentContainer"
                       :style="{ fontSize: (getActiveBook()?.fontSize || 16) + 'px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }">
                      {{ getPaginatedContent() }}
                  </div>
                  
-                 <!-- 触控翻页透明遮罩：避免遮挡到底部按钮区 -->
-                 <div class="absolute inset-0 z-10 flex" :style="!readTogetherState.isMinimized ? 'bottom: 50px;' : ''">
+                 <!-- 触控翻页透明遮罩 -->
+                 <div class="absolute inset-0 z-10 flex" :style="!readTogetherState.isMinimized ? 'bottom: 60px;' : ''">
                      <div class="w-1/3 h-full" @click.stop="prevBookPage"></div>
                      <div class="w-1/3 h-full" @click.stop="toggleReadMode(false)"></div>
                      <div class="w-1/3 h-full" @click.stop="nextBookPage"></div>
                  </div>
                  
-                 <!-- 底部翻页控制台 (全屏时显示，正常排布绝不遮挡文字) -->
-                 <div v-if="!readTogetherState.isMinimized" class="relative z-20 flex justify-between items-center px-4 py-3 bg-[#e8deca] border-t border-[#d3cbb8] text-xs text-[#5c5346] shrink-0 pb-safe">
+                 <!-- 底部翻页控制台 (全屏时显示，悬浮在文字底部留白的区域) -->
+                 <div v-if="!readTogetherState.isMinimized" class="absolute bottom-0 left-0 w-full h-[60px] z-20 flex justify-between items-center px-4 bg-[#e8deca] border-t border-[#d3cbb8] text-xs text-[#5c5346] pb-safe">
                      <button @click.stop="prevBookPage" class="px-4 py-2 bg-white/60 rounded-lg shadow-sm font-bold active:scale-95" :disabled="readTogetherState.currentPage === 0">上一页</button>
                      <span class="font-bold opacity-70">第 {{ readTogetherState.currentPage + 1 }} 页</span>
                      <button @click.stop="nextBookPage" class="px-4 py-2 bg-white/60 rounded-lg shadow-sm font-bold active:scale-95">下一页</button>
@@ -592,6 +593,40 @@
                 </div>
             </div>
             <input type="file" ref="avatarSettingInput" accept="image/*" class="hidden" @change="handleAvatarUpload">
+        </div>
+    </transition>
+    
+    <!-- 高级头像隐藏设置弹窗 -->
+    <transition name="app-slide">
+        <div v-if="chatAvatarModal.show" class="fixed inset-0 z-[75000]">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="chatAvatarModal.show = false"></div>
+            <div class="ios-list-modal">
+                <div class="ios-list-header">头像显示设置 <button class="absolute right-4 text-blue-500 font-normal text-sm" @click="chatAvatarModal.show = false">取消</button></div>
+                <div class="ios-list-content p-0 bg-white">
+                    <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarConfig('show_all')">
+                        <span class="font-bold text-gray-900 text-sm">都不隐藏 (默认)</span><i v-if="wechatState.activeSession?.avatarConfig === 'show_all' || !wechatState.activeSession?.avatarConfig" class="fas fa-check text-[#07c160]"></i>
+                    </div>
+                    <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarConfig('hide_target')">
+                        <span class="font-bold text-gray-900 text-sm">隐藏对方头像</span><i v-if="wechatState.activeSession?.avatarConfig === 'hide_target'" class="fas fa-check text-[#07c160]"></i>
+                    </div>
+                    <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarConfig('hide_both')">
+                        <span class="font-bold text-gray-900 text-sm">隐藏双方头像</span><i v-if="wechatState.activeSession?.avatarConfig === 'hide_both'" class="fas fa-check text-[#07c160]"></i>
+                    </div>
+                    <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarConfig('hide_self')">
+                        <span class="font-bold text-gray-900 text-sm">隐藏我的头像</span><i v-if="wechatState.activeSession?.avatarConfig === 'hide_self'" class="fas fa-check text-[#07c160]"></i>
+                    </div>
+                    <div class="p-4 border-b border-gray-50 flex flex-col justify-center cursor-pointer active:bg-gray-50 relative" @click="setAvatarConfig('cluster_first')">
+                        <span class="font-bold text-gray-900 text-sm">只显示一个头像 (第一条消息)</span>
+                        <span class="text-xs text-gray-500 mt-0.5">连续发送消息时，只显示首条头像，气泡对齐</span>
+                        <i v-if="wechatState.activeSession?.avatarConfig === 'cluster_first'" class="fas fa-check text-[#07c160] absolute right-4 top-1/2 -translate-y-1/2"></i>
+                    </div>
+                    <div class="p-4 flex flex-col justify-center cursor-pointer active:bg-gray-50 relative" @click="setAvatarConfig('cluster_last')">
+                        <span class="font-bold text-gray-900 text-sm">只显示一个头像 (最后一条消息)</span>
+                        <span class="text-xs text-gray-500 mt-0.5">连续发送消息时，只显示末条头像，气泡对齐</span>
+                        <i v-if="wechatState.activeSession?.avatarConfig === 'cluster_last'" class="fas fa-check text-[#07c160] absolute right-4 top-1/2 -translate-y-1/2"></i>
+                    </div>
+                </div>
+            </div>
         </div>
     </transition>
 
@@ -2368,9 +2403,12 @@
                                 </div>
                             </div>
                             
-                            <!-- 头像 (双击触发拍一拍) -->
-                            <div class="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-gray-100" @dblclick="handleAvatarDblClick(msg)" @contextmenu.prevent="showChatContextMenu($event, msg, i)">
-                                <img :src="getChatAvatar(msg)" class="w-full h-full object-cover">
+                            <!-- 头像 (加入高级隐藏与对齐控制) -->
+                            <div v-if="!['hide_both', (msg.isSelf ? 'hide_self' : 'hide_target')].includes(wechatState.activeSession.avatarConfig)" 
+                                 class="w-10 h-10 rounded-full shrink-0 flex items-start" 
+                                 :class="shouldShowAvatar(msg, i) ? 'overflow-hidden border border-gray-100' : 'invisible'"
+                                 @dblclick="handleAvatarDblClick(msg)" @contextmenu.prevent="showChatContextMenu($event, msg, i)">
+                                <img v-if="shouldShowAvatar(msg, i)" :src="getChatAvatar(msg)" class="w-full h-full object-cover">
                             </div>
                             
                             <div class="flex flex-col max-w-[70%]" :class="msg.isSelf ? 'items-end' : 'items-start'">
@@ -2450,7 +2488,7 @@
                                     <!-- 动态交互卡片 (HTML UI) -->
                                     <div v-else-if="msg.type === 'html'" class="w-full min-w-[220px] rounded-lg overflow-hidden" v-html="msg.content"></div>
                                     
-                                    <!-- 音乐邀请卡片 -->
+                                    <!-- 音乐邀请卡片 (补回丢失的代码) -->
                                     <div v-else-if="msg.type === 'music_invite'" class="bg-white border border-gray-100 rounded-xl p-3 shadow-sm w-[220px]">
                                         <div class="flex items-center gap-3 mb-3">
                                             <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-100"><img :src="msg.avatar" class="w-full h-full object-cover"></div>
@@ -2463,8 +2501,7 @@
                                             <button @click.stop="acceptMusicInvite(msg)" class="flex-1 bg-black text-white text-xs font-bold py-2 rounded-lg active:scale-95" :disabled="msg.isAccepted">{{ msg.isAccepted ? '已加入' : '加入' }}</button>
                                             <button v-if="!msg.isAccepted" @click.stop="msg.isAccepted=true; showToast('已拒绝')" class="flex-1 bg-gray-100 text-gray-500 text-xs font-bold py-2 rounded-lg active:scale-95">拒绝</button>
                                         </div>
-                                    </div>
-
+                                    </div>                                                                       
                                     <!-- 文本消息 (含后台预翻译功能) -->
                                     <div v-else class="flex flex-col">
                                         <span>{{ msg.content }}</span>
@@ -2585,6 +2622,14 @@
                     
                     <!-- 时间感应开关 -->
                     <div class="flex justify-between items-center"><span class="text-sm">时间感应</span><input type="checkbox" class="switch-checkbox" id="time-sense-toggle" v-model="wechatState.activeSession.enableTimeSense" @change="saveData"><label for="time-sense-toggle" class="switch-label"><div class="switch-button"></div></label></div>
+                    <!-- 高级头像隐藏设置 -->
+                    <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="chatAvatarModal.show = true">
+                        <span class="text-sm">聊天头像显示设置</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-gray-400">{{ getAvatarConfigName() }}</span>
+                            <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                        </div>
+                    </div>
                     
                     <!-- 气泡翻译开关 -->
                     <div class="flex justify-between items-center"><span class="text-sm">点击气泡翻译(外语/方言)</span><input type="checkbox" class="switch-checkbox" id="translate-toggle" v-model="wechatState.activeSession.enableClickTranslate" @change="saveData"><label for="translate-toggle" class="switch-label"><div class="switch-button"></div></label></div>
@@ -3086,6 +3131,7 @@ createApp({
             worldBinderModal: { show: false },
             modelSelectModal: { show: false }, 
             chatContextMenu: { show: false, x: 0, y: 0, msg: null, index: -1, isSelf: false },
+            chatAvatarModal: { show: false },
             folderSelectModal: { show: false }, 
             
             // Global Notifications & Status
@@ -6559,6 +6605,37 @@ createApp({
         getFriendName(tid) {
             const f = this.wechatState.friendList.find(x=>x.id===tid);
             return f ? (f.remark||f.name) : '未知好友';
+        },
+        setAvatarConfig(val) {
+            if (this.wechatState.activeSession) {
+                this.wechatState.activeSession.avatarConfig = val;
+                this.saveDataNow();
+            }
+            this.chatAvatarModal.show = false;
+        },
+        getAvatarConfigName() {
+            const c = this.wechatState.activeSession?.avatarConfig;
+            const map = { 'hide_target': '隐藏对方', 'hide_both': '隐藏双方', 'hide_self': '隐藏我的', 'cluster_first': '首条头像', 'cluster_last': '末条头像' };
+            return map[c] || '都不隐藏';
+        },
+        shouldShowAvatar(msg, i) {
+            const config = this.wechatState.activeSession?.avatarConfig || 'show_all';
+            if (config !== 'cluster_first' && config !== 'cluster_last') return true; // 如果不是聚合模式，正常显示
+            
+            const msgs = this.wechatState.activeSession.messages;
+            // 找上下相邻的消息（跳过撤回和系统旁白）
+            let prev = null, next = null;
+            for(let j = i - 1; j >= 0; j--) { if(msgs[j].type !== 'system' && !msgs[j].isRecalled) { prev = msgs[j]; break; } }
+            for(let j = i + 1; j < msgs.length; j++) { if(msgs[j].type !== 'system' && !msgs[j].isRecalled) { next = msgs[j]; break; } }
+            
+            const sameAsPrev = prev && prev.isSelf === msg.isSelf;
+            const sameAsNext = next && next.isSelf === msg.isSelf;
+            
+            // 首条模式：如果上一条跟我不是同一个人，那我是首条，显示头像
+            if (config === 'cluster_first') return !sameAsPrev;
+            // 末条模式：如果下一条跟我不是同一个人，那我是末条，显示头像
+            if (config === 'cluster_last') return !sameAsNext;
+            return true;
         },
         // --- 书架与一起读功能 ---
         handleTxtImport(e) {
