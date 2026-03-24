@@ -484,7 +484,8 @@
              <div class="flex-1 relative bg-[#f4ecd8] flex flex-col overflow-hidden">
                  
                  <!-- 文字显示区：flex-1 自动撑满剩余空间，不会被底栏遮挡 -->
-                 <div class="flex-1 p-5 text-[#3a3327] font-serif leading-relaxed overflow-hidden" ref="bookContentContainer"
+                 <!-- 文字显示区：增加 pb-12 底部安全边距，绝对防止被底栏遮挡 -->
+                 <div class="flex-1 px-5 pt-5 pb-12 text-[#3a3327] font-serif leading-relaxed overflow-hidden" ref="bookContentContainer"
                       :style="{ fontSize: (getActiveBook()?.fontSize || 16) + 'px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }">
                      {{ getPaginatedContent() }}
                  </div>
@@ -4412,12 +4413,13 @@ createApp({
             let timeContext = `\n[系统提示-当前真实时间]: 今天是 ${year}年${month}月${day}日，${weekDay}，当前具体时间是 ${hour}:${minute}。请在对话中准确认知现在的具体日期和时间。`;
             
             // Music Sense Logic (NEW)
+            // --- 强化音乐感知与 AI 主动切歌 ---
             let musicContext = "";
             if (this.musicModal.isPlaying && this.musicModal.currentId) {
                 const playingSong = this.musicPlaylist.find(s => s.id === this.musicModal.currentId);
                 const currentLyric = this.getCurrentLyricText();
                 if (playingSong) {
-                    musicContext = `\n[Music Player]: User is currently listening to "${playingSong.title}" by ${playingSong.artist}. Current Lyric displayed: "${currentLyric}". You can react to the music or lyrics.`;
+                    musicContext = `\n[一起听歌中]: 你们正在一起听 ${playingSong.artist} 的《${playingSong.title}》。当前歌词: "${currentLyric}"。如果你觉得这首歌不符合现在的聊天氛围，或者你不喜欢，你可以输出 "music_control": "next" 来主动切歌！`;
                 }
             }
             
@@ -4607,31 +4609,7 @@ createApp({
                 }
 
                 // --- 解析 AI 更换头像指令 (修复 Base64 乱码 Bug) ---
-                if (parsed.change_avatar === true) {
-                // --- 解析 AI 邀请一起听歌 (压轴触发) ---
-                let isInvitingMusic = parsed.invite_music === true || parsed.invite_music === "true";
-                const replyText = (parsed.reply ||[]).join("");
-                
-                if (!isInvitingMusic && (replyText.includes("一起听") || replyText.includes("听歌") || replyText.includes("音乐"))) {
-                    isInvitingMusic = true;
-                }
-                
-                if (isInvitingMusic) {
-                    // 等待所有文字消息发送完毕后（根据文字段落数量计算延迟），再压轴弹出音乐卡片
-                    const totalDelay = (segments.length * 1000) + 2000;
-                    setTimeout(() => {
-                        session.messages.push({
-                            type: 'music_invite',
-                            isSelf: false,
-                            time: Date.now(),
-                            avatar: session.avatar,
-                            isAccepted: false
-                        });
-                        session.lastMessage = '[音乐邀请]';
-                        this.scrollToBottom();
-                        this.saveDataNow(); 
-                    }, totalDelay);
-                }
+                if (parsed.change_avatar === true) {                
                     // 往前寻找用户最新发送的一张图片
                     const lastImageMsg = session.messages.slice().reverse().find(msg => msg.type === 'image' && msg.isSelf);
                     if (lastImageMsg) {
@@ -4691,12 +4669,7 @@ createApp({
                     session.messages.push(tfMsg); session.lastMessage = '[微信转账]';
                 }
                 
-                // AI Music Control Logic
-                if (parsed.music_control) {
-                    if (parsed.music_control === 'stop') this.stopListenTogether();
-                    else if (parsed.music_control === 'next') this.nextSong();
-                    else if (parsed.music_control === 'prev') this.prevSong();
-                }
+                
 
                 this.isTyping = false; 
                 this.handleAiIntimatePayConsumption(session);
@@ -4756,6 +4729,39 @@ createApp({
                     }, delay);
                     delay += 1000 + Math.random() * 800; 
                 });
+                // --- 绝对安全追加：等上面所有文字都发完后，再出音乐卡片和切歌 ---
+                setTimeout(() => {
+                    // 1. 解析切歌指令
+                    if (parsed.music_control === 'next') {
+                        this.nextSong();
+                        this.showToast(`${session.name} 切换了下一首歌`);
+                    } else if (parsed.music_control === 'prev') {
+                        this.prevSong();
+                    } else if (parsed.music_control === 'stop') {
+                        this.stopListenTogether();
+                    }
+                    
+                    // 2. 解析音乐邀请卡 (附带关键词兜底)
+                    let isInvitingMusic = parsed.invite_music === true || parsed.invite_music === "true";
+                    const replyText = (parsed.reply ||[]).join("");
+                    if (!isInvitingMusic && (replyText.includes("一起听") || replyText.includes("听歌") || replyText.includes("放首") || replyText.includes("音乐"))) {
+                        isInvitingMusic = true;
+                    }
+                    
+                    // 3. 压轴弹出卡片
+                    if (isInvitingMusic) {
+                        session.messages.push({
+                            type: 'music_invite',
+                            isSelf: false,
+                            time: Date.now(),
+                            avatar: session.avatar,
+                            isAccepted: false
+                        });
+                        session.lastMessage = '[音乐邀请]';
+                        this.scrollToBottom();
+                        this.saveDataNow(); // 强制存盘
+                    }
+                }, delay + 300); // 这里的 delay 是上面文字循环累加出来的时间，+300 保证卡片绝对在最底下！
 
             } catch(e) {
                 this.isTyping = false;
@@ -5259,7 +5265,12 @@ createApp({
             this.wechatState.activeSession = null;
             this.closeAllMenus();
         },
-        showToast(m) { this.toast.message=m; this.toast.show=true; setTimeout(()=>{this.toast.show=false},2000); },
+        showToast(m) { 
+            this.toast.message = m; 
+            this.toast.show = true; 
+            if(window._toastTimer) clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => { this.toast.show = false; }, 2000); 
+        },
         showInput(t,v,p,cb, inputType = 'text', extraBtn = null) { 
             this.inputModal = {
                 show: true,
