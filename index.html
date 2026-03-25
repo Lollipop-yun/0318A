@@ -483,8 +483,8 @@
              <!-- 阅读内容区 -->
              <div class="flex-1 relative bg-[#f4ecd8] flex flex-col overflow-hidden">
                  
-                 <!-- 文字显示区：增加 pb-24 底部安全边距，绝对防止被底栏遮挡 -->
-                 <div class="flex-1 px-5 pt-5 pb-24 text-[#3a3327] font-serif leading-relaxed overflow-y-auto" ref="bookContentContainer"
+                 <!-- 文字显示区：加入 min-h-0 防止弹性盒子溢出，开启垂直滚动并加大底部内边距 -->
+                 <div class="flex-1 px-5 pt-5 pb-20 text-[#3a3327] font-serif leading-relaxed overflow-y-auto min-h-0" ref="bookContentContainer"
                       :style="{ fontSize: (getActiveBook()?.fontSize || 16) + 'px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }">
                      {{ getPaginatedContent() }}
                  </div>
@@ -598,11 +598,13 @@
     <transition name="app-slide">
         <div v-if="avatarModeModal.show" class="fixed inset-0 z-[71000]">
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="avatarModeModal.show = false"></div>
-            <div class="ios-list-modal">
+            <div class="ios-list-modal max-h-[85vh]">
                 <div class="ios-list-header">头像显示设置 <button class="absolute right-4 text-blue-500 font-normal text-sm" @click="avatarModeModal.show = false">取消</button></div>
-                <div class="ios-list-content p-0 bg-white">
+                <div class="ios-list-content p-0 bg-white overflow-y-auto">
+                    <!-- 基础全局设置 -->
+                    <div class="p-3 bg-gray-50 text-xs font-bold text-gray-500 sticky top-0">全局设置</div>
                     <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('all')">
-                        <span class="text-gray-900 font-medium">不隐藏头像 (默认)</span>
+                        <span class="text-gray-900 font-medium">都不隐藏 (默认)</span>
                         <i v-if="(wechatState.activeSession?.avatarMode || 'all') === 'all'" class="fas fa-check text-[#07c160]"></i>
                     </div>
                     <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('none')">
@@ -613,17 +615,39 @@
                         <span class="text-gray-900 font-medium">隐藏对方头像</span>
                         <i v-if="wechatState.activeSession?.avatarMode === 'me'" class="fas fa-check text-[#07c160]"></i>
                     </div>
-                    <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('ai')">
+                    <div class="p-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('ai')">
                         <span class="text-gray-900 font-medium">隐藏我的头像</span>
                         <i v-if="wechatState.activeSession?.avatarMode === 'ai'" class="fas fa-check text-[#07c160]"></i>
                     </div>
-                    <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('first')">
-                        <div><div class="text-gray-900 font-medium">首条显示头像</div><div class="text-xs text-gray-500 mt-1">连续消息仅首条显示，气泡对齐</div></div>
-                        <i v-if="wechatState.activeSession?.avatarMode === 'first'" class="fas fa-check text-[#07c160]"></i>
+                    
+                    <!-- 首条设置 -->
+                    <div class="p-3 bg-gray-50 text-xs font-bold text-gray-500 sticky top-0 border-t border-gray-100">首条显示头像 (气泡自动对齐)</div>
+                    <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('first_all')">
+                        <span class="text-gray-900 font-medium">都不隐藏</span>
+                        <i v-if="wechatState.activeSession?.avatarMode === 'first_all'" class="fas fa-check text-[#07c160]"></i>
                     </div>
-                    <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('last')">
-                        <div><div class="text-gray-900 font-medium">尾条显示头像</div><div class="text-xs text-gray-500 mt-1">连续消息仅尾条显示，气泡对齐</div></div>
-                        <i v-if="wechatState.activeSession?.avatarMode === 'last'" class="fas fa-check text-[#07c160]"></i>
+                    <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('first_hide_me')">
+                        <span class="text-gray-900 font-medium">隐藏我的头像</span>
+                        <i v-if="wechatState.activeSession?.avatarMode === 'first_hide_me'" class="fas fa-check text-[#07c160]"></i>
+                    </div>
+                    <div class="p-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('first_hide_ai')">
+                        <span class="text-gray-900 font-medium">隐藏对方头像</span>
+                        <i v-if="wechatState.activeSession?.avatarMode === 'first_hide_ai'" class="fas fa-check text-[#07c160]"></i>
+                    </div>
+
+                    <!-- 尾条设置 -->
+                    <div class="p-3 bg-gray-50 text-xs font-bold text-gray-500 sticky top-0 border-t border-gray-100">尾条显示头像 (气泡自动对齐)</div>
+                    <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('last_all')">
+                        <span class="text-gray-900 font-medium">都不隐藏</span>
+                        <i v-if="wechatState.activeSession?.avatarMode === 'last_all'" class="fas fa-check text-[#07c160]"></i>
+                    </div>
+                    <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('last_hide_me')">
+                        <span class="text-gray-900 font-medium">隐藏我的头像</span>
+                        <i v-if="wechatState.activeSession?.avatarMode === 'last_hide_me'" class="fas fa-check text-[#07c160]"></i>
+                    </div>
+                    <div class="p-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('last_hide_ai')">
+                        <span class="text-gray-900 font-medium">隐藏对方头像</span>
+                        <i v-if="wechatState.activeSession?.avatarMode === 'last_hide_ai'" class="fas fa-check text-[#07c160]"></i>
                     </div>
                 </div>
             </div>
@@ -6589,27 +6613,48 @@ createApp({
             if (!session) return 'show';
             const mode = session.avatarMode || 'all';
             
-            if (mode === 'all') return 'show';
-            if (mode === 'none') return 'remove'; // 彻底移除
-            if (mode === 'ai' && msg.isSelf) return 'remove'; // 隐藏我的 -> 只显示对方
-            if (mode === 'me' && !msg.isSelf) return 'remove'; // 隐藏对方 -> 只显示我
+            // 全局彻底隐藏
+            if (mode === 'none') return 'remove';
+            if (mode === 'ai' && msg.isSelf) return 'remove';
+            if (mode === 'me' && !msg.isSelf) return 'remove';
 
-            // 首尾逻辑：返回 'invisible' 隐藏透明度但保留占位，这样气泡才能严格对齐
-            if (mode === 'first') {
+            // 判断是否是首条或尾条
+            let isFirst = false;
+            let isLast = false;
+            if (mode.startsWith('first_')) {
                 const prevMsg = i > 0 ? session.messages[i-1] : null;
-                const isFirst = !prevMsg || prevMsg.isSelf !== msg.isSelf || prevMsg.type === 'system' || this.shouldShowTime(msg, i);
-                return isFirst ? 'show' : 'invisible';
+                isFirst = !prevMsg || prevMsg.isSelf !== msg.isSelf || prevMsg.type === 'system' || this.shouldShowTime(msg, i);
             }
-            if (mode === 'last') {
+            if (mode.startsWith('last_')) {
                 const nextMsg = i < session.messages.length - 1 ? session.messages[i+1] : null;
-                const isLast = !nextMsg || nextMsg.isSelf !== msg.isSelf || nextMsg.type === 'system' || this.shouldShowTime(nextMsg, i+1);
-                return isLast ? 'show' : 'invisible';
+                isLast = !nextMsg || nextMsg.isSelf !== msg.isSelf || nextMsg.type === 'system' || this.shouldShowTime(nextMsg, i+1);
             }
+
+            // 首条分支逻辑 (用 invisible 保留占位对齐)
+            if (mode === 'first_all' || mode === 'first_hide_me' || mode === 'first_hide_ai') {
+                if (!isFirst) return 'invisible';
+                if (mode === 'first_hide_me' && msg.isSelf) return 'invisible';
+                if (mode === 'first_hide_ai' && !msg.isSelf) return 'invisible';
+                return 'show';
+            }
+
+            // 尾条分支逻辑 (用 invisible 保留占位对齐)
+            if (mode === 'last_all' || mode === 'last_hide_me' || mode === 'last_hide_ai') {
+                if (!isLast) return 'invisible';
+                if (mode === 'last_hide_me' && msg.isSelf) return 'invisible';
+                if (mode === 'last_hide_ai' && !msg.isSelf) return 'invisible';
+                return 'show';
+            }
+
             return 'show';
         },
         getAvatarModeName() {
             const mode = this.wechatState.activeSession?.avatarMode || 'all';
-            const map = { 'all': '不隐藏头像', 'none': '隐藏双方头像', 'me': '隐藏对方头像', 'ai': '隐藏我的头像', 'first': '首条显示头像', 'last': '尾条显示头像' };
+            const map = { 
+                'all': '不隐藏', 'none': '隐藏双方', 'me': '隐藏对方', 'ai': '隐藏我', 
+                'first_all': '首条: 都不隐藏', 'first_hide_me': '首条: 隐藏我', 'first_hide_ai': '首条: 隐藏对方',
+                'last_all': '尾条: 都不隐藏', 'last_hide_me': '尾条: 隐藏我', 'last_hide_ai': '尾条: 隐藏对方' 
+            };
             return map[mode] || '不隐藏头像';
         },
         setAvatarMode(mode) {
