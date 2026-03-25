@@ -483,15 +483,15 @@
              <!-- 阅读内容区 -->
              <div class="flex-1 relative bg-[#f4ecd8] flex flex-col overflow-hidden">
                  
-                 <!-- 文字显示区：根据模式开启滚动，并监听滚动进度 -->
+                 <!-- 文字显示区：判断如果是滑动模式则自适应滚动 -->
                  <div class="flex-1 px-5 pt-5 pb-6 text-[#3a3327] font-serif leading-relaxed" 
-                      :class="getActiveBook()?.readMode === 'scroll' && !readTogetherState.isMinimized ? 'overflow-y-auto' : 'overflow-hidden'"
-                      ref="bookContentContainer" @scroll="handleBookScroll"
+                      :class="getActiveBook()?.readMode === 'scroll' ? 'overflow-y-auto' : 'overflow-hidden'"
+                      ref="bookContentContainer"
                       :style="{ fontSize: (getActiveBook()?.fontSize || 16) + 'px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }">
                      {{ getPaginatedContent() }}
                  </div>
                  
-                 <!-- 触控翻页透明遮罩：如果选择了滑动模式，则隐藏点击翻页区 -->
+                 <!-- 触控翻页透明遮罩：只有在翻页模式(page)下才启用点击翻页 -->
                  <div v-if="getActiveBook()?.readMode !== 'scroll'" class="absolute inset-0 z-10 flex">
                      <div class="w-1/3 h-full" @click.stop="prevBookPage"></div>
                      <div class="w-1/3 h-full" @click.stop="toggleReadMode(false)"></div>
@@ -500,7 +500,7 @@
                  
                  <!-- 左下角显示进度 -->
                  <div v-if="!readTogetherState.isMinimized" class="absolute bottom-4 left-5 z-20 text-[11px] text-[#8b7e66] font-bold opacity-80 pointer-events-none pb-safe">
-                     <span v-if="getActiveBook()?.readMode === 'scroll'">进度: {{ readTogetherState.scrollPercent || 0 }}%</span>
+                     <span v-if="getActiveBook()?.readMode === 'scroll'">滑动阅读模式</span>
                      <span v-else>已读 {{ readTogetherState.currentPage + 1 }} 页 / 共 {{ Math.ceil((getActiveBook()?.content?.length || 0) / 400) || 1 }} 页</span>
                  </div>
              </div>
@@ -645,6 +645,7 @@
                     <div class="p-3 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('last_me')">
                         <span class="text-gray-900 text-sm font-medium">隐藏对方头像</span>
                         <i v-if="wechatState.activeSession?.avatarMode === 'last_me'" class="fas fa-check text-[#07c160]"></i>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2938,19 +2939,14 @@
 </div>
 <!-- ============================== -->
 
-<div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">API 预设</span><button @click="savePreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="apiPresets.length === 0" class="p-8 text-center text-gray-400 text-xs">暂无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(preset, idx) in apiPresets" :key="idx" class="p-4 flex items-center justify-between"><div class="flex-1 min-w-0 mr-4"><div class="font-bold text-gray-800 text-sm truncate">{{ preset.name }}</div><div class="text-[10px] text-gray-400 truncate">{{ preset.baseUrl }}</div></div><div class="flex items-center gap-2"><button @click="applyPreset(preset)" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-green-100 hover:text-green-600 transition"><i class="fas fa-check text-xs"></i></button><button @click="deletePreset(idx)" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-red-100 hover:text-red-600 transition"><i class="fas fa-trash text-xs"></i></button></div></div></div></div><button @click="saveSettings" class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-blue-200 active:scale-95 transition">保存配置</button></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'data-manage'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center"><div class="w-16 h-16 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fas fa-database"></i></div><h3 class="font-bold text-gray-900 text-lg">数据管理</h3><p class="text-xs text-gray-400 mt-2 px-4">备份恢复所有设置。</p></div><div class="grid grid-cols-2 gap-4"><button @click="exportData" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 active:scale-95 transition"><div class="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-file-export"></i></div><span class="text-sm font-bold text-gray-700">导出</span></button><button @click="triggerImport" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 active:scale-95 transition"><div class="w-10 h-10 rounded-full bg-green-50 text-green-500 flex items-center justify-center"><i class="fas fa-file-import"></i></div><span class="text-sm font-bold text-gray-700">导入</span></button></div><input type="file" ref="importInput" accept=".json" class="hidden" @change="handleImport"></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'notification'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"><div class="flex items-center justify-between mb-4"><span class="text-sm font-bold text-gray-700">当前提示音</span><span class="text-xs text-gray-400">{{ notificationConfig.currentName || '系统默认' }}</span></div><div class="flex gap-2"><button @click="triggerAudioUpload" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-upload"></i> 导入文件</button><button @click="triggerAudioUrl" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-link"></i> 网络直链</button><button @click="playCurrentSound" class="w-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center border border-green-100 active:scale-95 transition"><i class="fas fa-play"></i></button></div><input type="file" ref="audioInput" accept="audio/*" class="hidden" @change="handleAudioUpload">
-<button @click="simulateAiMessage" class="w-full mt-3 bg-gray-800 text-white py-2.5 rounded-xl text-xs font-bold active:bg-black transition">测试音效</button>
-</div>
+<div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">API 预设</span><button @click="savePreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="apiPresets.length === 0" class="p-8 text-center text-gray-400 text-xs">暂无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(preset, idx) in apiPresets" :key="idx" class="p-4 flex items-center justify-between"><div class="flex-1 min-w-0 mr-4"><div class="font-bold text-gray-800 text-sm truncate">{{ preset.name }}</div><div class="text-[10px] text-gray-400 truncate">{{ preset.baseUrl }}</div></div><div class="flex items-center gap-2"><button @click="applyPreset(preset)" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-green-100 hover:text-green-600 transition"><i class="fas fa-check text-xs"></i></button><button @click="deletePreset(idx)" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-red-100 hover:text-red-600 transition"><i class="fas fa-trash text-xs"></i></button></div></div></div></div><button @click="saveSettings" class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-blue-200 active:scale-95 transition">保存配置</button></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'data-manage'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center"><div class="w-16 h-16 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fas fa-database"></i></div><h3 class="font-bold text-gray-900 text-lg">数据管理</h3><p class="text-xs text-gray-400 mt-2 px-4">备份恢复所有设置。</p></div><div class="grid grid-cols-2 gap-4"><button @click="exportData" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 active:scale-95 transition"><div class="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-file-export"></i></div><span class="text-sm font-bold text-gray-700">导出</span></button><button @click="triggerImport" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 active:scale-95 transition"><div class="w-10 h-10 rounded-full bg-green-50 text-green-500 flex items-center justify-center"><i class="fas fa-file-import"></i></div><span class="text-sm font-bold text-gray-700">导入</span></button></div><input type="file" ref="importInput" accept=".json" class="hidden" @change="handleImport"></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'notification'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"><div class="flex items-center justify-between mb-4"><span class="text-sm font-bold text-gray-700">当前提示音</span><span class="text-xs text-gray-400">{{ notificationConfig.currentName || '系统默认' }}</span></div><div class="flex gap-2"><button @click="triggerAudioUpload" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-upload"></i> 导入文件</button><button @click="triggerAudioUrl" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-link"></i> 网络直链</button><button @click="playCurrentSound" class="w-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center border border-green-100 active:scale-95 transition"><i class="fas fa-play"></i></button></div><input type="file" ref="audioInput" accept="audio/*" class="hidden" @change="handleAudioUpload"><button @click="simulateAiMessage" class="w-full mt-3 bg-gray-800 text-white py-2.5 rounded-xl text-xs font-bold active:bg-black transition mb-4">测试音效</button>
 
-<!-- 新增：系统横幅通知设置 -->
-<div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mt-4">
-    <div class="flex justify-between items-center mb-3">
-        <span class="text-sm font-bold text-gray-700">系统横幅通知</span>
-        <input type="checkbox" class="switch-checkbox" id="sys-nav-toggle" v-model="notificationConfig.enableSystemNav" @change="toggleSystemNotification">
-        <label for="sys-nav-toggle" class="switch-label"><div class="switch-button"></div></label>
-    </div>
-    <p class="text-[10px] text-gray-400 mb-3 leading-relaxed">开启后，应用在后台时也能收到系统的横幅弹窗推送（需要授权系统通知权限）</p>
-    <button @click="testSystemNotification" class="w-full bg-blue-50 text-blue-600 border border-blue-100 py-2.5 rounded-xl text-xs font-bold active:bg-blue-100 transition">发送测试通知</button>
+<div class="flex justify-between items-center pt-4 border-t border-gray-50">
+    <span class="text-sm font-bold text-gray-700">系统通知栏推送 (后台接收AI消息)</span>
+    <input type="checkbox" id="push-toggle" class="switch-checkbox" v-model="notificationConfig.enablePush" @change="requestPushPermission">
+    <label for="push-toggle" class="switch-label"><div class="switch-button"></div></label>
+</div>
+<button @click="testPushNotification" class="w-full mt-3 bg-blue-50 text-blue-600 py-2.5 rounded-xl text-xs font-bold active:bg-blue-100 transition">测试系统推送</button>
 </div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">音频预设</span><button @click="saveSoundPreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="soundPresets.length === 0" class="p-6 text-center text-gray-400 text-xs">暂无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(sound, idx) in soundPresets" :key="idx" class="p-4 flex items-center justify-between"><span class="font-bold text-gray-700 text-sm truncate max-w-[50%]">{{ sound.name }}</span><div class="flex items-center gap-2"><button @click="playPresetSound(sound)" class="w-7 h-7 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center"><i class="fas fa-play text-[10px]"></i></button><button @click="applySoundPreset(sound)" class="w-7 h-7 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-check text-[10px]"></i></button><button @click="deleteSoundPreset(idx)" class="w-7 h-7 rounded-full bg-red-50 text-red-500 flex items-center justify-center"><i class="fas fa-trash text-[10px]"></i></button></div></div></div></div></div></div></transition></main></div></transition>
     
     <!-- 主题 App -->
@@ -4564,7 +4560,7 @@ createApp({
             IMPORTANT: You must output ONLY a valid JSON object. No Markdown. No other text.
             Structure:
             {
-              "reply":["message 1", "message 2"], 
+              "reply":["第一句话", "第二句话"], 
               "action": "当前动作",
               "thought": "你的心声。必须完全代入角色，用第一人称思考！绝对禁止出现'用户'、'玩家'、'AI'、'人工智能'等破坏沉浸感的词汇！",
               "outfit": "当前穿着",
@@ -4579,9 +4575,9 @@ createApp({
               "html_widget": "OPTIONAL: Valid HTML string using Tailwind CSS...",
               "change_avatar": true OR false (OPTIONAL: 仅当用户刚发了一张图片且明确要求你换头像时，将此值设为 true，系统会自动提取那张图为你换上),
               "sticker_id": "OPTIONAL: 填入你想发的表情包的纯数字 ID",
-              "invite_music": true (OPTIONAL: 注意！当用户明确要求“一起听歌/听音乐”时，或者你想主动分享音乐时，必须且只能输出布尔值 true，不可遗漏！)
+              "invite_music": true (OPTIONAL: 注意！你想邀请听歌时请设为 true，并且绝对不要在 reply 数组里输出诸如“系统提示：我发起了听歌”的文字，直接发即可)
             }            
-            "reply" is an array of strings. Split long text into natural short messages.`;
+            "reply" 必须是一个数组 (Array)。根据你的心情和说话习惯，你可以分多次把话发完(比如拆分成3条或4条)。`;
             
             contextMessages.push({ role: 'system', content: systemPrompt });
             
@@ -4780,13 +4776,6 @@ createApp({
                          };
                          session.messages.push(aiMsg);
                          this.scrollToBottom();
-                         
-                         // ==== 新增：触发设备系统推送通知 ====
-                         if (msgType === 'text' || msgType === 'voice') {
-                             this.sendSystemNotification(session.name, msgType === 'voice' ? '[发来一段语音]' : seg.trim(), session.avatar);
-                         }
-                         // ===============================
-                         
                          // 静默后台预翻译
                          if (session.enableClickTranslate && msgType === 'text') {
                              this.translateMessage(aiMsg);
@@ -4919,8 +4908,17 @@ createApp({
         viewRecalled(msg) { this.showConfirm(msg.content, null); },
         
         showGlobalNotification(session, content) {
+            // App 内置横幅提示
             this.globalNotification = { show: true, title: session.name, content: content, avatar: session.avatar, sessionId: session.id };
             setTimeout(() => { this.globalNotification.show = false; }, 3000);
+
+            // 触发浏览器系统级别的推送
+            if (this.notificationConfig.enablePush && "Notification" in window && Notification.permission === "granted") {
+                new Notification(session.name, {
+                    body: content,
+                    icon: session.avatar
+                });
+            }
         },
         jumpToChat(sessionId) {
             const session = this.wechatState.sessions.find(s => s.id === sessionId);
@@ -5206,35 +5204,6 @@ createApp({
         handleAudioUpload(e) { const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=(ev)=>{this.notificationConfig.currentSound=ev.target.result; this.notificationConfig.currentName=f.name; this.saveData();}; r.readAsDataURL(f); },
         playCurrentSound() { if(this.notificationConfig.currentSound) new Audio(this.notificationConfig.currentSound).play(); },
         simulateAiMessage() { setTimeout(()=>{this.playCurrentSound(); this.showToast('收到消息');},2000); },
-        toggleSystemNotification() {
-            if (this.notificationConfig.enableSystemNav) {
-                if ("Notification" in window) {
-                    Notification.requestPermission().then(permission => {
-                        if (permission !== "granted") {
-                            this.notificationConfig.enableSystemNav = false;
-                            this.showToast('通知权限被拒绝，请在系统设置中开启');
-                        }
-                        this.saveData();
-                    });
-                } else {
-                    this.notificationConfig.enableSystemNav = false;
-                    this.showToast('当前设备或浏览器不支持系统通知');
-                }
-            } else {
-                this.saveData();
-            }
-        },
-        testSystemNotification() {
-            if (!this.notificationConfig.enableSystemNav) {
-                return this.showToast('请先开启系统横幅通知开关');
-            }
-            this.sendSystemNotification('Aovein OS', '这是一条系统测试消息！', this.homeProfile.avatar || 'https://pic1.imgdb.cn/item/69ba80aab96fa53fd04c3771.png');
-        },
-        sendSystemNotification(title, body, icon) {
-            if (this.notificationConfig.enableSystemNav && "Notification" in window && Notification.permission === "granted") {
-                new Notification(title, { body: body, icon: icon });
-            }
-        },
         saveSoundPreset() { this.showInput("名称", "", "", (n)=>{ if(n) { this.soundPresets.push({name:n, data:this.notificationConfig.currentSound}); this.saveData(); } }); },
         playPresetSound(s) { new Audio(s.data).play(); },
         applySoundPreset(s) { this.notificationConfig.currentSound=s.data; this.notificationConfig.currentName=s.name; this.saveData(); },
@@ -6688,7 +6657,7 @@ createApp({
             const mode = this.wechatState.activeSession?.avatarMode || 'all';
             const map = { 
                 'all': '不隐藏头像', 'none': '隐藏双方头像', 'me': '隐藏对方头像', 'ai': '隐藏我的头像', 
-                'first': '首条显示(都不隐藏)', 'last': '尾条显示(都不隐藏)',
+                'first': '首条显示', 'last': '尾条显示',
                 'first_all': '首条显示(都不隐藏)', 'first_ai': '首条显示(隐藏我的)', 'first_me': '首条显示(隐藏对方)',
                 'last_all': '尾条显示(都不隐藏)', 'last_ai': '尾条显示(隐藏我的)', 'last_me': '尾条显示(隐藏对方)'
             };
@@ -6837,40 +6806,34 @@ createApp({
             const book = this.getActiveBook();
             if(!book || !book.content) return '';
             
-            // 如果是全屏 + 上下滑动模式，直接返回整本书（供用户流畅滑动）
-            if (book.readMode === 'scroll' && !this.readTogetherState.isMinimized) {
-                return book.content; 
-            }
+            // 如果是上下滑动模式，直接返回整本小说的内容供滚动
+            if(book.readMode === 'scroll') return book.content;
             
+            // 极其严谨地获取字数：小窗死守 150 字，全屏死守 400 字
             const currentModePageSize = this.readTogetherState.isMinimized ? 150 : 400;
             let start = (this.readTogetherState.currentPage || 0) * currentModePageSize;
             let end = start + currentModePageSize;
+            
             return book.content.substring(start, end);
         },
         toggleReadMode(minimize) {
             const oldSize = this.readTogetherState.isMinimized ? 150 : 400;
             const newSize = minimize ? 150 : 400;
             const currentTotalCharsRead = (this.readTogetherState.currentPage || 0) * oldSize;
+            
+            // 根据新窗口的字数，重新计算你应该落在第几页，保证进度完美衔接
             this.readTogetherState.currentPage = Math.floor(currentTotalCharsRead / newSize);
             this.readTogetherState.isMinimized = minimize;
             this.saveDataNow();
         },
         nextBookPage() {
             const book = this.getActiveBook();
-            const currentModePageSize = this.readTogetherState.isMinimized ? 150 : 400;
+            const currentModePageSize = this.readTogetherState.isMinimized ? 150 : 450;
+            
+            // 确保下一页的内容还在小说总字数之内
             if(book && (this.readTogetherState.currentPage + 1) * currentModePageSize < book.content.length) {
                 this.readTogetherState.currentPage++;
                 this.saveDataNow();
-            }
-        },
-        handleBookScroll(e) {
-            const target = e.target;
-            if (!target) return;
-            const maxScroll = target.scrollHeight - target.clientHeight;
-            if (maxScroll <= 0) {
-                this.readTogetherState.scrollPercent = 100;
-            } else {
-                this.readTogetherState.scrollPercent = Math.round((target.scrollTop / maxScroll) * 100);
             }
         },
         prevBookPage() {
@@ -6951,6 +6914,39 @@ createApp({
             this.showToast('已加入一起听');
         }
     }
+    async requestPushPermission() {
+            if (!("Notification" in window)) {
+                this.showToast('您的浏览器不支持系统通知');
+                this.notificationConfig.enablePush = false;
+                return;
+            }
+            if (Notification.permission === "granted") {
+                this.notificationConfig.enablePush = true;
+                this.saveData();
+            } else if (Notification.permission !== "denied") {
+                const perm = await Notification.requestPermission();
+                if (perm === "granted") {
+                    this.notificationConfig.enablePush = true;
+                    this.saveData();
+                } else {
+                    this.notificationConfig.enablePush = false;
+                    this.showToast('通知权限被拒绝');
+                }
+            } else {
+                this.notificationConfig.enablePush = false;
+                this.showToast('通知权限已被禁用，请在手机/浏览器设置中开启');
+            }
+        },
+        testPushNotification() {
+            if (this.notificationConfig.enablePush && "Notification" in window && Notification.permission === "granted") {
+                new Notification("测试消息", {
+                    body: "您好！如果看到这条消息，说明您的通知功能正常生效中~",
+                    icon: this.homeProfile.avatar || 'https://pic1.imgdb.cn/item/69ba80aab96fa53fd04c3771.png'
+                });
+            } else {
+                this.showToast('请先开启上方的系统通知栏推送开关并授予权限');
+            }
+        }
 }).mount('#app');
 </script>
 <script>
