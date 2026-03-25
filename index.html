@@ -483,17 +483,14 @@
              <!-- 阅读内容区 -->
              <div class="flex-1 relative bg-[#f4ecd8] flex flex-col overflow-hidden">
                  
-                 <!-- 文字显示区：根据模式决定 overflow -->
-                 <div class="flex-1 px-5 pt-5 pb-6 text-[#3a3327] font-serif leading-relaxed" 
-                      :class="getActiveBook()?.readMode === 'scroll' ? 'overflow-y-auto' : 'overflow-hidden'"
-                      @scroll="handleBookScroll"
-                      ref="bookContentContainer"
+                 <!-- 文字显示区：稍微留点 pb-6 让底部文字不贴边 -->
+                 <div class="flex-1 px-5 pt-5 pb-6 text-[#3a3327] font-serif leading-relaxed overflow-hidden" ref="bookContentContainer"
                       :style="{ fontSize: (getActiveBook()?.fontSize || 16) + 'px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }">
                      {{ getPaginatedContent() }}
                  </div>
                  
-                 <!-- 触控翻页透明遮罩 (仅在左右翻页模式显示) -->
-                 <div v-if="getActiveBook()?.readMode !== 'scroll'" class="absolute inset-0 z-10 flex">
+                 <!-- 触控翻页透明遮罩：彻底铺满屏幕 -->
+                 <div class="absolute inset-0 z-10 flex">
                      <div class="w-1/3 h-full" @click.stop="prevBookPage"></div>
                      <div class="w-1/3 h-full" @click.stop="toggleReadMode(false)"></div>
                      <div class="w-1/3 h-full" @click.stop="nextBookPage"></div>
@@ -501,8 +498,7 @@
                  
                  <!-- 左下角显示进度 -->
                  <div v-if="!readTogetherState.isMinimized" class="absolute bottom-4 left-5 z-20 text-[11px] text-[#8b7e66] font-bold opacity-80 pointer-events-none pb-safe">
-                     <span v-if="getActiveBook()?.readMode === 'scroll'">进度 {{ readTogetherState.scrollProgress || 0 }}%</span>
-                     <span v-else>已读 {{ readTogetherState.currentPage + 1 }} 页 / 共 {{ Math.ceil((getActiveBook()?.content?.length || 0) / 400) || 1 }} 页</span>
+                     已读 {{ readTogetherState.currentPage + 1 }} 页 / 共 {{ Math.ceil((getActiveBook()?.content?.length || 0) / 450) || 1 }} 页
                  </div>
              </div>
         </div>
@@ -604,49 +600,69 @@
                 <div class="ios-list-header">头像显示设置 <button class="absolute right-4 text-blue-500 font-normal text-sm" @click="avatarModeModal.show = false">取消</button></div>
                 <div class="ios-list-content p-0 bg-white">
                     <div class="p-3 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('all')">
-                        <span class="text-gray-900 text-sm font-medium">不隐藏头像</span>
+                        <span class="text-gray-900 text-sm font-medium">不隐藏头像 (默认)</span>
                         <i v-if="(wechatState.activeSession?.avatarMode || 'all') === 'all'" class="fas fa-check text-[#07c160]"></i>
                     </div>
                     <div class="p-3 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('none')">
-                        <span class="text-gray-900 text-sm font-medium">隐藏双方头像</span>
+                        <span class="text-gray-900 text-sm font-medium">隐藏双方头像 (只显示气泡)</span>
                         <i v-if="wechatState.activeSession?.avatarMode === 'none'" class="fas fa-check text-[#07c160]"></i>
                     </div>
                     <div class="p-3 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('ai')">
-                        <span class="text-gray-900 text-sm font-medium">隐藏我的头像</span>
+                        <span class="text-gray-900 text-sm font-medium">隐藏我的头像 (我的气泡不对齐)</span>
                         <i v-if="wechatState.activeSession?.avatarMode === 'ai'" class="fas fa-check text-[#07c160]"></i>
                     </div>
                     <div class="p-3 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('me')">
-                        <span class="text-gray-900 text-sm font-medium">隐藏对方头像</span>
+                        <span class="text-gray-900 text-sm font-medium">隐藏对方头像 (对方气泡不对齐)</span>
                         <i v-if="wechatState.activeSession?.avatarMode === 'me'" class="fas fa-check text-[#07c160]"></i>
                     </div>
                     
-                    <div class="p-2 bg-gray-50 text-xs text-gray-500 font-bold sticky top-0">首条显示头像</div>
+                    <div class="p-2 bg-gray-50 text-xs text-gray-500 font-bold sticky top-0">首条显示头像 (连续消息仅首条显示)</div>
                     <div class="p-3 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('first_all')">
-                        <span class="text-gray-900 text-sm font-medium">都不隐藏</span>
+                        <span class="text-gray-900 text-sm font-medium">都不隐藏 (双方气泡都隐形对齐)</span>
                         <i v-if="wechatState.activeSession?.avatarMode === 'first_all' || wechatState.activeSession?.avatarMode === 'first'" class="fas fa-check text-[#07c160]"></i>
                     </div>
                     <div class="p-3 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('first_ai')">
-                        <span class="text-gray-900 text-sm font-medium">隐藏我的头像</span>
+                        <span class="text-gray-900 text-sm font-medium">隐藏我的头像 (我的气泡不对齐)</span>
                         <i v-if="wechatState.activeSession?.avatarMode === 'first_ai'" class="fas fa-check text-[#07c160]"></i>
                     </div>
                     <div class="p-3 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('first_me')">
-                        <span class="text-gray-900 text-sm font-medium">隐藏对方头像</span>
+                        <span class="text-gray-900 text-sm font-medium">隐藏对方头像 (对方气泡不对齐)</span>
                         <i v-if="wechatState.activeSession?.avatarMode === 'first_me'" class="fas fa-check text-[#07c160]"></i>
                     </div>
 
-                    <div class="p-2 bg-gray-50 text-xs text-gray-500 font-bold sticky top-0">尾条显示头像</div>
+                    <div class="p-2 bg-gray-50 text-xs text-gray-500 font-bold sticky top-0">尾条显示头像 (连续消息仅尾条显示)</div>
                     <div class="p-3 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('last_all')">
-                        <span class="text-gray-900 text-sm font-medium">都不隐藏</span>
+                        <span class="text-gray-900 text-sm font-medium">都不隐藏 (双方气泡都隐形对齐)</span>
                         <i v-if="wechatState.activeSession?.avatarMode === 'last_all' || wechatState.activeSession?.avatarMode === 'last'" class="fas fa-check text-[#07c160]"></i>
                     </div>
                     <div class="p-3 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('last_ai')">
-                        <span class="text-gray-900 text-sm font-medium">隐藏我的头像</span>
+                        <span class="text-gray-900 text-sm font-medium">隐藏我的头像 (我的气泡不对齐)</span>
                         <i v-if="wechatState.activeSession?.avatarMode === 'last_ai'" class="fas fa-check text-[#07c160]"></i>
                     </div>
                     <div class="p-3 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setAvatarMode('last_me')">
-                        <span class="text-gray-900 text-sm font-medium">隐藏对方头像</span>
+                        <span class="text-gray-900 text-sm font-medium">隐藏对方头像 (对方气泡不对齐)</span>
                         <i v-if="wechatState.activeSession?.avatarMode === 'last_me'" class="fas fa-check text-[#07c160]"></i>
                     </div>
+                </div>
+            </div>
+        </div>
+    </transition>
+
+    <!-- 位置填写弹窗 -->
+    <transition name="scale">
+        <div v-if="locationInputModal.show" class="fixed inset-0 z-[60000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl p-6 flex flex-col items-center">
+                <div class="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4 text-blue-500 text-2xl">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <h3 class="text-lg font-bold mb-4">发送位置</h3>
+                <div class="w-full space-y-3">
+                    <input v-model="locationInputModal.name" placeholder="位置名称 (如: xx咖啡馆)" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-100 outline-none">
+                    <input v-model="locationInputModal.address" placeholder="详细地址 (选填)" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-100 outline-none">
+                </div>
+                <div class="flex gap-3 w-full mt-4">
+                    <button @click="locationInputModal.show = false" class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm">取消</button>
+                    <button @click="sendLocation" class="flex-1 py-3 bg-black text-white rounded-xl font-bold text-sm">发送</button>
                 </div>
             </div>
         </div>
@@ -2888,7 +2904,7 @@
     </transition>
 
     <!-- 设置 App -->
-    <transition name="app-slide"><div v-if="currentApp === 'settings'" class="absolute inset-0 z-[1000] bg-gray-50 flex flex-col overflow-hidden"><header class="bg-white/80 backdrop-blur h-[90px] pt-10 flex items-center justify-between px-4 border-b border-gray-200 sticky top-0 z-10"><button @click="navigateSettings('back')" class="w-8 h-8 flex items-center justify-center text-gray-800 bg-gray-100 rounded-full active:bg-gray-200 transition"><i v-if="settingsPage !== 'main'" class="fas fa-chevron-left text-sm"></i><i v-else class="fas fa-times text-sm"></i></button><h1 class="font-bold text-gray-900 text-[17px]">{{ settingsTitle }}</h1><div class="w-8"></div></header><main class="flex-1 overflow-y-auto relative"><transition name="page-slide"><div v-if="settingsPage === 'main'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-4 flex items-center gap-4 shadow-sm border border-gray-100"><div class="w-14 h-14 rounded-full bg-gray-100 overflow-hidden"><img v-if="homeProfile.avatar" :src="homeProfile.avatar" class="w-full h-full object-cover"></div><div><div class="font-bold text-lg">{{ homeProfile.name }}</div><div class="text-xs text-gray-400">@{{ homeProfile.id }}</div></div></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 divide-y divide-gray-50"><div @click="navigateSettings('api-config')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-blue-500 text-white flex items-center justify-center"><i class="fas fa-robot"></i></div><span class="font-medium text-gray-800">API 配置</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div @click="navigateSettings('notification')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-green-500 text-white flex items-center justify-center"><i class="fas fa-bell"></i></div><span class="font-medium text-gray-800">消息提示音</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div @click="navigateSettings('browser-notify')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-indigo-500 text-white flex items-center justify-center"><i class="fas fa-comment-dots"></i></div><span class="font-medium text-gray-800">系统通知推送</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div @click="navigateSettings('data-manage')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-orange-500 text-white flex items-center justify-center"><i class="fas fa-database"></i></div><span class="font-medium text-gray-800">数据管理</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div class="p-4 flex items-center justify-between active:bg-gray-50"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-purple-500 text-white flex items-center justify-center"><i class="fas fa-expand"></i></div><span class="font-medium text-gray-800">全屏模式</span></div><input type="checkbox" id="toggle-fs" class="switch-checkbox" v-model="isFullScreen" @change="toggleFullScreen"><label for="toggle-fs" class="switch-label"><div class="switch-button"></div></label></div><div class="p-4 flex items-center justify-between active:bg-gray-50"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-gray-500 text-white flex items-center justify-center"><i class="fas fa-eye-slash"></i></div><span class="font-medium text-gray-800">隐藏状态栏</span></div><input type="checkbox" id="toggle-sb" class="switch-checkbox" v-model="hideStatusBar" @change="saveData"><label for="toggle-sb" class="switch-label"><div class="switch-button"></div></label></div></div></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'api-config'" class="absolute inset-0 p-4"><div class="space-y-5 pb-10"><div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4"><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">反代地址</label><input v-model="apiConfig.baseUrl" placeholder="https://..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">API 密钥</label><input v-model="apiConfig.apiKey" type="password" placeholder="sk-..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div class="flex items-center gap-2"><button @click="fetchModels" :disabled="isLoading" class="flex-1 bg-gray-900 text-white py-2.5 rounded-xl text-sm font-bold active:scale-95 transition flex items-center justify-center gap-2"><i v-if="isLoading" class="fas fa-spinner fa-spin"></i><span v-else>拉取模型</span></button></div><div v-if="availableModels.length > 0" class="animate-fade-in"><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">选择模型</label><div @click="modelSelectModal.show = true" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-medium border border-gray-200 flex justify-between items-center cursor-pointer"><span>{{ apiConfig.selectedModel || '点击选择' }}</span><i class="fas fa-chevron-down text-gray-400 text-xs"></i></div></div><div><div class="flex justify-between mb-1"><label class="text-xs font-bold text-gray-500 ml-1">温度 (创造性): {{ apiConfig.temperature }}</label></div><input type="range" min="0" max="2" step="0.1" v-model.number="apiConfig.temperature" class="w-full h-2 bg-gray-200 rounded-lg cursor-pointer"></div></div>
+    <transition name="app-slide"><div v-if="currentApp === 'settings'" class="absolute inset-0 z-[1000] bg-gray-50 flex flex-col overflow-hidden"><header class="bg-white/80 backdrop-blur h-[90px] pt-10 flex items-center justify-between px-4 border-b border-gray-200 sticky top-0 z-10"><button @click="navigateSettings('back')" class="w-8 h-8 flex items-center justify-center text-gray-800 bg-gray-100 rounded-full active:bg-gray-200 transition"><i v-if="settingsPage !== 'main'" class="fas fa-chevron-left text-sm"></i><i v-else class="fas fa-times text-sm"></i></button><h1 class="font-bold text-gray-900 text-[17px]">{{ settingsTitle }}</h1><div class="w-8"></div></header><main class="flex-1 overflow-y-auto relative"><transition name="page-slide"><div v-if="settingsPage === 'main'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-4 flex items-center gap-4 shadow-sm border border-gray-100"><div class="w-14 h-14 rounded-full bg-gray-100 overflow-hidden"><img v-if="homeProfile.avatar" :src="homeProfile.avatar" class="w-full h-full object-cover"></div><div><div class="font-bold text-lg">{{ homeProfile.name }}</div><div class="text-xs text-gray-400">@{{ homeProfile.id }}</div></div></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 divide-y divide-gray-50"><div @click="navigateSettings('api-config')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-blue-500 text-white flex items-center justify-center"><i class="fas fa-robot"></i></div><span class="font-medium text-gray-800">API 配置</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div @click="navigateSettings('notification')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-green-500 text-white flex items-center justify-center"><i class="fas fa-bell"></i></div><span class="font-medium text-gray-800">消息提示音</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div @click="navigateSettings('data-manage')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-orange-500 text-white flex items-center justify-center"><i class="fas fa-database"></i></div><span class="font-medium text-gray-800">数据管理</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div class="p-4 flex items-center justify-between active:bg-gray-50"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-purple-500 text-white flex items-center justify-center"><i class="fas fa-expand"></i></div><span class="font-medium text-gray-800">全屏模式</span></div><input type="checkbox" id="toggle-fs" class="switch-checkbox" v-model="isFullScreen" @change="toggleFullScreen"><label for="toggle-fs" class="switch-label"><div class="switch-button"></div></label></div><div class="p-4 flex items-center justify-between active:bg-gray-50"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-gray-500 text-white flex items-center justify-center"><i class="fas fa-eye-slash"></i></div><span class="font-medium text-gray-800">隐藏状态栏</span></div><input type="checkbox" id="toggle-sb" class="switch-checkbox" v-model="hideStatusBar" @change="saveData"><label for="toggle-sb" class="switch-label"><div class="switch-button"></div></label></div></div></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'api-config'" class="absolute inset-0 p-4"><div class="space-y-5 pb-10"><div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4"><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">反代地址</label><input v-model="apiConfig.baseUrl" placeholder="https://..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">API 密钥</label><input v-model="apiConfig.apiKey" type="password" placeholder="sk-..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div class="flex items-center gap-2"><button @click="fetchModels" :disabled="isLoading" class="flex-1 bg-gray-900 text-white py-2.5 rounded-xl text-sm font-bold active:scale-95 transition flex items-center justify-center gap-2"><i v-if="isLoading" class="fas fa-spinner fa-spin"></i><span v-else>拉取模型</span></button></div><div v-if="availableModels.length > 0" class="animate-fade-in"><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">选择模型</label><div @click="modelSelectModal.show = true" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-medium border border-gray-200 flex justify-between items-center cursor-pointer"><span>{{ apiConfig.selectedModel || '点击选择' }}</span><i class="fas fa-chevron-down text-gray-400 text-xs"></i></div></div><div><div class="flex justify-between mb-1"><label class="text-xs font-bold text-gray-500 ml-1">温度 (创造性): {{ apiConfig.temperature }}</label></div><input type="range" min="0" max="2" step="0.1" v-model.number="apiConfig.temperature" class="w-full h-2 bg-gray-200 rounded-lg cursor-pointer"></div></div>
 
 <!-- === 新增：MiniMax 语音合成面板 === -->
 <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
@@ -2920,23 +2936,7 @@
 </div>
 <!-- ============================== -->
 
-<div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">API 预设</span><button @click="savePreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="apiPresets.length === 0" class="p-8 text-center text-gray-400 text-xs">暂无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(preset, idx) in apiPresets" :key="idx" class="p-4 flex items-center justify-between"><div class="flex-1 min-w-0 mr-4"><div class="font-bold text-gray-800 text-sm truncate">{{ preset.name }}</div><div class="text-[10px] text-gray-400 truncate">{{ preset.baseUrl }}</div></div><div class="flex items-center gap-2"><button @click="applyPreset(preset)" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-green-100 hover:text-green-600 transition"><i class="fas fa-check text-xs"></i></button><button @click="deletePreset(idx)" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-red-100 hover:text-red-600 transition"><i class="fas fa-trash text-xs"></i></button></div></div></div></div><button @click="saveSettings" class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-blue-200 active:scale-95 transition">保存配置</button></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'data-manage'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center"><div class="w-16 h-16 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fas fa-database"></i></div><h3 class="font-bold text-gray-900 text-lg">数据管理</h3><p class="text-xs text-gray-400 mt-2 px-4">备份恢复所有设置。</p></div><div class="grid grid-cols-2 gap-4"><button @click="exportData" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 active:scale-95 transition"><div class="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-file-export"></i></div><span class="text-sm font-bold text-gray-700">导出</span></button><button @click="triggerImport" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 active:scale-95 transition"><div class="w-10 h-10 rounded-full bg-green-50 text-green-500 flex items-center justify-center"><i class="fas fa-file-import"></i></div><span class="text-sm font-bold text-gray-700">导入</span></button></div><input type="file" ref="importInput" accept=".json" class="hidden" @change="handleImport"></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'notification'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"><div class="flex items-center justify-between mb-4"><span class="text-sm font-bold text-gray-700">当前提示音</span><span class="text-xs text-gray-400">{{ notificationConfig.currentName || '系统默认' }}</span></div><div class="flex gap-2"><button @click="triggerAudioUpload" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-upload"></i> 导入文件</button><button @click="triggerAudioUrl" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-link"></i> 网络直链</button><button @click="playCurrentSound" class="w-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center border border-green-100 active:scale-95 transition"><i class="fas fa-play"></i></button></div><input type="file" ref="audioInput" accept="audio/*" class="hidden" @change="handleAudioUpload"><button @click="simulateAiMessage" class="w-full mt-3 bg-gray-800 text-white py-2.5 rounded-xl text-xs font-bold active:bg-black transition">测试音效</button></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">音频预设</span><button @click="saveSoundPreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="soundPresets.length === 0" class="p-6 text-center text-gray-400 text-xs">暂无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(sound, idx) in soundPresets" :key="idx" class="p-4 flex items-center justify-between"><span class="font-bold text-gray-700 text-sm truncate max-w-[50%]">{{ sound.name }}</span><div class="flex items-center gap-2"><button @click="playPresetSound(sound)" class="w-7 h-7 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center"><i class="fas fa-play text-[10px]"></i></button><button @click="applySoundPreset(sound)" class="w-7 h-7 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-check text-[10px]"></i></button><button @click="deleteSoundPreset(idx)" class="w-7 h-7 rounded-full bg-red-50 text-red-500 flex items-center justify-center"><i class="fas fa-trash text-[10px]"></i></button></div></div></div></div></div></div></transition></main></div></transition><transition name="page-slide">
-    <div v-if="settingsPage === 'browser-notify'" class="absolute inset-0 p-4">
-        <div class="space-y-4">
-            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <span class="font-bold text-gray-800 text-sm">允许浏览器原生推送</span>
-                        <div class="text-xs text-gray-400 mt-1">开启后，后台可收到 AI 消息提醒</div>
-                    </div>
-                    <input type="checkbox" id="browser-notify-toggle" class="switch-checkbox" v-model="notificationConfig.browserNotify" @change="toggleBrowserNotify">
-                    <label for="browser-notify-toggle" class="switch-label"><div class="switch-button"></div></label>
-                </div>
-            </div>
-            <button @click="testBrowserNotify" class="w-full mt-3 bg-gray-800 text-white py-3.5 rounded-xl text-sm font-bold active:bg-black transition">测试推送 (发送模拟通知)</button>
-        </div>
-    </div>
-</transition>
+<div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">API 预设</span><button @click="savePreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="apiPresets.length === 0" class="p-8 text-center text-gray-400 text-xs">暂无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(preset, idx) in apiPresets" :key="idx" class="p-4 flex items-center justify-between"><div class="flex-1 min-w-0 mr-4"><div class="font-bold text-gray-800 text-sm truncate">{{ preset.name }}</div><div class="text-[10px] text-gray-400 truncate">{{ preset.baseUrl }}</div></div><div class="flex items-center gap-2"><button @click="applyPreset(preset)" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-green-100 hover:text-green-600 transition"><i class="fas fa-check text-xs"></i></button><button @click="deletePreset(idx)" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-red-100 hover:text-red-600 transition"><i class="fas fa-trash text-xs"></i></button></div></div></div></div><button @click="saveSettings" class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-blue-200 active:scale-95 transition">保存配置</button></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'data-manage'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center"><div class="w-16 h-16 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fas fa-database"></i></div><h3 class="font-bold text-gray-900 text-lg">数据管理</h3><p class="text-xs text-gray-400 mt-2 px-4">备份恢复所有设置。</p></div><div class="grid grid-cols-2 gap-4"><button @click="exportData" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 active:scale-95 transition"><div class="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-file-export"></i></div><span class="text-sm font-bold text-gray-700">导出</span></button><button @click="triggerImport" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 active:scale-95 transition"><div class="w-10 h-10 rounded-full bg-green-50 text-green-500 flex items-center justify-center"><i class="fas fa-file-import"></i></div><span class="text-sm font-bold text-gray-700">导入</span></button></div><input type="file" ref="importInput" accept=".json" class="hidden" @change="handleImport"></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'notification'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"><div class="flex items-center justify-between mb-4"><span class="text-sm font-bold text-gray-700">当前提示音</span><span class="text-xs text-gray-400">{{ notificationConfig.currentName || '系统默认' }}</span></div><div class="flex gap-2"><button @click="triggerAudioUpload" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-upload"></i> 导入文件</button><button @click="triggerAudioUrl" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-link"></i> 网络直链</button><button @click="playCurrentSound" class="w-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center border border-green-100 active:scale-95 transition"><i class="fas fa-play"></i></button></div><input type="file" ref="audioInput" accept="audio/*" class="hidden" @change="handleAudioUpload"><button @click="simulateAiMessage" class="w-full mt-3 bg-gray-800 text-white py-2.5 rounded-xl text-xs font-bold active:bg-black transition">测试音效</button></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">音频预设</span><button @click="saveSoundPreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="soundPresets.length === 0" class="p-6 text-center text-gray-400 text-xs">暂无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(sound, idx) in soundPresets" :key="idx" class="p-4 flex items-center justify-between"><span class="font-bold text-gray-700 text-sm truncate max-w-[50%]">{{ sound.name }}</span><div class="flex items-center gap-2"><button @click="playPresetSound(sound)" class="w-7 h-7 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center"><i class="fas fa-play text-[10px]"></i></button><button @click="applySoundPreset(sound)" class="w-7 h-7 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-check text-[10px]"></i></button><button @click="deleteSoundPreset(idx)" class="w-7 h-7 rounded-full bg-red-50 text-red-500 flex items-center justify-center"><i class="fas fa-trash text-[10px]"></i></button></div></div></div></div></div></div></transition></main></div></transition>
     
     <!-- 主题 App -->
     <transition name="app-slide"><div v-if="currentApp === 'themes'" class="absolute inset-0 z-[1000] bg-gray-50 flex flex-col overflow-hidden"><header class="bg-white/80 backdrop-blur h-[90px] pt-10 flex items-center justify-between px-4 border-b border-gray-200 sticky top-0 z-10"><button @click="navigateThemes('back')" class="w-8 h-8 flex items-center justify-center text-gray-800 bg-gray-100 rounded-full active:bg-gray-200 transition"><i v-if="themesPage !== 'main'" class="fas fa-chevron-left text-sm"></i><i v-else class="fas fa-times text-sm"></i></button><h1 class="font-bold text-gray-900 text-[17px]">{{ themesTitle }}</h1><div class="w-8"></div></header><main class="flex-1 overflow-y-auto relative">
@@ -3122,7 +3122,7 @@ createApp({
             isAppOpen: false, currentApp: null, settingsPage: 'main', themesPage: 'main', isLoading: false, isFullScreen: false, hideStatusBar: false,
             apiConfig: { baseUrl: '', apiKey: '', selectedModel: 'gpt-3.5-turbo', temperature: 0.7 }, availableModels: [], apiPresets:[], 
             minimaxConfig: { enabled: false, region: 'cn', groupId: '', apiKey: '', selectedModel: '', voiceId: 'male-qn-qingse' }, minimaxModels:[],
-            notificationConfig: { currentSound: null, currentName: '默认提示音', browserNotify: false }, soundPresets:[],
+            notificationConfig: { currentSound: null, currentName: '默认提示音' }, soundPresets:[],
             themeConfig: { wallpaper: '', fontFamily: '', fontUrl: '', fontSize: 1.0, fontColor: '#000000', isDarkMode: false }, fontPresets:[], fontInputUrl: '',
             
             // 美化配置
@@ -3290,7 +3290,6 @@ createApp({
             const query = this.wechatState.searchQuery.toLowerCase();
             return sessions.filter(c => c.name.toLowerCase().includes(query));
         },
-        if (this.settingsPage === 'browser-notify') return '系统通知推送';
         filteredStickers() {
             if(this.activeStickerGroupId === 'all') return this.stickers;
             return this.stickers.filter(s => s.groupId === this.activeStickerGroupId);
@@ -4550,7 +4549,7 @@ createApp({
             IMPORTANT: You must output ONLY a valid JSON object. No Markdown. No other text.
             Structure:
             {
-              "reply":["第一条消息", "第二条消息"], // 数组格式。请根据人物心情和语境自由决定发送几条消息，可以连发多条短消息模拟真实的聊天节奏，不要局限于只发一条！
+              "reply":["message 1", "message 2"], 
               "action": "当前动作",
               "thought": "你的心声。必须完全代入角色，用第一人称思考！绝对禁止出现'用户'、'玩家'、'AI'、'人工智能'等破坏沉浸感的词汇！",
               "outfit": "当前穿着",
@@ -4565,7 +4564,7 @@ createApp({
               "html_widget": "OPTIONAL: Valid HTML string using Tailwind CSS...",
               "change_avatar": true OR false (OPTIONAL: 仅当用户刚发了一张图片且明确要求你换头像时，将此值设为 true，系统会自动提取那张图为你换上),
               "sticker_id": "OPTIONAL: 填入你想发的表情包的纯数字 ID",
-              "invite_music": true (OPTIONAL: 当你想邀请对方听歌时设为 true。注意：绝对不要在 reply 中输出“系统通知：邀请你听歌”之类的出戏旁白，只需用自然语口吻说“我们一起听这首歌吧”)
+              "invite_music": true (OPTIONAL: 注意！当用户明确要求“一起听歌/听音乐”时，或者你想主动分享音乐时，必须且只能输出布尔值 true，不可遗漏！)
             }            
             "reply" is an array of strings. Split long text into natural short messages.`;
             
@@ -4744,10 +4743,8 @@ createApp({
                 let delay = 0;
                 segments.forEach((seg, index) => {
                     setTimeout(() => {
-                         const isHidden = typeof document !== 'undefined' && document.hidden;
-                         if (isHidden || this.currentApp !== 'wechat' || this.wechatState.activeNav !== 'room' || this.wechatState.activeSession.id !== session.id) {
-                             if (!isHidden) this.showGlobalNotification(session, seg); // 网页内部通知
-                             this.sendNativeNotification(session, seg); // 浏览器原生真机通知推送
+                         if (this.currentApp !== 'wechat' || this.wechatState.activeNav !== 'room' || this.wechatState.activeSession.id !== session.id) {
+                             this.showGlobalNotification(session, seg);
                          }
 
                          let msgType = 'text';
@@ -5186,58 +5183,6 @@ createApp({
         },
         handleAudioUpload(e) { const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=(ev)=>{this.notificationConfig.currentSound=ev.target.result; this.notificationConfig.currentName=f.name; this.saveData();}; r.readAsDataURL(f); },
         playCurrentSound() { if(this.notificationConfig.currentSound) new Audio(this.notificationConfig.currentSound).play(); },
-        toggleBrowserNotify() {
-            if (this.notificationConfig.browserNotify) {
-                if (!("Notification" in window)) {
-                    this.showToast('您的浏览器不支持通知功能');
-                    this.notificationConfig.browserNotify = false;
-                } else if (Notification.permission !== "granted") {
-                    Notification.requestPermission().then(permission => {
-                        if (permission === "granted") {
-                            this.showToast('通知权限已开启');
-                        } else {
-                            this.showToast('请在浏览器/手机设置中允许通知权限');
-                            this.notificationConfig.browserNotify = false;
-                        }
-                        this.saveData();
-                    });
-                } else {
-                    this.saveData();
-                }
-            } else {
-                this.saveData();
-            }
-        },
-        testBrowserNotify() {
-            if (!this.notificationConfig.browserNotify) {
-                return this.showToast('请先开启上方的推送开关');
-            }
-            if (Notification.permission === "granted") {
-                const n = new Notification('测试通知', {
-                    body: '这是一条测试消息！如果您能在顶部看到我，说明设置成功啦！',
-                    icon: this.homeProfile.avatar || 'https://pic1.imgdb.cn/item/69ba80aab96fa53fd04c3771.png'
-                });
-                n.onclick = () => window.focus();
-                this.showToast('已发送测试通知，请留意横幅');
-            } else {
-                this.showToast('未获得浏览器通知权限');
-            }
-        },
-        sendNativeNotification(session, content) {
-            if (!this.notificationConfig.browserNotify || Notification.permission !== "granted") return;
-            const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
-            const name = friend ? (friend.remark || friend.name) : session.name;
-            const iconUrl = friend ? friend.avatar : session.avatar;
-            const n = new Notification(name, {
-                body: content,
-                icon: iconUrl
-            });
-            n.onclick = () => {
-                window.focus();
-                this.openApp('wechat');
-                this.enterChatRoom(session);
-            };
-        },
         simulateAiMessage() { setTimeout(()=>{this.playCurrentSound(); this.showToast('收到消息');},2000); },
         saveSoundPreset() { this.showInput("名称", "", "", (n)=>{ if(n) { this.soundPresets.push({name:n, data:this.notificationConfig.currentSound}); this.saveData(); } }); },
         playPresetSound(s) { new Audio(s.data).play(); },
@@ -6836,41 +6781,26 @@ createApp({
         getActiveBook() {
             return this.bookshelf.find(b => b.id === this.readTogetherState.activeBookId);
         },
-        // --- 一起读 分页、拖拽与滚动模式 ---
+        // --- 一起读 分页与拖拽 ---
         getPaginatedContent() {
             const book = this.getActiveBook();
             if(!book || !book.content) return '';
             
-            if(book.readMode === 'scroll') {
-                return book.content; // 上下滑动模式：返回全部文本供原生滚动
-            }
-            // 左右翻页模式：小窗 150 字，全屏 400 字
-            const currentModePageSize = this.readTogetherState.isMinimized ? 150 : 400;
+            // 极其严谨地获取字数：小窗死守 150 字，全屏死守 450 字
+            const currentModePageSize = this.readTogetherState.isMinimized ? 150 : 450;
             let start = (this.readTogetherState.currentPage || 0) * currentModePageSize;
             let end = start + currentModePageSize;
+            
+            // 精确返回从 start 到 end 的文字，不多一个字，不少一个字
             return book.content.substring(start, end);
         },
-        handleBookScroll(e) {
-            const target = e.target;
-            if(!target) return;
-            const scrollTop = target.scrollTop;
-            const scrollHeight = target.scrollHeight - target.clientHeight;
-            if(scrollHeight <= 0) {
-                this.readTogetherState.scrollProgress = 100;
-            } else {
-                this.readTogetherState.scrollProgress = Math.round((scrollTop / scrollHeight) * 100);
-            }
-        },
         toggleReadMode(minimize) {
-            const book = this.getActiveBook();
-            if (book && book.readMode === 'scroll') {
-                this.readTogetherState.isMinimized = minimize;
-                this.saveDataNow();
-                return;
-            }
-            const oldSize = this.readTogetherState.isMinimized ? 150 : 400;
-            const newSize = minimize ? 150 : 400;
+            // 当切换大/小窗口时，计算你目前看过了多少个字
+            const oldSize = this.readTogetherState.isMinimized ? 150 : 450;
+            const newSize = minimize ? 150 : 450;
             const currentTotalCharsRead = (this.readTogetherState.currentPage || 0) * oldSize;
+            
+            // 根据新窗口的字数，重新计算你应该落在第几页，保证进度完美衔接
             this.readTogetherState.currentPage = Math.floor(currentTotalCharsRead / newSize);
             this.readTogetherState.isMinimized = minimize;
             this.saveDataNow();
