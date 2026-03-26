@@ -501,7 +501,7 @@
                  <!-- 左下角显示进度 -->
                  <div v-if="!readTogetherState.isMinimized" class="absolute bottom-4 left-5 z-20 text-[11px] text-[#8b7e66] font-bold opacity-80 pointer-events-none pb-safe">
                      <span v-if="getActiveBook()?.readMode === 'scroll'">上下滑动阅读中 (双击左上角退出)</span>
-                     <span v-else>已读 {{ readTogetherState.currentPage + 1 }} 页 / 共 {{ Math.ceil((getActiveBook()?.content?.length || 0) / 400) || 1 }} 页</span>
+                     <span v-else>已读 {{ readTogetherState.currentPage + 1 }} 页 / 共 {{ Math.ceil((getActiveBook()?.content?.length || 0) / 550) || 1 }} 页</span>
                  </div>
              </div>
         </div>
@@ -4772,8 +4772,15 @@ createApp({
                          if (this.currentApp !== 'wechat' || this.wechatState.activeNav !== 'room' || this.wechatState.activeSession.id !== session.id) {
                              this.showGlobalNotification(session, seg);
                          }
-                         if (this.currentApp !== 'wechat' || this.wechatState.activeNav !== 'room' || this.wechatState.activeSession.id !== session.id) {
-                             this.showGlobalNotification(session, seg);
+                         // 判断是否不在当前聊天界面，或者浏览器被切到了手机后台 (document.hidden)
+                         if (this.currentApp !== 'wechat' || this.wechatState.activeNav !== 'room' || this.wechatState.activeSession.id !== session.id || document.hidden) {
+                             
+                             // 如果还在前台，只是在别的界面，显示应用内横幅
+                             if (!document.hidden) {
+                                 this.showGlobalNotification(session, seg);
+                             }
+                             
+                             // 只要满足条件，就向系统底层发送推送通知
                              this.sendPushNotification('微信新消息', session.name, msgType === 'voice' ? '[语音]' : seg.trim(), session.avatar);
                          }
                          
@@ -4956,8 +4963,13 @@ createApp({
         },
         testPushNotification() {
             if (!this.pushConfig.enabled) return this.showToast('请先开启推送开关');
-            this.sendPushNotification('Aovein OS 测试', 'Aovein系统', '这是一条测试消息', this.homeProfile?.avatar);
-            this.showToast('已尝试向系统发送通知，请注意查看通知栏');
+            
+            this.showToast('请在 3 秒内将浏览器切到手机后台 (回到桌面)...');
+            
+            // 延迟 3 秒发送，让你有时间切回手机主屏幕看会不会弹通知
+            setTimeout(() => {
+                this.sendPushNotification('Aovein OS 测试', 'Aovein系统', '这是一条测试消息！如果您在后台收到了，说明推送功能正常。', this.homeProfile?.avatar);
+            }, 3000);
         },
         sendPushNotification(title, name, body, icon) {
             if (this.pushConfig.enabled && "Notification" in window && Notification.permission === "granted") {
@@ -6886,16 +6898,16 @@ createApp({
                 return book.content;
             }
             
-            // 翻页模式/小窗模式处理
-            const currentModePageSize = this.readTogetherState.isMinimized ? 150 : 400;
+            // 翻页模式/小窗模式处理 (全屏字数增至 550)
+            const currentModePageSize = this.readTogetherState.isMinimized ? 150 : 550;
             let start = (this.readTogetherState.currentPage || 0) * currentModePageSize;
             let end = start + currentModePageSize;
             
             return book.content.substring(start, end);
         },
         toggleReadMode(minimize) {
-            const oldSize = this.readTogetherState.isMinimized ? 150 : 400;
-            const newSize = minimize ? 150 : 400;
+            const oldSize = this.readTogetherState.isMinimized ? 150 : 550;
+            const newSize = minimize ? 150 : 550;
             const currentTotalCharsRead = (this.readTogetherState.currentPage || 0) * oldSize;
             
             this.readTogetherState.currentPage = Math.floor(currentTotalCharsRead / newSize);
