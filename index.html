@@ -2939,7 +2939,11 @@
 </div>
 <!-- ============================== -->
 
-<div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">API 预设</span><button @click="savePreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="apiPresets.length === 0" class="p-8 text-center text-gray-400 text-xs">暂无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(preset, idx) in apiPresets" :key="idx" class="p-4 flex items-center justify-between"><div class="flex-1 min-w-0 mr-4"><div class="font-bold text-gray-800 text-sm truncate">{{ preset.name }}</div><div class="text-[10px] text-gray-400 truncate">{{ preset.baseUrl }}</div></div><div class="flex items-center gap-2"><button @click="applyPreset(preset)" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-green-100 hover:text-green-600 transition"><i class="fas fa-check text-xs"></i></button><button @click="deletePreset(idx)" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-red-100 hover:text-red-600 transition"><i class="fas fa-trash text-xs"></i></button></div></div></div></div><button @click="saveSettings" class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-blue-200 active:scale-95 transition">保存配置</button></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'data-manage'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center"><div class="w-16 h-16 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fas fa-database"></i></div><h3 class="font-bold text-gray-900 text-lg">数据管理</h3><p class="text-xs text-gray-400 mt-2 px-4">备份恢复所有设置。</p></div><div class="grid grid-cols-2 gap-4"><button @click="exportData" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 active:scale-95 transition"><div class="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-file-export"></i></div><span class="text-sm font-bold text-gray-700">导出</span></button><button @click="triggerImport" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 active:scale-95 transition"><div class="w-10 h-10 rounded-full bg-green-50 text-green-500 flex items-center justify-center"><i class="fas fa-file-import"></i></div><span class="text-sm font-bold text-gray-700">导入</span></button></div><input type="file" ref="importInput" accept=".json" class="hidden" @change="handleImport"></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'notification'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"><div class="flex items-center justify-between mb-4"><span class="text-sm font-bold text-gray-700">当前提示音</span><span class="text-xs text-gray-400">{{ notificationConfig.currentName || '系统默认' }}</span></div><div class="flex gap-2"><button @click="triggerAudioUpload" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-upload"></i> 导入文件</button><button @click="triggerAudioUrl" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-link"></i> 网络直链</button><button @click="playCurrentSound" class="w-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center border border-green-100 active:scale-95 transition"><i class="fas fa-play"></i></button></div><input type="file" ref="audioInput" accept="audio/*" class="hidden" @change="handleAudioUpload"><button @click="simulateAiMessage" class="w-full mt-3 bg-gray-800 text-white py-2.5 rounded-xl text-xs font-bold active:bg-black transition">测试音效</button></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">音频预设</span><button @click="saveSoundPreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="soundPresets.length === 0" class="p-6 text-center text-gray-400 text-xs">暂无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(sound, idx) in soundPresets" :key="idx" class="p-4 flex items-center justify-between"><span class="font-bold text-gray-700 text-sm truncate max-w-[50%]">{{ sound.name }}</span><div class="flex items-center gap-2"><button @click="playPresetSound(sound)" class="w-7 h-7 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center"><i class="fas fa-play text-[10px]"></i></button><button @click="applySoundPreset(sound)" class="w-7 h-7 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-check text-[10px]"></i></button><button @click="deleteSoundPreset(idx)" class="w-7 h-7 rounded-full bg-red-50 text-red-500 flex items-center justify-center"><i class="fas fa-trash text-[10px]"></i></button></div></div></div></div></div></div></transition><transition name="page-slide">
+<div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">API 预设</span><button @click="savePreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="apiPresets.length === 0" class="p-8 text-center text-gray-400 text-xs">暂无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(preset, idx) in apiPresets" :key="idx" class="p-4 flex items-center justify-between"><div class="flex-1 min-w-0 mr-4"><div class="font-bold text-gray-800 text-sm truncate">{{ preset.name }}</div><div class="text-[10px] text-gray-400 truncate">{{ preset.baseUrl }}</div></div><div class="flex items-center gap-2"><button @click="applyPreset(preset)" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-green-100 hover:text-green-600 transition"><i class="fas fa-check text-xs"></i></button><button @click="deletePreset(idx)" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-red-100 hover:text-red-600 transition"><i class="fas fa-trash text-xs"></i></button></div></div></div></div><button @click="saveSettings" class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-blue-200 active:scale-95 transition">保存配置</button></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'data-manage'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center"><div class="w-16 h-16 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fas fa-database"></i></div><h3 class="font-bold text-gray-900 text-lg">数据管理</h3><p class="text-xs text-gray-400 mt-2 px-4">备份恢复所有设置。</p></div>
+
+<div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between mb-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center"><i class="fas fa-shield-alt"></i></div><div><div class="font-bold text-sm text-gray-800">数据防清理保护</div><div class="text-[10px] text-gray-400 mt-0.5">防止手机内存不足时浏览器自动删档</div></div></div><input type="checkbox" id="data-protect-toggle" class="switch-checkbox" v-model="dataProtection" @change="toggleDataProtection"><label for="data-protect-toggle" class="switch-label"><div class="switch-button"></div></label></div>
+
+<div class="grid grid-cols-2 gap-4"><button @click="exportData" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 active:scale-95 transition"><div class="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-file-export"></i></div><span class="text-sm font-bold text-gray-700">导出</span></button><button @click="triggerImport" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 active:scale-95 transition"><div class="w-10 h-10 rounded-full bg-green-50 text-green-500 flex items-center justify-center"><i class="fas fa-file-import"></i></div><span class="text-sm font-bold text-gray-700">导入</span></button></div><input type="file" ref="importInput" accept=".json" class="hidden" @change="handleImport"></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'notification'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"><div class="flex items-center justify-between mb-4"><span class="text-sm font-bold text-gray-700">当前提示音</span><span class="text-xs text-gray-400">{{ notificationConfig.currentName || '系统默认' }}</span></div><div class="flex gap-2"><button @click="triggerAudioUpload" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-upload"></i> 导入文件</button><button @click="triggerAudioUrl" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-link"></i> 网络直链</button><button @click="playCurrentSound" class="w-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center border border-green-100 active:scale-95 transition"><i class="fas fa-play"></i></button></div><input type="file" ref="audioInput" accept="audio/*" class="hidden" @change="handleAudioUpload"><button @click="simulateAiMessage" class="w-full mt-3 bg-gray-800 text-white py-2.5 rounded-xl text-xs font-bold active:bg-black transition">测试音效</button></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">音频预设</span><button @click="saveSoundPreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="soundPresets.length === 0" class="p-6 text-center text-gray-400 text-xs">暂无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(sound, idx) in soundPresets" :key="idx" class="p-4 flex items-center justify-between"><span class="font-bold text-gray-700 text-sm truncate max-w-[50%]">{{ sound.name }}</span><div class="flex items-center gap-2"><button @click="playPresetSound(sound)" class="w-7 h-7 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center"><i class="fas fa-play text-[10px]"></i></button><button @click="applySoundPreset(sound)" class="w-7 h-7 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-check text-[10px]"></i></button><button @click="deleteSoundPreset(idx)" class="w-7 h-7 rounded-full bg-red-50 text-red-500 flex items-center justify-center"><i class="fas fa-trash text-[10px]"></i></button></div></div></div></div></div></div></transition><transition name="page-slide">
                 <div v-if="settingsPage === 'push-config'" class="absolute inset-0 p-4">
                     <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
                         <div class="flex justify-between items-center">
@@ -3289,7 +3293,7 @@ createApp({
             timer: null, toast: { show: false, message: '' }, 
             inputModal: { show: false, title: '', value: '', placeholder: '', callback: null, desc: '', inputType: 'text', extraBtn: null }, 
             confirmModal: { show: false, message: '', callback: null },
-            inputMsg: '', deviceId: '', isTyping: false, replyingTo: null
+            inputMsg: '', deviceId: '', isTyping: false, replyingTo: null, dataProtection: false
         }
     },
     computed: {
@@ -4384,8 +4388,6 @@ createApp({
                     this.$refs.chatInputArea.style.height = 'auto';
                 }
             });
-            // 静默后台预翻译
-            if (this.wechatState.activeSession.enableClickTranslate) { this.translateMessage(msg); }
         },
         triggerReceive() {
             if (!this.apiConfig.apiKey) { this.showToast('请先配置 API Key'); return; }
@@ -4802,10 +4804,6 @@ createApp({
                          };
                          session.messages.push(aiMsg);
                          this.scrollToBottom();
-                         // 静默后台预翻译
-                         if (session.enableClickTranslate && msgType === 'text') {
-                             this.translateMessage(aiMsg);
-                         }
                          
                          if (index === segments.length - 1) {
                              session.lastMessage = msgType === 'voice' ? '[语音]' : seg.trim();
@@ -5289,8 +5287,8 @@ createApp({
         
         // Export All Data (Corrected)
         exportData() { 
-            const d = { ...this.$data }; 
-            // Remove temp runtime variables
+            // 采用深拷贝彻底斩断 Vue 的 Proxy 响应式对象绑定，防止跨端转换出错
+            const d = JSON.parse(JSON.stringify(this.$data)); 
             delete d.isAppOpen; 
             delete d.currentApp; 
             delete d.showMaskManager; 
@@ -5321,10 +5319,10 @@ createApp({
             delete d.visibilityTargetModal.show; 
             delete d.momentGenerateModal.show; 
             delete d.locationInputModal.show;
-            // diaryState reset
             d.diaryState = { showGenerate: false };
 
-            const b = new Blob([JSON.stringify(d)], {type:'application/json'}); 
+            // 强制指定编码为 utf-8，解决跨浏览器乱码和导入失败问题
+            const b = new Blob([JSON.stringify(d)], {type:'application/json;charset=utf-8'}); 
             const u = URL.createObjectURL(b); 
             const a = document.createElement('a'); 
             a.href = u; 
@@ -5339,18 +5337,19 @@ createApp({
                 try { 
                     const rawText = ev.target.result; 
                     JSON.parse(rawText); // 验证格式
-                    // 分离保存，绝不卡死
-                    try { localStorage.setItem('onyunx_hybrid_v40', rawText); } catch(err) {}
-                    await this.writeSafeData('onyunx_hybrid_v40', rawText);
+                    
+                    // 分离双重保存，双重 try-catch 防止任意一端报错卡死整个进程
+                    try { localStorage.setItem('onyunx_hybrid_v40', rawText); } catch(err) { console.warn('LocalStorage导入失败/已满'); }
+                    try { await this.writeSafeData('onyunx_hybrid_v40', rawText); } catch(err) { console.error('IndexedDB导入失败', err); }
                     
                     this.showToast('数据导入成功！系统即将重启'); 
                     setTimeout(() => location.reload(), 1500); 
                 } catch(e){ 
                     console.error(e);
-                    this.showToast('导入失败，文件格式可能已损坏'); 
+                    this.showToast('导入失败，文件格式可能已损坏或不兼容'); 
                 } 
             }; 
-            r.readAsText(f); e.target.value = ''; 
+            r.readAsText(f, 'UTF-8'); e.target.value = ''; 
         },
         
         triggerCardAvatarUpload() { if(this.$refs.cardAvatarInput) this.$refs.cardAvatarInput.click(); },
@@ -5428,6 +5427,37 @@ createApp({
             this.wechatState.activeNav = 'chat';
             this.wechatState.activeSession = null;
             this.closeAllMenus();
+
+            // 启动时同步系统的“防清理保护”状态
+            if (navigator.storage && navigator.storage.persisted) {
+                navigator.storage.persisted().then(persisted => {
+                    this.dataProtection = persisted;
+                });
+            }
+        },
+        async toggleDataProtection() {
+            if (this.dataProtection) {
+                if (navigator.storage && navigator.storage.persist) {
+                    try {
+                        const isPersisted = await navigator.storage.persist();
+                        if (isPersisted) {
+                            this.showToast("防清理保护已开启，浏览器不会自动删档");
+                        } else {
+                            this.dataProtection = false;
+                            this.showToast("开启失败：当前浏览器不支持或已拒绝持久化");
+                        }
+                    } catch (e) {
+                        this.dataProtection = false;
+                        this.showToast("开启失败：发生错误");
+                    }
+                } else {
+                    this.dataProtection = false;
+                    this.showToast("开启失败：您的浏览器不支持防清理 API");
+                }
+            } else {
+                this.showToast("注意：关闭后内存不足时浏览器可能会清理数据");
+            }
+            this.saveData();
         },
         showToast(m) { 
             this.toast.message = m; 
