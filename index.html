@@ -485,7 +485,7 @@
                  
                  <!-- 文字显示区：稍微留点 pb-6 让底部文字不贴边 -->
                  <div class="flex-1 px-5 pt-5 pb-6 text-[#3a3327] font-serif leading-relaxed overflow-hidden" ref="bookContentContainer"
-                      :style="{ fontSize: (getActiveBook()?.fontSize || 16) + 'px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }">
+                      :style="{ fontSize: (readTogetherState.isMinimized ? (getActiveBook()?.fontSize || 16) : Math.max(12, (getActiveBook()?.fontSize || 16) - 3)) + 'px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }">
                      {{ getPaginatedContent() }}
                  </div>
                  
@@ -4937,31 +4937,52 @@ createApp({
                     this.pushConfig.enabled = false;
                     return;
                 }
-                if (Notification.permission !== "granted") {
+                if (Notification.permission === "granted") {
+                    this.showToast('推送权限已就绪');
+                } else if (Notification.permission !== "denied") {
                     const permission = await Notification.requestPermission();
                     if (permission !== "granted") {
-                        this.showToast('权限被拒绝，无法开启');
+                        this.showToast('权限请求被拒绝，无法开启');
                         this.pushConfig.enabled = false;
                     } else {
-                        this.showToast('推送权限已获取');
+                        this.showToast('推送权限获取成功');
                     }
+                } else {
+                    this.showToast('通知权限已被永久拒绝，请在手机系统或浏览器设置中手动开启通知权限');
+                    this.pushConfig.enabled = false;
                 }
             }
             this.saveData();
         },
         testPushNotification() {
             if (!this.pushConfig.enabled) return this.showToast('请先开启推送开关');
-            this.sendPushNotification('Aovein OS 测试', 'Aovein', '这是一条测试推送通知，配置成功！', this.homeProfile.avatar);
+            this.sendPushNotification('Aovein OS 测试', 'Aovein系统', '这是一条测试消息', this.homeProfile?.avatar);
+            this.showToast('已尝试向系统发送通知，请注意查看通知栏');
         },
         sendPushNotification(title, name, body, icon) {
             if (this.pushConfig.enabled && "Notification" in window && Notification.permission === "granted") {
+                const notifyTitle = `${title} - ${name}`;
+                const notifyOptions = { 
+                    body: body, 
+                    icon: icon || 'https://pic1.imgdb.cn/item/69ba80aab96fa53fd04c3771.png',
+                    vibrate: [200, 100, 200]
+                };
+                
                 try {
-                    new Notification(`${title} - ${name}`, {
-                        body: body,
-                        icon: icon || 'https://pic1.imgdb.cn/item/69ba80aab96fa53fd04c3771.png'
-                    });
+                    // 兼容手机端(Android/iOS PWA)机制：手机浏览器强制要求通过 ServiceWorker 发送 Notification
+                    if (navigator.serviceWorker) {
+                        navigator.serviceWorker.ready.then(function(registration) {
+                            registration.showNotification(notifyTitle, notifyOptions);
+                        }).catch(function() {
+                            // 降级使用普通通知
+                            new Notification(notifyTitle, notifyOptions);
+                        });
+                    } else {
+                        new Notification(notifyTitle, notifyOptions);
+                    }
                 } catch (e) {
-                    console.error('Push Error:', e);
+                    console.error('推送唤起失败:', e);
+                    try { new Notification(notifyTitle, notifyOptions); } catch (ex) {}
                 }
             }
         },
@@ -5900,6 +5921,15 @@ createApp({
         async translateMessage(msg) {
             // 如果已经在翻译，或者已经翻译成功，就不重复请求
             if (msg.isTranslating || (msg.translation && msg.translation !== '翻译失败')) return;
+            
+            // 纯本地拦截：如果原文包含中文字符，直接不请求大模型，不浪费 Token
+            if (/[\u4e00-\u9fa5]/.test(msg.content)) {
+                msg.translation = '原内容为中文，无需翻译';
+                msg.showTranslation = true;
+                this.saveData();
+                return;
+            }
+
             if (!this.apiConfig.apiKey) return; // 静默失败，不打扰用户
 
             msg.isTranslating = true;
