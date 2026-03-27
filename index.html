@@ -2048,15 +2048,15 @@
     </div>
     
     <!-- 下方的天数记录 (带翅膀的药丸容器) -->
-    <div class="relative mt-5 w-[110px] h-[36px] bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.05)] cursor-pointer active:scale-95 transition border border-white/60" @click="editHomeConfig('rightWidgetTitle', '修改天数')">
-        <!-- 左侧翅膀 (内嵌SVG代码还原图片细节) -->
-        <img src="data:image/svg+xml;utf8,<svg width='100%' height='100%' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><path d='M 80 40 C 60 10, 20 20, 10 40 C 5 55, 15 70, 40 70 C 60 70, 80 60, 90 50 Z' fill='%23ffffff' stroke='%23d1d5db' stroke-width='4'/><path d='M 30 35 Q 20 45 40 55' fill='none' stroke='%23d1d5db' stroke-width='3' stroke-linecap='round'/><path d='M 15 30 L 17 35 L 22 36 L 18 40 L 19 45 L 15 42 L 11 45 L 12 40 L 8 36 L 13 35 Z' fill='%23d1d5db'/></svg>" class="absolute -left-[24px] top-1/2 -translate-y-1/2 w-[34px] h-[34px] drop-shadow-sm rotate-[-10deg] pointer-events-none">
+    <div class="relative mt-6 w-[120px] h-[40px] bg-[#f0f0f0] rounded-[20px] flex items-center justify-center shadow-[inset_0_2px_5px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] cursor-pointer active:scale-95 transition border-2 border-white" @click="editHomeConfig('rightWidgetTitle', '修改天数')">
+        <!-- 左侧翅膀 (精准重绘：带星星和漩涡) -->
+        <img src="data:image/svg+xml;utf8,<svg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'><path d='M100,50 C95,15 35,5 15,35 C15,35 30,42 35,42 C15,55 15,75 35,85 C60,95 90,85 100,50 Z' fill='%23ffffff' stroke='%23b3b3b3' stroke-width='8' stroke-linejoin='round' stroke-linecap='round'/><path d='M 85,55 C 85,45 70,40 60,50 C 50,60 60,75 75,70' fill='none' stroke='%23b3b3b3' stroke-width='6' stroke-linecap='round'/><path d='M30,20 l2.5,5 l5.5,1 l-4,4 l1,5.5 l-5,-2.5 l-5,2.5 l1,-5.5 l-4,-4 l5.5,-1 z' fill='%23b3b3b3'/></svg>" class="absolute -left-[32px] top-1/2 w-[48px] h-[48px] pointer-events-none" style="transform: translateY(-50%) rotate(-5deg); filter: drop-shadow(0 2px 2px rgba(0,0,0,0.05));">
         
         <!-- 天数文字 -->
-        <span class="text-[16px] font-bold text-gray-400 tracking-wider" :style="{color: themeConfig.fontColor}">{{ homeConfig.rightWidgetTitle || '6440天' }}</span>
+        <span class="text-[18px] font-bold text-[#999999] tracking-wider z-10" :style="{color: themeConfig.fontColor}">{{ homeConfig.rightWidgetTitle || '6440天' }}</span>
         
-        <!-- 右侧翅膀 (内嵌SVG代码) -->
-        <img src="data:image/svg+xml;utf8,<svg width='100%' height='100%' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><path d='M 20 40 C 40 10, 80 20, 90 40 C 95 55, 85 70, 60 70 C 40 70, 20 60, 10 50 Z' fill='%23ffffff' stroke='%23d1d5db' stroke-width='4'/><path d='M 70 35 Q 80 45 60 55' fill='none' stroke='%23d1d5db' stroke-width='3' stroke-linecap='round'/><path d='M 85 30 L 83 35 L 78 36 L 82 40 L 81 45 L 85 42 L 89 45 L 88 40 L 92 36 L 87 35 Z' fill='%23d1d5db'/></svg>" class="absolute -right-[24px] top-1/2 -translate-y-1/2 w-[34px] h-[34px] drop-shadow-sm rotate-[10deg] pointer-events-none">
+        <!-- 右侧翅膀 (直接CSS水平翻转对齐) -->
+        <img src="data:image/svg+xml;utf8,<svg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'><path d='M100,50 C95,15 35,5 15,35 C15,35 30,42 35,42 C15,55 15,75 35,85 C60,95 90,85 100,50 Z' fill='%23ffffff' stroke='%23b3b3b3' stroke-width='8' stroke-linejoin='round' stroke-linecap='round'/><path d='M 85,55 C 85,45 70,40 60,50 C 50,60 60,75 75,70' fill='none' stroke='%23b3b3b3' stroke-width='6' stroke-linecap='round'/><path d='M30,20 l2.5,5 l5.5,1 l-4,4 l1,5.5 l-5,-2.5 l-5,2.5 l1,-5.5 l-4,-4 l5.5,-1 z' fill='%23b3b3b3'/></svg>" class="absolute -right-[32px] top-1/2 w-[48px] h-[48px] pointer-events-none" style="transform: translateY(-50%) scaleX(-1) rotate(-5deg); filter: drop-shadow(0 2px 2px rgba(0,0,0,0.05));">
     </div>
 </div></div>
         </div>
