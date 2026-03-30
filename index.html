@@ -2049,14 +2049,14 @@
     
     <!-- 下方的天数记录 (带翅膀的药丸容器) -->
     <div class="relative mt-6 w-[120px] h-[40px] bg-[#f0f0f0] rounded-[20px] flex items-center justify-center shadow-[inset_0_2px_5px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] cursor-pointer active:scale-95 transition border-2 border-white" @click="editHomeConfig('rightWidgetTitle', '修改天数')">
-        <!-- 左侧翅膀 (使用新图片链接) -->
-        <img src="https://pic1.imgdb.cn/item/69ca59329547e6ce4e3f7d60.png" class="absolute -left-[28px] top-1/2 w-[44px] h-[44px] object-contain pointer-events-none" style="transform: translateY(-50%); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.06));">
+        <!-- 左侧翅膀 (进一步缩小) -->
+        <img src="https://pic1.imgdb.cn/item/69ca59329547e6ce4e3f7d60.png" class="absolute -left-[18px] top-1/2 w-[32px] h-[32px] object-contain pointer-events-none" style="transform: translateY(-50%); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.06));">
         
         <!-- 天数文字 -->
         <span class="text-[18px] font-bold text-[#999999] tracking-wider z-10" :style="{color: themeConfig.fontColor}">{{ homeConfig.rightWidgetTitle || '6440天' }}</span>
         
-        <!-- 右侧翅膀 (使用新图片链接，并使用 scaleX(-1) 进行水平翻转) -->
-        <img src="https://pic1.imgdb.cn/item/69ca59329547e6ce4e3f7d60.png" class="absolute -right-[28px] top-1/2 w-[44px] h-[44px] object-contain pointer-events-none" style="transform: translateY(-50%) scaleX(-1); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.06));">
+        <!-- 右侧翅膀 (进一步缩小并翻转) -->
+        <img src="https://pic1.imgdb.cn/item/69ca59329547e6ce4e3f7d60.png" class="absolute -right-[18px] top-1/2 w-[32px] h-[32px] object-contain pointer-events-none" style="transform: translateY(-50%) scaleX(-1); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.06));">
     </div>
 </div></div>
         </div>
@@ -3050,8 +3050,8 @@
             </div>
 
             <!-- 主题美化 Tab -->
-            <div v-if="beautifyConfig.currentTab === 'theme'" class="flex-1 flex flex-col gap-4 overflow-hidden">
-                <!-- 新增：主题界面预览区域 -->
+            <div v-if="beautifyConfig.currentTab === 'theme'" class="flex-1 flex flex-col gap-4 overflow-y-auto scrollbar-hide pb-safe">
+                <!-- 主题界面预览区域 -->
                 <div class="bg-gray-100 rounded-2xl p-4 border border-gray-200 shrink-0">
                     <div class="text-xs text-gray-400 mb-2 text-center font-bold">主题效果预览</div>
                     <div class="border border-gray-200 rounded-xl overflow-hidden bg-[#fdfdfd] flex flex-col relative shadow-sm" style="height: 350px;">
@@ -3064,25 +3064,17 @@
                         
                         <!-- 预览：聊天内容区(包含卡片和气泡) -->
                         <div class="flex-1 p-3 flex flex-col gap-3 overflow-y-auto bg-cover bg-center" :style="{ backgroundImage: wechatState.activeSession?.wallpaper ? 'url(' + wechatState.activeSession.wallpaper + ')' : '' }">
-                            
-                            <!-- AI 气泡 -->
                             <div class="flex gap-2 w-full mt-1">
                                 <div class="w-9 h-9 rounded-full bg-gray-200 overflow-hidden shrink-0 border border-gray-100"><i class="fas fa-robot flex h-full items-center justify-center text-gray-400"></i></div>
                                 <div class="chat-bubble chat-bubble-ai text-sm max-w-[70%] shadow-sm">这是气泡预览，你可以直接修改 CSS 看效果！</div>
                             </div>
-                            
-                            <!-- 用户 气泡 -->
                             <div class="flex gap-2 w-full flex-row-reverse mt-1">
                                 <div class="w-9 h-9 rounded-full bg-blue-100 overflow-hidden shrink-0 border border-gray-100"><i class="fas fa-user flex h-full items-center justify-center text-blue-400"></i></div>
-                                <div class="chat-bubble chat-bubble-user text-sm max-w-[70%] shadow-sm">界面终于变长了，看起来舒服多了。</div>
+                                <div class="chat-bubble chat-bubble-user text-sm max-w-[70%] shadow-sm">界面终于变长了，现在下面也不会被挡住了。</div>
                             </div>
-
-                            <!-- 红包卡片 -->
                             <div class="chat-bubble chat-bubble-redpacket !p-0 w-[180px] rounded-lg self-end mt-2 shadow-sm">
                                 <div class="p-3 flex items-center gap-3"><i class="fas fa-wallet text-white text-2xl"></i><div class="flex flex-col"><span class="text-white text-[15px] font-bold">恭喜发财</span><span class="text-white/80 text-[11px] mt-0.5">微信红包</span></div></div>
                             </div>
-                            
-                            <!-- 转账卡片 -->
                             <div class="chat-bubble chat-bubble-transfer !p-0 w-[180px] rounded-lg self-end mt-1 shadow-sm mb-4">
                                 <div class="p-3 flex items-center gap-3"><i class="fas fa-exchange-alt text-white text-2xl"></i><div class="flex flex-col"><span class="text-white text-[15px] font-bold">微信转账</span><span class="text-white/80 text-[11px] mt-0.5">¥520.00</span></div></div>
                             </div>
@@ -3098,7 +3090,7 @@
                     </div>
                 </div>
 
-                <div class="flex-1 flex flex-col min-h-0">
+                <div class="flex flex-col shrink-0">
                     <div class="flex justify-between items-center mb-1">
                         <span class="text-xs font-bold text-gray-500 ml-1">CSS 代码 (聊天界面整体)</span>
                         <div class="flex gap-2">
@@ -3106,28 +3098,27 @@
                             <button @click="copyDefaultCode('theme')" class="text-xs text-blue-500 font-bold active:opacity-50">复制源代码</button>
                         </div>
                     </div>
-                    <textarea v-model="beautifyConfig.tempCode" placeholder="输入 CSS 代码..." class="flex-1 bg-gray-50 p-3 rounded-xl text-xs font-mono border border-gray-200 outline-none resize-none mb-2"></textarea>
-                    <div class="flex gap-2 mb-4 shrink-0">
+                    <textarea v-model="beautifyConfig.tempCode" placeholder="输入 CSS 代码..." class="w-full h-32 bg-gray-50 p-3 rounded-xl text-xs font-mono border border-gray-200 outline-none resize-none mb-2"></textarea>
+                    <div class="flex gap-2 mb-2 shrink-0">
                         <button @click="applyBeautifyCode('theme')" class="flex-1 bg-black text-white py-2.5 rounded-xl text-xs font-bold active:scale-95 transition">应用更改</button>
                         <button @click="saveBeautifyPreset('theme')" class="w-20 bg-gray-200 text-gray-700 py-2.5 rounded-xl text-xs font-bold active:scale-95 transition">保存预设</button>
                     </div>
-                    
-                    <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 flex-1 overflow-y-auto">
-                        <div class="p-3 border-b border-gray-50 bg-gray-50/50 text-xs font-bold text-gray-500">我的预设</div>
-                        <div v-if="beautifyConfig.themePresets.length === 0" class="p-6 text-center text-gray-400 text-xs">暂无预设</div>
-                        <div v-else class="divide-y divide-gray-50">
-                            <div v-for="(preset, idx) in beautifyConfig.themePresets" :key="idx" class="p-3 flex items-center justify-between">
-                                <span class="font-bold text-gray-700 text-xs truncate">{{ preset.name }}</span>
-                                <div class="flex items-center gap-2">
-                                    <button @click="loadBeautifyPreset('theme', preset)" class="w-6 h-6 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-check text-[10px]"></i></button>
-                                    <button @click="deleteBeautifyPreset('theme', idx)" class="w-6 h-6 rounded-full bg-red-50 text-red-500 flex items-center justify-center"><i class="fas fa-trash text-[10px]"></i></button>
-                                </div>
+                </div>
+
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 shrink-0 mb-10">
+                    <div class="p-3 border-b border-gray-50 bg-gray-50/50 text-xs font-bold text-gray-500">我的预设</div>
+                    <div v-if="beautifyConfig.themePresets.length === 0" class="p-6 text-center text-gray-400 text-xs">暂无预设</div>
+                    <div v-else class="divide-y divide-gray-50">
+                        <div v-for="(preset, idx) in beautifyConfig.themePresets" :key="idx" class="p-3 flex items-center justify-between">
+                            <span class="font-bold text-gray-700 text-xs truncate">{{ preset.name }}</span>
+                            <div class="flex items-center gap-2">
+                                <button @click="loadBeautifyPreset('theme', preset)" class="w-6 h-6 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-check text-[10px]"></i></button>
+                                <button @click="deleteBeautifyPreset('theme', idx)" class="w-6 h-6 rounded-full bg-red-50 text-red-500 flex items-center justify-center"><i class="fas fa-trash text-[10px]"></i></button>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div>                                  </div>
     </transition>
 
     <transition name="page-slide"><div v-if="themesPage === 'wallpaper'" class="absolute inset-0 p-4 space-y-6"><div class="w-full aspect-[9/16] bg-gray-200 rounded-3xl overflow-hidden shadow-lg relative mx-auto max-w-[240px] border-4 border-white"><img v-if="themeConfig.wallpaper" :src="themeConfig.wallpaper" class="w-full h-full object-cover"><div v-else class="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-100"><i class="fas fa-image text-3xl mb-2"></i><span class="text-xs">默认壁纸</span></div></div><div class="flex flex-col gap-3"><button @click="triggerWallpaperUpload" class="w-full bg-gray-900 text-white py-3.5 rounded-2xl font-bold active:scale-95 transition shadow-lg">从相册选择</button><button @click="resetWallpaper" class="w-full bg-white text-gray-600 py-3.5 rounded-2xl font-bold border border-gray-200 active:bg-gray-50 transition">恢复默认</button></div><input type="file" ref="wallpaperInput" accept="image/*" class="hidden" @change="handleWallpaperUpload"></div></transition><transition name="page-slide"><div v-if="themesPage === 'font'" class="absolute inset-0 p-4 pb-20"><div class="space-y-6"><div class="bg-gray-100 rounded-2xl p-6 text-center border border-gray-200" :style="{fontFamily: previewFontFamily || themeConfig.fontFamily}"><div class="text-2xl font-bold mb-2" :style="{color: themeConfig.fontColor}">12:30</div><div class="text-lg" :style="{color: themeConfig.fontColor}">Hello World</div><div class="text-sm opacity-60" :style="{color: themeConfig.fontColor}">预览字体效果</div></div><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-3"><label class="text-xs font-bold text-gray-500 ml-1">字体 URL</label><div class="flex gap-2"><input v-model="fontInputUrl" placeholder="https://..." class="w-2/3 bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none"><button @click="previewFontFromUrl" :disabled="isLoading" class="flex-1 bg-gray-100 text-gray-600 px-2 rounded-xl font-bold text-xs active:scale-95 transition"><span v-if="!isLoading">预览</span><i v-else class="fas fa-spinner fa-spin"></i></button><button @click="applyFontFromUrl" class="flex-1 bg-black text-white px-2 rounded-xl font-bold text-xs active:scale-95 transition">应用</button></div><button @click="resetFont" class="w-full bg-white text-red-500 py-2 rounded-xl font-bold text-xs border border-gray-100 active:bg-gray-50">恢复默认字体</button></div><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-4"><div><div class="flex justify-between mb-2"><span class="text-xs font-bold text-gray-500">大小</span><span class="text-xs text-gray-400">{{ (themeConfig.fontSize * 100).toFixed(0) }}%</span></div><input type="range" min="0.8" max="1.2" step="0.05" v-model.number="themeConfig.fontSize" @change="saveData" class="w-full h-2 bg-gray-200 rounded-lg cursor-pointer"></div><div><div class="flex justify-between mb-2"><span class="text-xs font-bold text-gray-500">色号</span></div><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full border border-gray-200 shadow-sm shrink-0" :style="{backgroundColor: themeConfig.fontColor}"></div><input type="text" v-model="themeConfig.fontColor" @change="saveData" placeholder="#000000" class="flex-1 bg-gray-50 px-3 py-2 rounded-xl text-sm border border-gray-200 font-mono outline-none uppercase"></div></div></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">预设</span><button @click="saveFontPreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="fontPresets.length === 0" class="p-6 text-center text-gray-400 text-xs">无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(fp, idx) in fontPresets" :key="idx" class="p-4 flex items-center justify-between"><div class="flex-1 min-w-0 mr-2"><div class="font-bold text-gray-800 text-sm truncate" :style="{fontFamily: fp.fontFamily}">{{ fp.name }}</div></div><div class="flex items-center gap-2"><button @click="applyFontPreset(fp)" class="w-7 h-7 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-check text-[10px]"></i></button><button @click="deleteFontPreset(idx)" class="w-7 h-7 rounded-full bg-red-50 text-red-500 flex items-center justify-center"><i class="fas fa-trash text-[10px]"></i></button></div></div></div></div></div></div></transition><transition name="page-slide"><div v-if="themesPage === 'icons'" class="absolute inset-0 p-4 pb-20"><div class="space-y-4"><div class="flex justify-end"><button @click="resetAllIcons" class="text-xs text-red-500 font-bold px-3 py-1 bg-red-50 rounded-lg active:bg-red-100">重置所有</button></div><div class="space-y-3"><div v-for="appId in appList" :key="appId" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col gap-3"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-xl border border-gray-100 overflow-hidden flex items-center justify-center bg-gray-50 shrink-0 home-icon-custom"><img v-if="hasCustomIcon(appId)" :src="getAppIcon(appId)" class="w-full h-full object-cover"><i v-else :class="getDefaultIconClass(appId) + ' text-gray-400 text-xl'"></i></div><div class="flex-1"><label class="text-[10px] font-bold text-gray-400 mb-1 block">应用名称</label><input :value="getAppName(appId)" @input="(e)=>setAppName(appId, e.target.value)" class="w-full bg-gray-50 px-2 py-1.5 rounded-lg text-sm border border-gray-200 outline-none"></div></div><div class="flex gap-2"><input v-model="tempIconUrls[appId]" placeholder="图标 URL" class="flex-1 bg-gray-50 px-3 py-2 rounded-lg text-xs border border-gray-200 outline-none"><button @click="setAppIcon(appId, tempIconUrls[appId])" class="px-3 bg-black text-white rounded-lg text-xs font-bold">确定</button><button @click="triggerIconUpload(appId)" class="px-3 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold active:bg-gray-200"><i class="fas fa-image"></i></button><button @click="resetApp(appId)" class="px-3 bg-red-50 text-red-500 rounded-lg text-xs active:bg-red-100"><i class="fas fa-undo"></i></button></div></div></div><input type="file" ref="iconUploadInput" accept="image/*" class="hidden" @change="handleIconFile"></div></div></transition></main></div></transition>
@@ -5364,17 +5355,16 @@ createApp({
         
         // Export All Data (Corrected)
         exportData() { 
-            // 深拷贝，斩断所有 Vue proxy 代理以保证 JSON 纯净
+            // 完美深拷贝，斩断所有 Vue proxy 响应式关联
             const d = JSON.parse(JSON.stringify(this.$data)); 
             
-            // 安全重置 UI 弹窗状态 (不用 delete，保证 100% 数据不丢失)
+            // 只手动修改弹窗状态，绝不覆写或删除核心数据节点
             d.isAppOpen = false; 
             d.currentApp = null; 
             d.showMaskManager = false; 
             d.showStickerManager = false; 
             d.showPublishMoment = false;
             
-            // 遍历并关闭所有 Modal
             const modalsToClose =[
                 'maskModal', 'addContactModal', 'chatWizard', 'chatContextMenu',
                 'statusModal', 'statusHistoryModal', 'forwardModal', 'folderSelectModal',
@@ -5382,12 +5372,12 @@ createApp({
                 'favoritesModal', 'voiceInputModal', 'redPacketModal', 'transferModal',
                 'qinmiSelectModal', 'paymentSelectModal', 'avatarSettingModal',
                 'groupSelectModal', 'mentionModal', 'visibilityModal', 'visibilityTargetModal',
-                'momentGenerateModal', 'locationInputModal', 'globalNotification', 'toast'
+                'momentGenerateModal', 'locationInputModal', 'globalNotification', 'toast',
+                'avatarModeModal'
             ];
             modalsToClose.forEach(m => { if(d[m]) d[m].show = false; });
             
-            if(d.avatarModeModal) d.avatarModeModal.show = false;
-            if(d.diaryState) { d.diaryState.showGenerate = false; d.diaryState.isWriting = false; }
+            if(d.diaryState) { d.diaryState.showGenerate = false; d.diaryState.isWriting = false; d.diaryState.isMultiSelect = false; }
             if(d.musicModal) { d.musicModal.show = false; d.musicModal.isMinimized = false; }
             if(d.readTogetherState) { d.readTogetherState.show = false; }
 
@@ -5525,8 +5515,13 @@ createApp({
             if (dataStr) {
                 try { 
                     const d = JSON.parse(dataStr); 
-                    Object.assign(this.$data, d); 
-                } catch(e){} 
+                    // 使用 Vue 推荐的动态响应式注入方式，彻底解决数据导入后莫名缺失(如表情包/配置)的BUG
+                    Object.keys(d).forEach(k => {
+                        if (this.hasOwnProperty(k)) {
+                            this[k] = d[k];
+                        }
+                    });
+                } catch(e) { console.error('数据加载失败', e); } 
             }
             if (localStorage.getItem('onyunx_is_activated') === 'true') { this.isActivated = true; }
             this.isAppOpen = false;
@@ -5536,11 +5531,10 @@ createApp({
             
             // 每次打开网页强制重置消息弹窗状态，解决通知卡死去不掉的 Bug
             this.globalNotification.show = false;
-            this.toast.show = false; // 新增：清除可能因为页面刷新重启被强制保存在数据库里的幽灵 Toast 通知
+            this.toast.show = false;
             
             this.closeAllMenus();
 
-            // 启动时同步系统的“防清理保护”状态
             if (navigator.storage && navigator.storage.persisted) {
                 navigator.storage.persisted().then(persisted => {
                     this.dataProtection = persisted;
