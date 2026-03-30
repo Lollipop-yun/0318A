@@ -2049,14 +2049,14 @@
     
     <!-- 下方的天数记录 (带翅膀的药丸容器) -->
     <div class="relative mt-6 w-[120px] h-[40px] bg-[#f0f0f0] rounded-[20px] flex items-center justify-center shadow-[inset_0_2px_5px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] cursor-pointer active:scale-95 transition border-2 border-white" @click="editHomeConfig('rightWidgetTitle', '修改天数')">
-        <!-- 左侧翅膀 (缩小尺寸并调整为向左上方延伸) -->
-        <img src="data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><path d='M88 50 C88 15 35 15 15 35 C5 50 15 70 30 65 C35 85 60 85 65 65 C75 85 95 70 88 50 Z' fill='%23ffffff' stroke='%23ffffff' stroke-width='10' stroke-linejoin='round'/><polygon points='25,17 27.5,22.5 33,23 28.5,27 30,33 25,30 20,33 21.5,27 17,23 22.5,22.5' fill='%23ffffff' stroke='%23ffffff' stroke-width='8' stroke-linejoin='round'/><path d='M88 50 C88 15 35 15 15 35 C5 50 15 70 30 65 C35 85 60 85 65 65 C75 85 95 70 88 50 Z' fill='%23ffffff' stroke='%23b3b3b3' stroke-width='3.5' stroke-linejoin='round'/><path d='M 70 45 C 70 30, 45 30, 40 45 C 35 60, 55 65, 60 55' fill='none' stroke='%23b3b3b3' stroke-width='3' stroke-linecap='round'/><polygon points='25,17 27.5,22.5 33,23 28.5,27 30,33 25,30 20,33 21.5,27 17,23 22.5,22.5' fill='%23b3b3b3'/></svg>" class="absolute -left-[28px] top-1/2 w-[44px] h-[44px] pointer-events-none" style="transform: translateY(-50%) rotate(25deg); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.06));">
+        <!-- 左侧翅膀 (使用新图片链接) -->
+        <img src="https://pic1.imgdb.cn/item/69ca59329547e6ce4e3f7d60.png" class="absolute -left-[28px] top-1/2 w-[44px] h-[44px] object-contain pointer-events-none" style="transform: translateY(-50%); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.06));">
         
         <!-- 天数文字 -->
         <span class="text-[18px] font-bold text-[#999999] tracking-wider z-10" :style="{color: themeConfig.fontColor}">{{ homeConfig.rightWidgetTitle || '6440天' }}</span>
         
-        <!-- 右侧翅膀 (缩小尺寸并调整为向右上方延伸) -->
-        <img src="data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><path d='M88 50 C88 15 35 15 15 35 C5 50 15 70 30 65 C35 85 60 85 65 65 C75 85 95 70 88 50 Z' fill='%23ffffff' stroke='%23ffffff' stroke-width='10' stroke-linejoin='round'/><polygon points='25,17 27.5,22.5 33,23 28.5,27 30,33 25,30 20,33 21.5,27 17,23 22.5,22.5' fill='%23ffffff' stroke='%23ffffff' stroke-width='8' stroke-linejoin='round'/><path d='M88 50 C88 15 35 15 15 35 C5 50 15 70 30 65 C35 85 60 85 65 65 C75 85 95 70 88 50 Z' fill='%23ffffff' stroke='%23b3b3b3' stroke-width='3.5' stroke-linejoin='round'/><path d='M 70 45 C 70 30, 45 30, 40 45 C 35 60, 55 65, 60 55' fill='none' stroke='%23b3b3b3' stroke-width='3' stroke-linecap='round'/><polygon points='25,17 27.5,22.5 33,23 28.5,27 30,33 25,30 20,33 21.5,27 17,23 22.5,22.5' fill='%23b3b3b3'/></svg>" class="absolute -right-[28px] top-1/2 w-[44px] h-[44px] pointer-events-none" style="transform: translateY(-50%) scaleX(-1) rotate(25deg); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.06));">
+        <!-- 右侧翅膀 (使用新图片链接，并使用 scaleX(-1) 进行水平翻转) -->
+        <img src="https://pic1.imgdb.cn/item/69ca59329547e6ce4e3f7d60.png" class="absolute -right-[28px] top-1/2 w-[44px] h-[44px] object-contain pointer-events-none" style="transform: translateY(-50%) scaleX(-1); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.06));">
     </div>
 </div></div>
         </div>
