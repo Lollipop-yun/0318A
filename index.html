@@ -3051,6 +3051,35 @@
 
             <!-- 主题美化 Tab -->
             <div v-if="beautifyConfig.currentTab === 'theme'" class="flex-1 flex flex-col gap-4 overflow-hidden">
+                <!-- 新增：主题界面预览区域 -->
+                <div class="bg-gray-100 rounded-2xl p-4 border border-gray-200 shrink-0">
+                    <div class="text-xs text-gray-400 mb-2 text-center font-bold">主题效果预览</div>
+                    <div class="border border-gray-200 rounded-xl overflow-hidden bg-[#fdfdfd] flex flex-col relative shadow-sm" style="height: 150px;">
+                        <!-- 预览：顶部导航 -->
+                        <header class="h-10 px-3 flex items-center justify-between border-b border-gray-100 bg-white/95 shrink-0">
+                            <i class="fas fa-chevron-left text-gray-800 text-sm"></i>
+                            <span class="font-bold text-xs text-gray-900">聊天界面</span>
+                            <i class="fas fa-ellipsis-h text-gray-800 text-sm"></i>
+                        </header>
+                        <!-- 预览：聊天内容区(包含卡片) -->
+                        <div class="flex-1 p-2 flex flex-col gap-2 overflow-hidden">
+                            <div class="chat-bubble chat-bubble-redpacket !p-0 w-[140px] rounded-lg self-end">
+                                <div class="p-2 flex items-center gap-2"><i class="fas fa-wallet text-white"></i><span class="text-white text-[10px] font-bold">恭喜发财</span></div>
+                            </div>
+                            <div class="chat-bubble chat-bubble-transfer !p-0 w-[140px] rounded-lg self-end">
+                                <div class="p-2 flex items-center gap-2"><i class="fas fa-exchange-alt text-white"></i><span class="text-white text-[10px] font-bold">微信转账</span></div>
+                            </div>
+                        </div>
+                        <!-- 预览：底部输入栏 -->
+                        <div class="h-10 border-t border-gray-100 flex items-center px-3 gap-3 chat-input-area shrink-0">
+                            <i class="fas fa-paperclip text-gray-500 text-sm"></i>
+                            <div class="flex-1 bg-gray-100 rounded-full h-6"></div>
+                            <i class="far fa-smile text-gray-500 text-sm"></i>
+                            <i class="fas fa-check-circle text-gray-500 text-base"></i>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex-1 flex flex-col min-h-0">
                     <div class="flex justify-between items-center mb-1">
                         <span class="text-xs font-bold text-gray-500 ml-1">CSS 代码 (聊天界面整体)</span>
@@ -5459,6 +5488,7 @@ createApp({
             
             // 每次打开网页强制重置消息弹窗状态，解决通知卡死去不掉的 Bug
             this.globalNotification.show = false;
+            this.toast.show = false; // 新增：清除可能因为页面刷新重启被强制保存在数据库里的幽灵 Toast 通知
             
             this.closeAllMenus();
 
