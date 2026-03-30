@@ -3054,28 +3054,46 @@
                 <!-- 新增：主题界面预览区域 -->
                 <div class="bg-gray-100 rounded-2xl p-4 border border-gray-200 shrink-0">
                     <div class="text-xs text-gray-400 mb-2 text-center font-bold">主题效果预览</div>
-                    <div class="border border-gray-200 rounded-xl overflow-hidden bg-[#fdfdfd] flex flex-col relative shadow-sm" style="height: 150px;">
+                    <div class="border border-gray-200 rounded-xl overflow-hidden bg-[#fdfdfd] flex flex-col relative shadow-sm" style="height: 350px;">
                         <!-- 预览：顶部导航 -->
-                        <header class="h-10 px-3 flex items-center justify-between border-b border-gray-100 bg-white/95 shrink-0">
+                        <header class="h-12 px-3 flex items-center justify-between border-b border-gray-100 bg-white/95 shrink-0 z-10">
                             <i class="fas fa-chevron-left text-gray-800 text-sm"></i>
-                            <span class="font-bold text-xs text-gray-900">聊天界面</span>
+                            <span class="font-bold text-sm text-gray-900">预览界面</span>
                             <i class="fas fa-ellipsis-h text-gray-800 text-sm"></i>
                         </header>
-                        <!-- 预览：聊天内容区(包含卡片) -->
-                        <div class="flex-1 p-2 flex flex-col gap-2 overflow-hidden">
-                            <div class="chat-bubble chat-bubble-redpacket !p-0 w-[140px] rounded-lg self-end">
-                                <div class="p-2 flex items-center gap-2"><i class="fas fa-wallet text-white"></i><span class="text-white text-[10px] font-bold">恭喜发财</span></div>
+                        
+                        <!-- 预览：聊天内容区(包含卡片和气泡) -->
+                        <div class="flex-1 p-3 flex flex-col gap-3 overflow-y-auto bg-cover bg-center" :style="{ backgroundImage: wechatState.activeSession?.wallpaper ? 'url(' + wechatState.activeSession.wallpaper + ')' : '' }">
+                            
+                            <!-- AI 气泡 -->
+                            <div class="flex gap-2 w-full mt-1">
+                                <div class="w-9 h-9 rounded-full bg-gray-200 overflow-hidden shrink-0 border border-gray-100"><i class="fas fa-robot flex h-full items-center justify-center text-gray-400"></i></div>
+                                <div class="chat-bubble chat-bubble-ai text-sm max-w-[70%] shadow-sm">这是气泡预览，你可以直接修改 CSS 看效果！</div>
                             </div>
-                            <div class="chat-bubble chat-bubble-transfer !p-0 w-[140px] rounded-lg self-end">
-                                <div class="p-2 flex items-center gap-2"><i class="fas fa-exchange-alt text-white"></i><span class="text-white text-[10px] font-bold">微信转账</span></div>
+                            
+                            <!-- 用户 气泡 -->
+                            <div class="flex gap-2 w-full flex-row-reverse mt-1">
+                                <div class="w-9 h-9 rounded-full bg-blue-100 overflow-hidden shrink-0 border border-gray-100"><i class="fas fa-user flex h-full items-center justify-center text-blue-400"></i></div>
+                                <div class="chat-bubble chat-bubble-user text-sm max-w-[70%] shadow-sm">界面终于变长了，看起来舒服多了。</div>
+                            </div>
+
+                            <!-- 红包卡片 -->
+                            <div class="chat-bubble chat-bubble-redpacket !p-0 w-[180px] rounded-lg self-end mt-2 shadow-sm">
+                                <div class="p-3 flex items-center gap-3"><i class="fas fa-wallet text-white text-2xl"></i><div class="flex flex-col"><span class="text-white text-[15px] font-bold">恭喜发财</span><span class="text-white/80 text-[11px] mt-0.5">微信红包</span></div></div>
+                            </div>
+                            
+                            <!-- 转账卡片 -->
+                            <div class="chat-bubble chat-bubble-transfer !p-0 w-[180px] rounded-lg self-end mt-1 shadow-sm mb-4">
+                                <div class="p-3 flex items-center gap-3"><i class="fas fa-exchange-alt text-white text-2xl"></i><div class="flex flex-col"><span class="text-white text-[15px] font-bold">微信转账</span><span class="text-white/80 text-[11px] mt-0.5">¥520.00</span></div></div>
                             </div>
                         </div>
+                        
                         <!-- 预览：底部输入栏 -->
-                        <div class="h-10 border-t border-gray-100 flex items-center px-3 gap-3 chat-input-area shrink-0">
-                            <i class="fas fa-paperclip text-gray-500 text-sm"></i>
-                            <div class="flex-1 bg-gray-100 rounded-full h-6"></div>
-                            <i class="far fa-smile text-gray-500 text-sm"></i>
-                            <i class="fas fa-check-circle text-gray-500 text-base"></i>
+                        <div class="h-12 border-t border-gray-100 flex items-center px-3 gap-3 chat-input-area shrink-0 z-10 bg-white">
+                            <i class="fas fa-paperclip text-gray-500 text-lg"></i>
+                            <div class="flex-1 bg-gray-100 rounded-full h-8 flex items-center px-3"><span class="text-gray-400 text-xs">Aa...</span></div>
+                            <i class="far fa-smile text-gray-500 text-lg"></i>
+                            <i class="fas fa-check-circle text-gray-500 text-xl"></i>
                         </div>
                     </div>
                 </div>
@@ -5346,69 +5364,99 @@ createApp({
         
         // Export All Data (Corrected)
         exportData() { 
-            // 采用深拷贝彻底斩断 Vue 的 Proxy 响应式对象绑定，防止跨端转换出错
+            // 深拷贝，斩断所有 Vue proxy 代理以保证 JSON 纯净
             const d = JSON.parse(JSON.stringify(this.$data)); 
-            delete d.isAppOpen; 
-            delete d.currentApp; 
-            delete d.showMaskManager; 
-            delete d.showStickerManager; 
-            delete d.maskModal.show; 
-            delete d.addContactModal.show; 
-            delete d.chatWizard.show; 
-            delete d.chatContextMenu.show; 
-            delete d.statusModal.show; 
-            delete d.statusHistoryModal.show; 
-            delete d.forwardModal.show; 
-            delete d.folderSelectModal.show; 
-            delete d.modelSelectModal.show; 
-            delete d.worldBinderModal.show; 
-            delete d.viewFileModal.show; 
-            delete d.worldModal.show; 
-            delete d.favoritesModal.show; 
-            delete d.voiceInputModal.show; 
-            delete d.redPacketModal.show; 
-            delete d.transferModal.show; 
-            delete d.qinmiSelectModal.show; 
-            delete d.paymentSelectModal.show; 
-            delete d.showPublishMoment; 
-            delete d.avatarSettingModal.show; 
-            delete d.groupSelectModal.show; 
-            delete d.mentionModal.show; 
-            delete d.visibilityModal.show; 
-            delete d.visibilityTargetModal.show; 
-            delete d.momentGenerateModal.show; 
-            delete d.locationInputModal.show;
-            d.diaryState = { showGenerate: false };
+            
+            // 安全重置 UI 弹窗状态 (不用 delete，保证 100% 数据不丢失)
+            d.isAppOpen = false; 
+            d.currentApp = null; 
+            d.showMaskManager = false; 
+            d.showStickerManager = false; 
+            d.showPublishMoment = false;
+            
+            // 遍历并关闭所有 Modal
+            const modalsToClose =[
+                'maskModal', 'addContactModal', 'chatWizard', 'chatContextMenu',
+                'statusModal', 'statusHistoryModal', 'forwardModal', 'folderSelectModal',
+                'modelSelectModal', 'worldBinderModal', 'viewFileModal', 'worldModal',
+                'favoritesModal', 'voiceInputModal', 'redPacketModal', 'transferModal',
+                'qinmiSelectModal', 'paymentSelectModal', 'avatarSettingModal',
+                'groupSelectModal', 'mentionModal', 'visibilityModal', 'visibilityTargetModal',
+                'momentGenerateModal', 'locationInputModal', 'globalNotification', 'toast'
+            ];
+            modalsToClose.forEach(m => { if(d[m]) d[m].show = false; });
+            
+            if(d.avatarModeModal) d.avatarModeModal.show = false;
+            if(d.diaryState) { d.diaryState.showGenerate = false; d.diaryState.isWriting = false; }
+            if(d.musicModal) { d.musicModal.show = false; d.musicModal.isMinimized = false; }
+            if(d.readTogetherState) { d.readTogetherState.show = false; }
 
-            // 强制指定编码为 utf-8，解决跨浏览器乱码和导入失败问题
+            // 动态获取当天真实日期：YYYY-MM-DD
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+            // 生成 Blob 文件下载
             const b = new Blob([JSON.stringify(d)], {type:'application/json;charset=utf-8'}); 
             const u = URL.createObjectURL(b); 
             const a = document.createElement('a'); 
             a.href = u; 
-            a.download = 'Aovein_backup_' + Date.now() + '.json'; 
+            a.download = `AoveinOS_Backup_${dateStr}.json`; 
             a.click(); 
         },
         triggerImport() { this.$refs.importInput.click(); },
         handleImport(e) { 
-            const f=e.target.files[0]; if(!f)return; 
-            const r=new FileReader(); 
+            const f = e.target.files[0]; 
+            if(!f) return; 
+            const r = new FileReader(); 
             r.onload = async (ev) => { 
                 try { 
                     const rawText = ev.target.result; 
-                    JSON.parse(rawText); // 验证格式
+                    if (!rawText || rawText.trim() === '') throw new Error('文件内容为空');
                     
-                    // 分离双重保存，双重 try-catch 防止任意一端报错卡死整个进程
-                    try { localStorage.setItem('onyunx_hybrid_v40', rawText); } catch(err) { console.warn('LocalStorage导入失败/已满'); }
-                    try { await this.writeSafeData('onyunx_hybrid_v40', rawText); } catch(err) { console.error('IndexedDB导入失败', err); }
+                    // 第一层保护：测试 JSON 是否能被安全解析
+                    let parsedData;
+                    try {
+                        parsedData = JSON.parse(rawText);
+                    } catch(err) {
+                        throw new Error('解析失败，文件已损坏或非标准 JSON 格式');
+                    }
                     
-                    this.showToast('数据导入成功！系统即将重启'); 
-                    setTimeout(() => location.reload(), 1500); 
-                } catch(e){ 
-                    console.error(e);
-                    this.showToast('导入失败，文件格式可能已损坏或不兼容'); 
+                    // 第二层保护：数据核验，防止导入不相干的错乱文件
+                    if (!parsedData.wechatState && !parsedData.homeProfile) {
+                        throw new Error('这不是 Aovein OS 的存档文件');
+                    }
+
+                    // 核心导入：双管齐下存入两层数据库
+                    let saveSuccess = false;
+                    try { 
+                        localStorage.setItem('onyunx_hybrid_v40', rawText); 
+                        saveSuccess = true;
+                    } catch(err) { 
+                        console.warn('LocalStorage导入受限 (可能由于图库超大)'); 
+                    }
+                    
+                    try { 
+                        await this.writeSafeData('onyunx_hybrid_v40', rawText); 
+                        saveSuccess = true;
+                    } catch(err) { 
+                        console.error('IndexedDB 底层导入受阻', err); 
+                    }
+                    
+                    // 如果任意一个数据库写入成功，即视为成功并重启应用生效
+                    if (saveSuccess) {
+                        this.showToast('数据导入成功！系统即将刷新应用'); 
+                        setTimeout(() => location.reload(), 1500); 
+                    } else {
+                        throw new Error('设备可用存储空间不足，无法保存存档');
+                    }
+                } catch(e) { 
+                    console.error("跨浏览器导入错误: ", e);
+                    this.showToast(`导入中止: ${e.message}`); 
                 } 
             }; 
-            r.readAsText(f, 'UTF-8'); e.target.value = ''; 
+            // 默认采用最安全的兼容读取方式
+            r.readAsText(f); 
+            e.target.value = ''; 
         },
         
         triggerCardAvatarUpload() { if(this.$refs.cardAvatarInput) this.$refs.cardAvatarInput.click(); },
