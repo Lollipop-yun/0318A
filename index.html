@@ -2704,19 +2704,51 @@
                         <div v-if="offlineState.isGenerating" class="text-center text-xs text-gray-400 py-4 animate-pulse"><i class="fas fa-pen-fancy mr-1"></i> 对方正在描写动作与神态...</div>
                     </div>
 
-                    <!-- 底部输入区 -->
-                    <div class="bg-white border-t border-gray-200 p-4 pb-safe shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.03)] z-10">
-                        <div class="flex items-center gap-3 mb-3 pl-1">
-                            <button @click="regenerateOfflineMessage" class="text-[12px] font-bold text-gray-500 bg-gray-50 px-4 py-1.5 rounded-full border border-gray-100 hover:bg-gray-100 active:scale-95 transition flex items-center gap-1.5"><i class="fas fa-sync-alt"></i> 重回</button>
-                            <button @click="continueOfflineMessage" class="text-[12px] font-bold text-gray-500 bg-gray-50 px-4 py-1.5 rounded-full border border-gray-100 hover:bg-gray-100 active:scale-95 transition flex items-center gap-1.5"><i class="fas fa-pen-nib"></i> 续写</button>
-                        </div>
-                        <div class="flex items-end gap-3">
-                            <textarea v-model="offlineState.input" class="flex-1 bg-gray-50 rounded-2xl p-3.5 text-[15px] border border-gray-200 outline-none resize-none max-h-32 min-h-[50px] shadow-inner" placeholder="输入描写... (回车换行)"></textarea>
-                            <div class="flex gap-2 shrink-0 h-[50px]">
-                                <button @click="sendOfflineMessage" class="h-full px-5 bg-black text-white rounded-2xl text-[15px] font-bold active:scale-95 transition shadow-md">发送</button>
-                                <button @click="receiveOfflineMessage(false)" class="h-full px-5 bg-white text-black border-[2px] border-black rounded-2xl text-[15px] font-bold active:scale-95 transition shadow-sm">接收</button>
+                    <!-- 底部输入区 (高度还原图片 UI) -->
+                    <div class="bg-white border-t border-gray-200 p-3 pb-safe shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.03)] z-20 relative">
+                        <!-- 上方操作栏 (重回、续写) -->
+                        <div class="flex items-center gap-3 mb-3 pl-2 relative z-30">
+                            <button @click="regenerateOfflineMessage" class="text-[12px] font-bold text-gray-500 bg-gray-50 px-4 py-1.5 rounded-full border border-gray-100 hover:bg-gray-200 active:scale-95 transition flex items-center gap-1.5"><i class="fas fa-sync-alt"></i> 重回</button>
+                            
+                            <div class="relative">
+                                <!-- 续写主按钮 -->
+                                <button @click="offlineState.showContinueMenu = !offlineState.showContinueMenu" class="text-[12px] font-bold text-gray-500 bg-gray-50 px-4 py-1.5 rounded-full border border-gray-100 hover:bg-gray-200 active:scale-95 transition flex items-center gap-1.5">
+                                    <i class="fas fa-pen-nib"></i> 续写
+                                </button>
+                                <!-- 续写分支弹窗 -->
+                                <transition name="fade">
+                                    <div v-if="offlineState.showContinueMenu" class="absolute bottom-full left-0 mb-2 w-[170px] bg-white border border-gray-100 shadow-xl rounded-2xl overflow-hidden flex flex-col divide-y divide-gray-50">
+                                        <button @click="offlineState.showContinueMenu = false; receiveOfflineMessage(true)" class="text-[13px] text-gray-700 py-3.5 px-4 hover:bg-gray-50 text-left font-bold flex items-center gap-2"><i class="fas fa-forward text-gray-400"></i> AI直接推进剧情</button>
+                                        <button @click="offlineState.showContinueMenu = false; generateAiDraftForOffline()" class="text-[13px] text-purple-600 py-3.5 px-4 hover:bg-purple-50 text-left font-bold flex items-center gap-2"><i class="fas fa-magic text-purple-400"></i> 让 AI 帮我写</button>
+                                    </div>
+                                </transition>
                             </div>
                         </div>
+
+                        <!-- 图片风格输入栏 -->
+                        <div class="flex items-end gap-3 px-1 relative z-30">
+                            <!-- 药丸形输入框 -->
+                            <div class="flex-1 bg-[#f4f5f7] rounded-[24px] flex items-end px-4 py-2 border border-transparent focus-within:border-gray-300 transition-all duration-200 shadow-[inset_0_1px_4px_rgba(0,0,0,0.02)] min-h-[46px]">
+                                <!-- 左侧语音图标 (用特殊类模拟图片里的 ||| ) -->
+                                <i class="fas fa-chart-bar text-gray-400 text-lg mr-3 shrink-0 rotate-90 pb-1 cursor-pointer" @click="showToast('语音功能待接入')"></i>
+                                
+                                <!-- 输入区 (去除回车发送，纯换行。加入自适应高度) -->
+                                <textarea v-model="offlineState.input" ref="offlineInputArea" @input="resizeOfflineInput" class="flex-1 bg-transparent text-[15px] text-gray-800 outline-none resize-none max-h-32 py-1 leading-relaxed w-full scrollbar-hide" rows="1" placeholder="输入描写..."></textarea>
+                                
+                                <!-- 右侧搜索/接收图标 (映射为触发接收AI回复) -->
+                                <i class="fas fa-search text-gray-400 text-lg ml-3 shrink-0 pb-1 cursor-pointer active:scale-90 transition active:text-black" @click="receiveOfflineMessage(false)" title="接收剧情"></i>
+                            </div>
+                            
+                            <!-- 外部圆形黑底按钮 -->
+                            <button @click="offlineState.input.trim() ? sendOfflineMessage() : showToast('请输入内容或点击放大镜接收')" class="w-[46px] h-[46px] rounded-full bg-black text-white flex items-center justify-center shrink-0 shadow-md active:scale-90 transition transform">
+                                <!-- 当有文字时，变成发送箭头；没文字时，保持 + 号 -->
+                                <i v-if="offlineState.input.trim()" class="fas fa-paper-plane text-base"></i>
+                                <i v-else class="fas fa-plus text-xl"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- 点击外部关闭续写菜单的透明遮罩 -->
+                        <div v-if="offlineState.showContinueMenu" class="fixed inset-0 z-20" @click="offlineState.showContinueMenu = false"></div>
                     </div>
                 </div>
             </transition>
@@ -5862,6 +5894,84 @@ Structure:
                 this.saveData();
             } catch (e) {
                 this.showToast('生成失败: ' + e.message);
+            } finally {
+                this.offlineState.isGenerating = false;
+            }
+        },
+        resizeOfflineInput(e) {
+            // 动态控制输入框高度被顶起，但最大被 Tailwind 的 max-h-32 (128px) 限制
+            const target = e.target || this.$refs.offlineInputArea;
+            if(!target) return;
+            target.style.height = 'auto'; 
+            target.style.height = target.scrollHeight + 'px'; 
+        },
+        async generateAiDraftForOffline() {
+            if (!this.apiConfig.apiKey) return this.showToast('请先配置 API Key');
+            const session = this.wechatState.activeSession;
+            const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
+            const mask = this.getMaskById(session.maskId);
+            const settings = this.getOfflineSettings();
+            const msgs = this.getOfflineMessages();
+            
+            this.offlineState.isGenerating = true;
+            this.showToast('AI 正在为您斟酌词句，请稍候...');
+            
+            const systemPrompt = `【线下现实互动模式 - 用户代笔助手】
+当前背景设定: ${settings.context}。
+对方是: ${friend ? friend.name : session.name}。对方设定: ${friend ? friend.bio : '无'}。
+我是: ${mask.name}。我的设定: ${mask.bio}。
+你们正在进行一场线下沉浸式互动/跑团。
+
+你的任务是：扮演【${mask.name}】（也就是我），根据当前的剧情上下文，帮我写一段符合我设定的回应（可以包含语言、动作、心理描写等）。
+叙事视角：请使用 ${settings.perspective} 描写。
+文风：${settings.style}。
+字数：控制在 ${settings.wordCount} 内即可，不需要太长。
+要求：纯文本输出，直接输出你要写的情节内容，不要加任何前缀、引号或“这是为你代笔的内容”等废话。`;
+
+            // 把过去的剧情当做上下文发给 AI
+            let contextStr = "无历史剧情。";
+            if (msgs.length > 0) {
+                const recentMsgs = msgs.slice(-15);
+                contextStr = recentMsgs.map(m => `[${m.isSelf ? mask.name : (friend ? friend.name : session.name)}]: ${m.content}`).join('\n\n');
+            }
+
+            const messages =[
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: `这是最近的剧情上下文：\n${contextStr}\n\n请直接输出接下来【${mask.name}】（我）该做的回应：` }
+            ];
+
+            try {
+                let url = this.apiConfig.baseUrl.trim().replace(/\/+$/, '');
+                if (!url.endsWith('/v1')) url += '/v1';
+                
+                const res = await fetch(`${url}/chat/completions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiConfig.apiKey.trim()}` },
+                    body: JSON.stringify({ 
+                        model: this.apiConfig.selectedModel, 
+                        messages: messages,
+                        temperature: this.apiConfig.temperature || 0.8
+                    })
+                });
+
+                if (!res.ok) throw new Error('API 请求失败');
+                const data = await res.json();
+                let draft = data.choices[0].message.content.trim();
+                
+                // 将代笔内容填充到输入框
+                this.offlineState.input = draft;
+                
+                // 主动触发输入框高度重新计算，把它顶起来
+                this.$nextTick(() => {
+                    const el = this.$refs.offlineInputArea;
+                    if(el) {
+                        el.style.height = 'auto';
+                        el.style.height = el.scrollHeight + 'px';
+                    }
+                });
+                this.showToast('代笔完成，可在输入框二次修改');
+            } catch (e) {
+                this.showToast('代笔失败: ' + e.message);
             } finally {
                 this.offlineState.isGenerating = false;
             }
