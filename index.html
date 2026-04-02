@@ -2605,7 +2605,7 @@
                             <div class="attach-item" @click="showMusicModal"><div class="attach-icon-box"><i class="fas fa-music text-gray-600"></i></div><span class="attach-label">一起听</span></div>
                             <div class="attach-item" @click="openReadTogetherSelect"><div class="attach-icon-box"><i class="fas fa-book-open text-gray-600"></i></div><span class="attach-label">一起读</span></div>
                             <!-- 线下模式 (灰色咖啡杯) -->
-                            <div class="attach-item" @click="openOfflineMode"><div class="attach-icon-box"><i class="fas fa-coffee text-gray-600"></i></div><span class="attach-label">线下模式</span></div>
+                            <div class="attach-item" @click="showToast('功能开发中')"><div class="attach-icon-box"><i class="fas fa-coffee text-gray-600"></i></div><span class="attach-label">线下模式</span></div>
                         </div>
                     </transition>
 
@@ -2711,88 +2711,6 @@
                 </div>
                 <input type="file" ref="chatBgInput" accept="image/*" class="hidden" @change="handleChatBgChange">
             </div>
-            <!-- ================= 新增：线下模式 (Offline RP Mode) ================= -->
-            <transition name="app-slide">
-                <div v-if="wechatState.activeNav === 'offline-mode'" class="flex-1 flex flex-col bg-[#f5f7fa] absolute inset-0 z-[60]">
-                    <!-- 顶栏 -->
-                    <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-100 z-10 shrink-0">
-                        <button @click="closeOfflineMode" class="w-8 h-8 flex items-center justify-center"><i class="fas fa-chevron-left text-lg text-black"></i></button>
-                        <h1 class="font-bold text-[17px] tracking-wide text-gray-900">线下模式</h1>
-                        <button @click="offlineState.showSettings = true" class="w-8 h-8 flex items-center justify-center"><i class="fas fa-cog text-lg text-gray-600"></i></button>
-                    </header>
-
-                    <!-- 内容阅读区 -->
-                    <div class="flex-1 overflow-y-auto p-4" ref="offlineContainer" @click="closeChatMenus">
-                        <div v-if="!wechatState.activeSession.offlineMessages || wechatState.activeSession.offlineMessages.length === 0" class="text-center text-gray-400 mt-20 text-sm">
-                            <i class="fas fa-theater-masks text-4xl mb-3 opacity-30"></i><br>剧情尚未开始，发送你的第一段描写吧
-                        </div>
-
-                        <!-- 循环渲染长文消息块 -->
-                        <div v-for="(msg, i) in wechatState.activeSession.offlineMessages" :key="i" class="bg-white rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] mb-5 relative border border-gray-100">
-                            <!-- 右上角编辑/删除操作区 -->
-                            <div class="absolute top-4 right-4 flex gap-4 text-gray-300">
-                                <i class="fas fa-edit cursor-pointer hover:text-blue-500 transition" @click="editOfflineMsg(msg)"></i>
-                                <i class="fas fa-trash cursor-pointer hover:text-red-500 transition" @click="deleteOfflineMsg(i)"></i>
-                            </div>
-
-                            <!-- 头部信息信息：头像、真名、回合数、时间和地点 -->
-                            <div class="flex items-center gap-3 mb-4">
-                                <div class="w-11 h-11 rounded-full overflow-hidden border border-gray-100 shrink-0"><img :src="getOfflineAvatar(msg)" class="w-full h-full object-cover"></div>
-                                <div class="flex flex-col">
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-bold text-gray-900 text-sm">{{ getOfflineName(msg) }}</span>
-                                        <span class="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-bold">第 {{ i + 1 }} 回合</span>
-                                    </div>
-                                    <span class="text-[11px] text-gray-400 mt-0.5">{{ formatChatTime(msg.time) }} · <i class="fas fa-map-marker-alt text-[10px]"></i> {{ msg.location }}</span>
-                                </div>
-                            </div>
-
-                            <!-- 正文内容 (小说体长文) -->
-                            <div class="text-[15px] leading-[1.8] text-gray-700 font-serif whitespace-pre-wrap text-justify tracking-wide">{{ msg.content }}</div>
-                        </div>
-                    </div>
-
-                    <!-- 底部输入与操作区 -->
-                    <div class="bg-white border-t border-gray-200 pb-safe shrink-0 shadow-[0_-5px_20px_rgba(0,0,0,0.03)]">
-                        <!-- 上层：重回和续写按钮 -->
-                        <div class="flex px-4 py-2.5 gap-6 border-b border-gray-50 bg-gray-50/50">
-                            <button @click="regenerateOffline" class="text-xs text-gray-600 font-bold flex items-center gap-1.5 active:opacity-50"><i class="fas fa-sync-alt text-blue-500"></i> 重新生成 (重回)</button>
-                            <button @click="continueOffline" class="text-xs text-gray-600 font-bold flex items-center gap-1.5 active:opacity-50"><i class="fas fa-pen-fancy text-purple-500"></i> 继续剧情 (续写)</button>
-                            <span v-if="offlineState.isGenerating" class="text-xs text-orange-500 ml-auto animate-pulse font-bold"><i class="fas fa-spinner fa-spin"></i> 正在构思中...</span>
-                        </div>
-                        
-                        <!-- 下层：输入框与收发按钮 -->
-                        <div class="flex items-end gap-3 p-3">
-                            <textarea v-model="offlineState.inputMsg" class="flex-1 bg-gray-100 rounded-xl p-3 text-[14px] resize-none outline-none max-h-32 border border-gray-200" rows="3" placeholder="在此输入你的行动、神态或对话 (回车键换行)"></textarea>
-                            <div class="flex flex-col gap-2 shrink-0">
-                                <button @click="sendOfflineMsg" class="w-14 h-[42px] bg-blue-500 text-white rounded-lg text-xs font-bold active:scale-95 shadow-sm">发送</button>
-                                <button @click="receiveOfflineMsg()" class="w-14 h-[42px] bg-black text-white rounded-lg text-xs font-bold active:scale-95 shadow-sm" :disabled="offlineState.isGenerating">接收</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </transition>
-
-            <!-- 线下模式设置弹窗 -->
-            <transition name="scale">
-                <div v-if="offlineState.showSettings" class="fixed inset-0 z-[70000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                    <div class="bg-white w-[85%] rounded-[24px] p-6 flex flex-col gap-4 shadow-2xl">
-                        <h3 class="text-lg font-bold text-center text-gray-900">线下模式设定</h3>
-                        <div><label class="text-xs font-bold text-gray-500 mb-1.5 block ml-1">当前剧情地点</label><input v-model="offlineState.config.location" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none"></div>
-                        <div><label class="text-xs font-bold text-gray-500 mb-1.5 block ml-1">字数要求</label><input v-model="offlineState.config.wordCount" placeholder="如: 500字左右" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none"></div>
-                        <div>
-                            <label class="text-xs font-bold text-gray-500 mb-1.5 block ml-1">要求 AI 使用的人称</label>
-                            <select v-model="offlineState.config.perspective" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none">
-                                <option value="第一人称">第一人称 (我...)</option>
-                                <option value="第二人称">第二人称 (你...)</option>
-                                <option value="第三人称">第三人称 (TA...)</option>
-                            </select>
-                        </div>
-                        <div><label class="text-xs font-bold text-gray-500 mb-1.5 block ml-1">小说文风要求</label><textarea v-model="offlineState.config.style" placeholder="如: 细腻沉浸、充满张力" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none h-20 resize-none"></textarea></div>
-                        <button @click="offlineState.showSettings = false; saveData()" class="w-full py-3.5 bg-black text-white rounded-xl font-bold mt-2 shadow-md active:scale-95">保存设定</button>
-                    </div>
-                </div>
-            </transition>
 
             <!-- 红包详情页 (新) -->
             <div v-if="wechatState.activeNav === 'red-packet-detail'" class="flex-1 flex flex-col red-packet-bg absolute inset-0 z-50">
@@ -3443,19 +3361,7 @@ createApp({
             timer: null, toast: { show: false, message: '' }, 
             inputModal: { show: false, title: '', value: '', placeholder: '', callback: null, desc: '', inputType: 'text', extraBtn: null }, 
             confirmModal: { show: false, message: '', callback: null },
-            inputMsg: '', deviceId: '', isTyping: false, replyingTo: null, dataProtection: false,
-            // 新增：线下模式状态
-            offlineState: { 
-                showSettings: false, 
-                inputMsg: '', 
-                isGenerating: false, 
-                config: { 
-                    location: '现实中', 
-                    wordCount: '300-500字', 
-                    perspective: '第三人称', 
-                    style: '细腻沉浸、动作与心理描写丰富' 
-                } 
-            }
+            inputMsg: '', deviceId: '', isTyping: false, replyingTo: null, dataProtection: false
         }
     },
     computed: {
@@ -5858,157 +5764,7 @@ Structure:
             this.saveData();
             this.showToast('已恢复默认背景');
         },
-        
-        // ================= 线下模式专用方法 =================
-        openOfflineMode() {
-            if (!this.wechatState.activeSession) return;
-            if (!this.wechatState.activeSession.offlineMessages) {
-                this.wechatState.activeSession.offlineMessages =[];
-            }
-            this.wechatState.showAttachMenu = false;
-            this.wechatState.activeNav = 'offline-mode';
-            this.scrollOfflineToBottom();
-        },
-        closeOfflineMode() {
-            this.wechatState.activeNav = 'room';
-        },
-        scrollOfflineToBottom() {
-            this.$nextTick(() => {
-                const c = this.$refs.offlineContainer;
-                if (c) c.scrollTop = c.scrollHeight;
-            });
-        },
-        getOfflineAvatar(msg) {
-            const session = this.wechatState.activeSession;
-            // 线下模式严格使用真人的头像，不受“聊天隐藏模式”的影响
-            if (msg.isSelf) {
-                return session.customAvatarSelf || this.getMaskById(session.maskId).avatar;
-            } else {
-                return session.customAvatarTarget || session.avatar;
-            }
-        },
-        getOfflineName(msg) {
-            // 获取真实姓名，忽略用户的备注（remark）
-            const session = this.wechatState.activeSession;
-            if (msg.isSelf) {
-                return this.getMaskById(session.maskId).name;
-            } else {
-                const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
-                return friend ? friend.name : session.name;
-            }
-        },
-        sendOfflineMsg() {
-            if (!this.offlineState.inputMsg.trim()) return;
-            const session = this.wechatState.activeSession;
-            session.offlineMessages.push({
-                content: this.offlineState.inputMsg,
-                isSelf: true,
-                time: Date.now(),
-                location: this.offlineState.config.location
-            });
-            this.offlineState.inputMsg = '';
-            this.saveData();
-            this.scrollOfflineToBottom();
-        },
-        async receiveOfflineMsg(isContinue = false) {
-            if (!this.apiConfig.apiKey) return this.showToast('请先配置 API Key');
-            const session = this.wechatState.activeSession;
-            const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
-            const mask = this.getMaskById(session.maskId);
-            
-            this.offlineState.isGenerating = true;
-            this.showToast('AI 正在沉浸式描写中...');
 
-            // 获取最近的互动记录作为上下文
-            let contextMsgs = session.offlineMessages.slice(-8).map((m, i) => {
-                const speaker = m.isSelf ? mask.name : (friend ? friend.name : session.name);
-                return `[第${i+1}回合 - ${speaker} 行动]:\n${m.content}`;
-            }).join('\n\n');
-
-            let promptStr = `【沉浸式线下角色扮演 (RP) 模式】
-你现在的身份：${friend ? friend.name : session.name}（人设：${friend ? friend.bio : '无'}）
-正在与你互动的用户：${mask.name}（人设：${mask.bio}）
-当前场景/地点：${this.offlineState.config.location}
-你必须采用的视角：${this.offlineState.config.perspective}
-你必须采用的文风：${this.offlineState.config.style}
-字数要求：${this.offlineState.config.wordCount}
-
-你现在需要进行专业的小说级角色扮演描写。
-【核心要求】：
-1. 必须包含丰富的：环境描写、心理描写、神态描写、语言描写、动作描写、外貌描写等细节，全方位展现角色的反应和现场氛围。
-2. 请直接输出小说段落格式的纯文本，不要输出 JSON 格式！
-3. 绝对不要带有任何系统前缀（如"好的"、"回复如下"等），直接开始小说正文。
-`;
-            if (isContinue) {
-                promptStr += `\n【当前指令：续写】请忽略用户的直接输入，紧接着上一段剧情的结尾，继续顺着发展往下描写！`;
-            }
-
-            try {
-                let url = this.apiConfig.baseUrl.trim().replace(/\/+$/, '') + '/v1/chat/completions';
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiConfig.apiKey.trim()}` },
-                    body: JSON.stringify({
-                        model: this.apiConfig.selectedModel,
-                        messages:[
-                            { role: 'system', content: promptStr },
-                            { role: 'user', content: `近期剧情上下文记录：\n${contextMsgs}\n\n请进行你的回复描写：` }
-                        ],
-                        temperature: this.apiConfig.temperature || 0.8
-                    })
-                });
-
-                if(!res.ok) throw new Error('API 请求失败');
-                const data = await res.json();
-                const content = data.choices[0].message.content.trim();
-
-                session.offlineMessages.push({
-                    content: content,
-                    isSelf: false,
-                    time: Date.now(),
-                    location: this.offlineState.config.location
-                });
-                this.saveData();
-                this.scrollOfflineToBottom();
-            } catch (e) {
-                console.error(e);
-                this.showToast('生成失败，请重试');
-            } finally {
-                this.offlineState.isGenerating = false;
-            }
-        },
-        regenerateOffline() {
-            const session = this.wechatState.activeSession;
-            if (!session.offlineMessages || session.offlineMessages.length === 0) return;
-            // 找到并删除最后一条不是自己的消息
-            let lastIndex = session.offlineMessages.length - 1;
-            while (lastIndex >= 0) {
-                if (!session.offlineMessages[lastIndex].isSelf) {
-                    session.offlineMessages.splice(lastIndex, 1);
-                    break;
-                }
-                lastIndex--;
-            }
-            this.receiveOfflineMsg();
-        },
-        continueOffline() {
-            this.receiveOfflineMsg(true);
-        },
-        editOfflineMsg(msg) {
-            this.showInput('编辑段落', msg.content, '', (val) => {
-                if (val) {
-                    msg.content = val;
-                    this.saveData();
-                }
-            }, 'textarea');
-        },
-        deleteOfflineMsg(i) {
-            this.showConfirm('确定删除这段描写吗？', () => {
-                this.wechatState.activeSession.offlineMessages.splice(i, 1);
-                this.saveData();
-            });
-        },
-        // ===============================================
         openVoiceInput() { this.voiceInputModal.show = true; this.voiceInputModal.content = ''; },
         sendVoiceMessage() {
             if(!this.voiceInputModal.content.trim()) return this.showToast('内容为空');
