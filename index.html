@@ -2659,15 +2659,14 @@
             <!-- 线下模式 (Offline Mode) 全屏界面 -->
             <transition name="app-slide">
                 <div v-if="offlineState.show" class="absolute inset-0 z-[60000] bg-[#f9f9f9] flex flex-col font-serif">
-                    <!-- 顶栏 -->
-                    <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-200 shrink-0 shadow-sm z-10">
-                        <button @click="offlineState.show = false" class="w-8 h-8 flex items-center justify-center text-gray-800"><i class="fas fa-chevron-left text-lg"></i></button>
-                        <div class="flex flex-col items-center">
-                            <h1 class="font-bold text-[17px] text-gray-900 tracking-wider">线下模式</h1>
-                            <span class="text-[10px] text-gray-400 mt-0.5">{{ getOfflineSettings().context }}</span>
-                        </div>
-                        <button @click="offlineState.settingsShow = true" class="w-8 h-8 flex items-center justify-center text-gray-800"><i class="fas fa-sliders-h text-lg"></i></button>
-                    </header>
+                    <!-- 顶栏 (胶囊风格还原) -->
+                    <div class="pt-12 px-4 pb-2 bg-[#f9f9f9] shrink-0 z-10 sticky top-0">
+                        <header class="h-[50px] px-5 flex items-center justify-between bg-white border border-gray-200 rounded-[25px] shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+                            <button @click="offlineState.show = false" class="flex items-center justify-center text-gray-500 hover:text-black transition"><i class="fas fa-arrow-left text-[17px]"></i></button>
+                            <h1 class="font-medium text-[16px] text-gray-800 tracking-wider">线下模式</h1>
+                            <button @click="offlineState.settingsShow = true" class="flex items-center justify-center text-gray-500 hover:text-black transition"><i class="fas fa-sliders-h text-[17px]"></i></button>
+                        </header>
+                    </div>
 
                     <!-- 消息列表区 -->
                     <div class="flex-1 overflow-y-auto p-4 space-y-6 bg-[#f4f4f4]" ref="offlineChatContainer">
@@ -2684,7 +2683,7 @@
                                         <img :src="msg.isSelf ? getOfflineUserAvatar() : getOfflineAiAvatar()" class="w-full h-full object-cover">
                                     </div>
                                     <div class="flex flex-col">
-                                        <span class="font-bold text-[15px] text-gray-900">{{ msg.isSelf ? homeProfile.name : getOfflineAiRealName() }}</span>
+                                        <span class="font-bold text-[15px] text-gray-900">{{ msg.isSelf ? getMaskById(wechatState.activeSession?.maskId).name : getOfflineAiRealName() }}</span>
                                         <span class="text-[11px] text-gray-400 font-mono mt-0.5">{{ formatChatTime(msg.time) }}</span>
                                     </div>
                                 </div>
@@ -2725,26 +2724,22 @@
                             </div>
                         </div>
 
-                        <!-- 图片风格输入栏 -->
-                        <div class="flex items-end gap-3 px-1 relative z-30">
-                            <!-- 药丸形输入框 -->
-                            <div class="flex-1 bg-[#f4f5f7] rounded-[24px] flex items-end px-4 py-2 border border-transparent focus-within:border-gray-300 transition-all duration-200 shadow-[inset_0_1px_4px_rgba(0,0,0,0.02)] min-h-[46px]">
-                                <!-- 左侧语音图标 (用特殊类模拟图片里的 ||| ) -->
-                                <i class="fas fa-chart-bar text-gray-400 text-lg mr-3 shrink-0 rotate-90 pb-1 cursor-pointer" @click="showToast('语音功能待接入')"></i>
+                        <!-- 图片风格输入栏 (新UI) -->
+                        <div class="flex items-end gap-2 px-1 relative z-30">
+                            <!-- 药丸形输入框 (集成了发送和接收按钮) -->
+                            <div class="flex-1 bg-[#f4f5f7] rounded-[24px] flex items-end px-3 py-2 border border-gray-200 transition-all duration-200 min-h-[46px]">
+                                <!-- 左侧新图标 -->
+                                <img src="https://pic1.imgdb.cn/item/69ce63fb6ccec478dfacfcbb.jpg" class="w-6 h-6 rounded-full mr-2 shrink-0 self-center object-contain cursor-pointer mix-blend-multiply opacity-80" @click="showToast('语音功能待接入')">
                                 
-                                <!-- 输入区 (去除回车发送，纯换行。加入自适应高度) -->
-                                <textarea v-model="offlineState.input" ref="offlineInputArea" @input="resizeOfflineInput" class="flex-1 bg-transparent text-[15px] text-gray-800 outline-none resize-none max-h-32 py-1 leading-relaxed w-full scrollbar-hide" rows="1" placeholder="输入描写..."></textarea>
+                                <!-- 输入区 -->
+                                <textarea v-model="offlineState.input" ref="offlineInputArea" @input="resizeOfflineInput" class="flex-1 bg-transparent text-[15px] text-gray-800 outline-none resize-none max-h-32 py-1 leading-relaxed w-full scrollbar-hide" rows="1" placeholder="输入描写... (回车换行)"></textarea>
                                 
-                                <!-- 右侧搜索/接收图标 (映射为触发接收AI回复) -->
-                                <i class="fas fa-search text-gray-400 text-lg ml-3 shrink-0 pb-1 cursor-pointer active:scale-90 transition active:text-black" @click="receiveOfflineMessage(false)" title="接收剧情"></i>
+                                <!-- 接收按钮(放大镜) -->
+                                <i class="fas fa-search text-gray-400 text-[18px] mx-2 shrink-0 self-center cursor-pointer active:scale-90 transition hover:text-black" @click="receiveOfflineMessage(false)" title="接收剧情"></i>
+                                
+                                <!-- 发送按钮(纸飞机) -->
+                                <i class="fas fa-paper-plane text-black text-[18px] ml-1 shrink-0 self-center cursor-pointer active:scale-90 transition opacity-80 hover:opacity-100" @click="offlineState.input.trim() ? sendOfflineMessage() : showToast('请输入内容')" title="发送剧情"></i>
                             </div>
-                            
-                            <!-- 外部圆形黑底按钮 -->
-                            <button @click="offlineState.input.trim() ? sendOfflineMessage() : showToast('请输入内容或点击放大镜接收')" class="w-[46px] h-[46px] rounded-full bg-black text-white flex items-center justify-center shrink-0 shadow-md active:scale-90 transition transform">
-                                <!-- 当有文字时，变成发送箭头；没文字时，保持 + 号 -->
-                                <i v-if="offlineState.input.trim()" class="fas fa-paper-plane text-base"></i>
-                                <i v-else class="fas fa-plus text-xl"></i>
-                            </button>
                         </div>
                         
                         <!-- 点击外部关闭续写菜单的透明遮罩 -->
@@ -5958,22 +5953,40 @@ Structure:
                 const data = await res.json();
                 let draft = data.choices[0].message.content.trim();
                 
-                // 将代笔内容填充到输入框
-                this.offlineState.input = draft;
-                
-                // 主动触发输入框高度重新计算，把它顶起来
-                this.$nextTick(() => {
-                    const el = this.$refs.offlineInputArea;
-                    if(el) {
-                        el.style.height = 'auto';
-                        el.style.height = el.scrollHeight + 'px';
-                    }
-                });
-                this.showToast('代笔完成，可在输入框二次修改');
-            } catch (e) {
-                this.showToast('代笔失败: ' + e.message);
-            } finally {
+                // 停止“正在生成”的脉冲动画，准备开始打字机效果
                 this.offlineState.isGenerating = false;
+                this.offlineState.input = '';
+                
+                let index = 0;
+                const typeNext = () => {
+                    // 如果中途关了界面，就停止打字
+                    if (!this.offlineState.show) return; 
+                    
+                    if (index < draft.length) {
+                        this.offlineState.input += draft.charAt(index);
+                        index++;
+                        
+                        this.$nextTick(() => {
+                            const el = this.$refs.offlineInputArea;
+                            if(el) {
+                                el.style.height = 'auto';
+                                // 让高度跟随内容撑大，并在超过限制后自动滑到最底部
+                                el.style.height = el.scrollHeight + 'px';
+                                el.scrollTop = el.scrollHeight;
+                            }
+                        });
+                        
+                        // 每个字延迟大约 30 毫秒，呈现流畅的打字感
+                        setTimeout(typeNext, 30);
+                    } else {
+                        this.showToast('代笔完成，可在输入框二次修改');
+                    }
+                };
+                typeNext();
+                
+            } catch (e) {
+                this.offlineState.isGenerating = false;
+                this.showToast('代笔失败: ' + e.message);
             }
         },
         regenerateOfflineMessage() {
