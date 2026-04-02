@@ -2995,7 +2995,7 @@
     
     <!-- 美化设置页面 -->
     <transition name="page-slide">
-        <div v-if="themesPage === 'beautify'" class="absolute inset-0 p-4 pb-20 flex flex-col">
+        <div v-if="themesPage === 'beautify'" class="absolute inset-0 pt-4 px-4 flex flex-col">
             <!-- Tab切换 -->
             <div class="flex bg-gray-200 p-1 rounded-xl mb-4 shrink-0">
                 <button @click="beautifyConfig.currentTab='bubble'" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition" :class="beautifyConfig.currentTab==='bubble'?'bg-white shadow-sm text-black':'text-gray-500'">气泡美化</button>
@@ -3050,7 +3050,7 @@
             </div>
 
             <!-- 主题美化 Tab -->
-            <div v-if="beautifyConfig.currentTab === 'theme'" class="flex-1 flex flex-col gap-4 overflow-y-auto scrollbar-hide pb-safe">
+            <div v-if="beautifyConfig.currentTab === 'theme'" class="flex-1 flex flex-col gap-4 overflow-y-auto scrollbar-hide pb-24">
                 <!-- 主题界面预览区域 -->
                 <div class="bg-gray-100 rounded-2xl p-4 border border-gray-200 shrink-0">
                     <div class="text-xs text-gray-400 mb-2 text-center font-bold">主题效果预览</div>
@@ -5515,26 +5515,31 @@ createApp({
             if (dataStr) {
                 try { 
                     const d = JSON.parse(dataStr); 
-                    // 使用 Vue 推荐的动态响应式注入方式，彻底解决数据导入后莫名缺失(如表情包/配置)的BUG
-                    Object.keys(d).forEach(k => {
-                        if (this.hasOwnProperty(k)) {
-                            this[k] = d[k];
+                    // 彻底修复：跨浏览器导入数据不全的问题
+                    // 放弃 hasOwnProperty，直接遍历并覆盖 Vue 的根状态对象，确保所有深层数据(联系人/预设/记录) 100% 还原
+                    for (const key in d) {
+                        if (this[key] !== undefined) {
+                            this[key] = d[key];
                         }
-                    });
+                    }
                 } catch(e) { console.error('数据加载失败', e); } 
             }
+            
+            // 恢复系统激活状态
             if (localStorage.getItem('onyunx_is_activated') === 'true') { this.isActivated = true; }
+            
+            // 强制初始化界面状态
             this.isAppOpen = false;
             this.currentApp = null;
             this.wechatState.activeNav = 'chat';
             this.wechatState.activeSession = null;
             
-            // 每次打开网页强制重置消息弹窗状态，解决通知卡死去不掉的 Bug
+            // 强制重置各种弹窗状态，解决幽灵卡死 Bug
             this.globalNotification.show = false;
             this.toast.show = false;
-            
             this.closeAllMenus();
 
+            // 恢复系统级数据防清理状态
             if (navigator.storage && navigator.storage.persisted) {
                 navigator.storage.persisted().then(persisted => {
                     this.dataProtection = persisted;
