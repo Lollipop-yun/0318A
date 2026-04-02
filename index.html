@@ -2748,33 +2748,102 @@
                 </div>
             </transition>
 
-            <!-- 线下模式设置弹窗 -->
+            <!-- 线下模式设置弹窗 (重构版) -->
             <transition name="scale">
                 <div v-if="offlineState.settingsShow" class="fixed inset-0 z-[81000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
                     <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl p-6 flex flex-col gap-4">
                         <h3 class="text-lg font-bold text-center mb-2">线下模式设定</h3>
                         
-                        <div><label class="text-xs text-gray-500 ml-1 font-bold">当前情境 (背景)</label><input v-model="getOfflineSettings().context" placeholder="例如: 现实中 / 咖啡馆里" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none mt-1"></div>
-                        
                         <div class="flex gap-3">
-                            <div class="flex-1"><label class="text-xs text-gray-500 ml-1 font-bold">字数倾向</label>
-                            <select v-model="getOfflineSettings().wordCount" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none mt-1">
-                                <option value="简短 (100字左右)">简短 (100字)</option>
-                                <option value="中等 (300字左右)">中等 (300字)</option>
-                                <option value="长篇 (500字以上)">长篇 (500字+)</option>
+                            <div class="flex-1"><label class="text-xs text-gray-500 ml-1 font-bold">对【角色】的称呼</label>
+                            <select v-model="getOfflineSettings().perspectiveAi" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none mt-1 font-bold text-gray-800">
+                                <option value="第一人称 (我)">第一人称 (我)</option>
+                                <option value="第二人称 (你)">第二人称 (你)</option>
+                                <option value="第三人称 (TA)">第三人称 (TA)</option>
                             </select></div>
                             
-                            <div class="flex-1"><label class="text-xs text-gray-500 ml-1 font-bold">叙事人称</label>
-                            <select v-model="getOfflineSettings().perspective" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none mt-1">
-                                <option value="第一人称 (以'我'自称)">第一人称</option>
-                                <option value="第二人称 (以'你'称呼对方)">第二人称</option>
-                                <option value="第三人称 (上帝视角)">第三人称</option>
+                            <div class="flex-1"><label class="text-xs text-gray-500 ml-1 font-bold">对【我】的称呼</label>
+                            <select v-model="getOfflineSettings().perspectiveUser" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none mt-1 font-bold text-gray-800">
+                                <option value="第一人称 (我)">第一人称 (我)</option>
+                                <option value="第二人称 (你)">第二人称 (你)</option>
+                                <option value="第三人称 (TA)">第三人称 (TA)</option>
                             </select></div>
                         </div>
                         
-                        <div><label class="text-xs text-gray-500 ml-1 font-bold">文风要求</label><input v-model="getOfflineSettings().style" placeholder="如: 细腻写实、意识流、轻松日常..." class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none mt-1"></div>
+                        <div>
+                            <label class="text-xs text-gray-500 ml-1 font-bold">严格字数要求</label>
+                            <div @click="openOfflineWordCountModal" class="w-full bg-gray-50 p-3.5 rounded-xl text-sm border border-gray-200 mt-1 cursor-pointer flex justify-between items-center active:bg-gray-100 transition shadow-sm">
+                                <span class="text-gray-800 font-bold font-mono">{{ getOfflineSettings().wordCount }} 字</span>
+                                <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-xs text-gray-500 ml-1 font-bold">文风与描写要求</label>
+                            <div @click="openOfflineStyleModal" class="w-full bg-gray-50 p-3.5 rounded-xl text-sm border border-gray-200 mt-1 cursor-pointer flex justify-between items-center active:bg-gray-100 transition shadow-sm">
+                                <span class="text-gray-800 font-bold truncate max-w-[80%]">{{ getActiveStyleTitle() }}</span>
+                                <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                            </div>
+                        </div>
                         
-                        <button @click="offlineState.settingsShow = false; saveData()" class="w-full py-3.5 bg-black text-white rounded-xl text-sm font-bold mt-2 shadow-md">完成</button>
+                        <button @click="offlineState.settingsShow = false; saveData()" class="w-full py-3.5 bg-black text-white rounded-xl text-sm font-bold mt-2 shadow-md active:scale-95 transition">完成</button>
+                    </div>
+                </div>
+            </transition>
+
+            <!-- 线下专属：字数输入弹窗 -->
+            <transition name="scale">
+                <div v-if="offlineWordCountModal.show" class="fixed inset-0 z-[82000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                    <div class="bg-white w-[75%] rounded-[20px] overflow-hidden shadow-2xl p-5 flex flex-col gap-4">
+                        <h3 class="text-[15px] font-bold text-center">输入目标字数</h3>
+                        <input type="number" v-model.number="offlineWordCountModal.count" class="w-full bg-gray-50 p-3 text-center text-xl font-bold font-mono border-b-2 border-gray-200 outline-none focus:border-black transition" placeholder="例如: 300">
+                        <div class="flex gap-2 mt-2">
+                            <button @click="offlineWordCountModal.show = false" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold active:scale-95">取消</button>
+                            <button @click="saveOfflineWordCount" class="flex-1 py-2.5 bg-black text-white rounded-xl text-xs font-bold active:scale-95">确定</button>
+                        </div>
+                    </div>
+                </div>
+            </transition>
+
+            <!-- 线下专属：文风预设库弹窗 -->
+            <transition name="app-slide">
+                <div v-if="offlineStyleModal.show" class="fixed inset-0 z-[82000] bg-gray-50 flex flex-col">
+                    <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-200 shrink-0 z-10 shadow-sm">
+                        <button @click="closeOfflineStyleModal" class="w-8 h-8 flex items-center justify-center text-gray-800"><i class="fas fa-chevron-left"></i></button>
+                        <h1 class="font-bold text-[16px] text-gray-900">{{ offlineStyleModal.isEditing ? '编辑文风' : '文风预设库' }}</h1>
+                        <button v-if="!offlineStyleModal.isEditing" @click="addNewOfflineStyle" class="w-8 h-8 flex items-center justify-center text-gray-800"><i class="fas fa-plus"></i></button>
+                        <button v-else @click="saveOfflineStyleEdit" class="text-blue-600 font-bold text-sm px-2">保存</button>
+                    </header>
+                    
+                    <!-- 列表模式 -->
+                    <div v-if="!offlineStyleModal.isEditing" class="flex-1 overflow-y-auto p-4 space-y-3">
+                        <div v-for="(style, idx) in offlineStylePresets" :key="style.id" class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm relative group cursor-pointer active:bg-gray-50" @click="selectOfflineStyle(style.id)">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center transition" :class="{'bg-black border-black': getOfflineSettings().styleId === style.id}">
+                                        <i v-if="getOfflineSettings().styleId === style.id" class="fas fa-check text-white text-[10px]"></i>
+                                    </div>
+                                    <h3 class="font-bold text-gray-900 text-sm">{{ style.title }}</h3>
+                                </div>
+                                <div class="flex gap-3 text-gray-400">
+                                    <i class="fas fa-edit hover:text-blue-500 transition" @click.stop="editOfflineStyle(style)"></i>
+                                    <i class="fas fa-trash-alt hover:text-red-500 transition" @click.stop="deleteOfflineStyle(idx)"></i>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 leading-relaxed line-clamp-2 pl-7">{{ style.content }}</p>
+                        </div>
+                    </div>
+
+                    <!-- 编辑/添加模式 -->
+                    <div v-else class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">文风标题</label>
+                            <input v-model="offlineStyleModal.editForm.title" placeholder="如: 细腻写实、跑团战斗..." class="w-full bg-white p-3.5 rounded-xl text-sm font-bold border border-gray-200 outline-none shadow-sm">
+                        </div>
+                        <div class="flex-1 flex flex-col min-h-[200px]">
+                            <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">文风具体要求 (供 AI 参考)</label>
+                            <textarea v-model="offlineStyleModal.editForm.content" placeholder="输入详细的描写侧重点、句式要求、禁忌词等..." class="flex-1 w-full bg-white p-4 rounded-xl text-[13px] leading-relaxed border border-gray-200 outline-none resize-none shadow-sm"></textarea>
+                        </div>
                     </div>
                 </div>
             </transition>
@@ -3485,7 +3554,13 @@ createApp({
             inputModal: { show: false, title: '', value: '', placeholder: '', callback: null, desc: '', inputType: 'text', extraBtn: null }, 
             confirmModal: { show: false, message: '', callback: null },
             inputMsg: '', deviceId: '', isTyping: false, replyingTo: null, dataProtection: false,
-            offlineState: { show: false, input: '', settingsShow: false, isGenerating: false }
+            offlineState: { show: false, input: '', settingsShow: false, isGenerating: false, showContinueMenu: false },
+            offlineWordCountModal: { show: false, count: 300 },
+            offlineStyleModal: { show: false, isEditing: false, editForm: { id: null, title: '', content: '' } },
+            offlineStylePresets:[ 
+                { id: 'default1', title: '细腻写实', content: '注重环境、氛围渲染，动作细节丰富，心理活动刻画深刻真实，对话自然且贴合人物性格，避免空洞的叙述。' },
+                { id: 'default2', title: '意识流', content: '以内心独白和感官体验为主，句子长短不一，充满隐喻和碎片化的情感，淡化客观动作描写，强调情绪的沉浸感。' } 
+            ]
         }
     },
     computed: {
@@ -5770,10 +5845,85 @@ Structure:
         getOfflineSettings() {
             const session = this.wechatState.activeSession;
             if(!session) return {};
-            if(!session.offlineSettings) {
-                session.offlineSettings = { context: '现实中', wordCount: '中等 (300字左右)', perspective: '第一人称 (以\'我\'自称)', style: '细腻写实' };
+            // 数据结构升级兼容
+            if(!session.offlineSettings || !session.offlineSettings.perspectiveAi) {
+                session.offlineSettings = { 
+                    wordCount: 300, 
+                    perspectiveAi: '第一人称 (我)', 
+                    perspectiveUser: '第二人称 (你)', 
+                    styleId: 'default1' 
+                };
             }
             return session.offlineSettings;
+        },
+        openOfflineWordCountModal() {
+            this.offlineWordCountModal.count = this.getOfflineSettings().wordCount;
+            this.offlineWordCountModal.show = true;
+        },
+        saveOfflineWordCount() {
+            if (this.offlineWordCountModal.count < 10) return this.showToast('字数太少了吧');
+            this.getOfflineSettings().wordCount = this.offlineWordCountModal.count;
+            this.offlineWordCountModal.show = false;
+            this.saveData();
+        },
+        openOfflineStyleModal() {
+            this.offlineStyleModal.isEditing = false;
+            this.offlineStyleModal.show = true;
+        },
+        closeOfflineStyleModal() {
+            if (this.offlineStyleModal.isEditing) {
+                this.offlineStyleModal.isEditing = false;
+            } else {
+                this.offlineStyleModal.show = false;
+            }
+        },
+        getActiveStyleTitle() {
+            const id = this.getOfflineSettings().styleId;
+            const style = this.offlineStylePresets.find(s => s.id === id);
+            return style ? style.title : '未选择文风';
+        },
+        getActiveStyleContent() {
+            const id = this.getOfflineSettings().styleId;
+            const style = this.offlineStylePresets.find(s => s.id === id);
+            return style ? style.content : '';
+        },
+        selectOfflineStyle(id) {
+            this.getOfflineSettings().styleId = id;
+            this.saveData();
+            this.offlineStyleModal.show = false;
+        },
+        addNewOfflineStyle() {
+            this.offlineStyleModal.editForm = { id: null, title: '', content: '' };
+            this.offlineStyleModal.isEditing = true;
+        },
+        editOfflineStyle(style) {
+            this.offlineStyleModal.editForm = { ...style };
+            this.offlineStyleModal.isEditing = true;
+        },
+        saveOfflineStyleEdit() {
+            const form = this.offlineStyleModal.editForm;
+            if (!form.title.trim() || !form.content.trim()) return this.showToast('标题和内容不能为空');
+            
+            if (form.id) {
+                const idx = this.offlineStylePresets.findIndex(s => s.id === form.id);
+                if (idx > -1) this.offlineStylePresets[idx] = { ...form };
+            } else {
+                form.id = 'style_' + Date.now();
+                this.offlineStylePresets.unshift({ ...form });
+            }
+            this.offlineStyleModal.isEditing = false;
+            this.saveData();
+            this.showToast('文风已保存');
+        },
+        deleteOfflineStyle(idx) {
+            this.showConfirm("确定删除该文风吗？", () => {
+                const deletedId = this.offlineStylePresets[idx].id;
+                this.offlineStylePresets.splice(idx, 1);
+                if (this.getOfflineSettings().styleId === deletedId) {
+                    this.getOfflineSettings().styleId = this.offlineStylePresets[0]?.id || null;
+                }
+                this.saveData();
+            });
         },
         getOfflineMessages() {
             const session = this.wechatState.activeSession;
@@ -5832,19 +5982,18 @@ Structure:
             
             this.offlineState.isGenerating = true;
             
-            const systemPrompt = `【沉浸式线下现实互动模式】
-你现在正在与我进行面对面的现实相处互动。
-你的真实名字是: ${friend ? friend.name : session.name}。你的设定: ${friend ? friend.bio : '无'}。
-我的名字是: ${mask.name}。我的设定: ${mask.bio}。
+            const systemPrompt = `【沉浸式高级小说演绎模式】
+你正在与我进行一场极度沉浸的互动。你的角色是: ${friend ? friend.name : session.name} (设定: ${friend ? friend.bio : '无'})。
+我的角色是: ${mask.name} (设定: ${mask.bio})。
 
 【本次写作绝对要求】
-1. 当前背景设定: ${settings.context}。
-2. 视角要求: 必须使用 ${settings.perspective} 来叙事。
-3. 文风要求: ${settings.style}。
-4. 字数要求: ${settings.wordCount}。
-5. 内容要求: 必须包含极度细腻的“环境描写、心理描写、神态描写、语言描写、动作描写、外貌描写”。不要只写对话，要像高质量的小说一样立体刻画当前场景和你的身体反应。
-6. ${isContinue ? '请直接紧接着你上一次的话语/动作，继续往下自然续写。' : '请根据最新剧情作出合理反应。'}
-7. 输出格式: 纯文本输出，自然分段。不要使用 JSON 格式！绝对禁止出现 AI 助手提示语！`;
+1. 叙事视角约束：
+   - 当你描写你自己（${friend ? friend.name : session.name}）的动作和心理时，必须强制使用【${settings.perspectiveAi}】。
+   - 当你描写我（${mask.name}）时，必须强制使用【${settings.perspectiveUser}】。
+2. 强制字数约束: 你的输出必须严格控制在 ${settings.wordCount} 字左右（允许±50字误差）。如果剧情即将太早结束，请务必利用极其细腻的心理描写和神态细节来扩充字数，不可敷衍！
+3. 核心文风要求: ${this.getActiveStyleContent()}
+4. 综合要求: 融合环境、心理、神态、语言、动作描写。${isContinue ? '直接接着你上一次的动作/话语无缝往下续写。' : '根据最新剧情做出你的合理反应。'}
+5. 格式要求: 纯文本直接输出，自然分段，严禁使用 JSON，严禁输出多余的引导语或机器特征！`;
 
             let messages =[{ role: 'system', content: systemPrompt }];
             
