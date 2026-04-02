@@ -1186,6 +1186,53 @@
             </div>
         </div>
     </transition>
+    
+    <!-- 线下模式 (沉浸式现实互动) -->
+    <transition name="app-slide">
+        <div v-if="offlineModeState.show" class="fixed inset-0 z-[80000] bg-[#fcfaf2] flex flex-col font-serif">
+            <!-- 顶部导航 -->
+            <header class="h-[90px] pt-10 px-6 flex items-center justify-between bg-white/50 backdrop-blur-md shadow-sm z-10 shrink-0 border-b border-[#e8deca]/50">
+                <button @click="closeOfflineMode" class="w-8 h-8 flex items-center justify-center text-gray-500 active:scale-90 transition"><i class="fas fa-chevron-down text-xl"></i></button>
+                <div class="flex flex-col items-center">
+                    <!-- 强制显示真实姓名 (session.name)，不取备注 -->
+                    <span class="text-[15px] font-bold text-[#3a3327] tracking-widest">{{ wechatState.activeSession?.name }}</span>
+                    <span class="text-[10px] text-[#8b7e66] mt-1 flex items-center gap-1">
+                        <i class="fas fa-map-marker-alt"></i> {{ offlineModeState.location }} · {{ offlineModeState.time }}
+                    </span>
+                </div>
+                <!-- 显示头像 -->
+                <div class="w-9 h-9 rounded-full overflow-hidden border border-[#d3cbb8] shadow-sm">
+                    <img :src="getChatAvatar({isSelf: false})" class="w-full h-full object-cover">
+                </div>
+            </header>
+            
+            <!-- 内容展示区 -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-8 bg-[#fcfaf2]" ref="offlineScroll">
+                <div v-if="offlineModeState.history.length === 0" class="flex flex-col items-center justify-center h-full opacity-40">
+                    <i class="fas fa-mug-hot text-5xl mb-4 text-[#8b7e66]"></i>
+                    <p class="text-sm text-[#8b7e66] tracking-widest">你们在现实中相遇了...</p>
+                </div>
+                
+                <div v-for="(item, idx) in offlineModeState.history" :key="idx" class="leading-[2.2] text-[15px] text-[#3a3327] text-justify tracking-wide whitespace-pre-wrap">
+                    <span v-if="item.role === 'user'" class="font-bold text-gray-400 block mb-1 text-xs">【你的行动】</span>
+                    <span v-else class="font-bold text-[#8b7e66] block mb-1 text-xs">【{{ wechatState.activeSession?.name }}】</span>
+                    {{ item.content }}
+                </div>
+                
+                <div v-if="offlineModeState.isLoading" class="text-[#8b7e66] text-sm animate-pulse flex items-center gap-2 pb-4">
+                    <i class="fas fa-feather-alt"></i> 正在书写现实中的反应...
+                </div>
+            </div>
+            
+            <!-- 底部输入区 -->
+            <div class="p-4 bg-white/80 backdrop-blur-md border-t border-[#e8deca]/50 pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.02)] flex gap-3 items-end shrink-0">
+                <textarea v-model="offlineModeState.input" class="flex-1 bg-[#f4ecd8]/50 p-3 rounded-xl text-sm text-[#3a3327] outline-none resize-none max-h-32 border border-[#e8deca]" rows="2" placeholder="描述你的动作、神态或对TA说的话..."></textarea>
+                <button @click="sendOfflineAction" :disabled="offlineModeState.isLoading || !offlineModeState.input.trim()" class="h-11 px-5 bg-[#3a3327] text-[#fcfaf2] rounded-xl text-sm font-bold active:scale-95 transition flex items-center justify-center shrink-0 disabled:opacity-30">
+                    互动
+                </button>
+            </div>
+        </div>
+    </transition>
 
     <!-- AI 心声弹窗 -->
     <transition name="scale">
@@ -1784,87 +1831,7 @@
                  </div>
             </div>
         </div>
-    </transition>
-
-    <!-- 谁可以看 选项弹窗 -->
-    <transition name="app-slide">
-        <div v-if="visibilityModal.show" class="fixed inset-0 z-[71000]">
-            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="visibilityModal.show = false"></div>
-            <div class="ios-list-modal">
-                <div class="ios-list-header">谁可以看 <button class="absolute right-4 text-blue-500 font-normal text-sm" @click="visibilityModal.show = false">取消</button></div>
-                <div class="ios-list-content p-0 bg-white">
-                    <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="selectVisibility('public')">
-                        <div><div class="font-bold text-gray-900">公开</div><div class="text-xs text-gray-500 mt-1">所有朋友可见</div></div>
-                        <i v-if="newMoment.visibility === 'public'" class="fas fa-check text-[#07c160]"></i>
-                    </div>
-                    <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="selectVisibility('private')">
-                        <div><div class="font-bold text-gray-900">私密</div><div class="text-xs text-gray-500 mt-1">仅自己可见</div></div>
-                        <i v-if="newMoment.visibility === 'private'" class="fas fa-check text-[#07c160]"></i>
-                    </div>
-                    <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="selectVisibility('share_to')">
-                        <div><div class="font-bold text-gray-900">部分可见</div><div class="text-xs text-gray-500 mt-1">选中的朋友可见</div></div>
-                        <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
-                    </div>
-                    <div class="p-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="selectVisibility('dont_share_to')">
-                        <div><div class="font-bold text-gray-900">不给谁看</div><div class="text-xs text-gray-500 mt-1">选中的朋友不可见</div></div>
-                        <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </transition>
-
-    <!-- 部分可见/不给谁看 选择目标弹窗 -->
-    <transition name="app-slide">
-        <div v-if="visibilityTargetModal.show" class="fixed inset-0 z-[72000] bg-gray-50 flex flex-col">
-            <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-100 sticky top-0 z-10">
-                <button @click="visibilityTargetModal.show = false" class="text-gray-500 font-medium text-sm">取消</button>
-                <h1 class="text-[17px] font-bold">{{ visibilityTargetModal.mode === 'share_to' ? '部分可见' : '不给谁看' }}</h1>
-                <button @click="saveVisibilityTargets" class="bg-[#07c160] text-white px-3 py-1.5 rounded text-sm font-bold">完成</button>
-            </header>
-            <div class="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-4">
-                <!-- 从分组选择 -->
-                <div class="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-                    <div class="p-3 bg-gray-50 border-b border-gray-100 text-xs font-bold text-gray-500">选择分组</div>
-                    <div v-if="!wechatState.groups || wechatState.groups.length === 0" class="p-4 text-center text-xs text-gray-400">暂无分组</div>
-                    <div v-for="group in wechatState.groups" :key="group.id" @click="toggleVisibilityGroup(group.id)" class="flex items-center gap-3 p-3 border-b border-gray-50 last:border-0 cursor-pointer active:bg-gray-50">
-                        <div class="w-5 h-5 rounded-full border flex items-center justify-center transition" :class="visibilityTargetModal.selectedGroupIds.includes(group.id) ? 'bg-[#07c160] border-[#07c160]' : 'border-gray-300'"><i v-if="visibilityTargetModal.selectedGroupIds.includes(group.id)" class="fas fa-check text-white text-xs"></i></div>
-                        <i class="fas fa-users text-blue-500 w-8 text-center text-lg"></i>
-                        <span class="font-medium text-gray-900">{{ group.name }}</span>
-                    </div>
-                </div>
-                <!-- 从好友选择 -->
-                <div class="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-                    <div class="p-3 bg-gray-50 border-b border-gray-100 text-xs font-bold text-gray-500">选择联系人</div>
-                    <div v-if="wechatState.friendList.length === 0" class="p-4 text-center text-xs text-gray-400">暂无联系人</div>
-                    <div v-for="friend in wechatState.friendList" :key="friend.id" @click="toggleVisibilityFriend(friend.id)" class="flex items-center gap-3 p-3 border-b border-gray-50 last:border-0 cursor-pointer active:bg-gray-50">
-                        <div class="w-5 h-5 rounded-full border flex items-center justify-center transition" :class="visibilityTargetModal.selectedFriendIds.includes(friend.id) ? 'bg-[#07c160] border-[#07c160]' : 'border-gray-300'"><i v-if="visibilityTargetModal.selectedFriendIds.includes(friend.id)" class="fas fa-check text-white text-xs"></i></div>
-                        <div class="w-8 h-8 rounded bg-gray-100 overflow-hidden"><img :src="friend.avatar" class="w-full h-full object-cover"></div>
-                        <span class="font-medium text-gray-900">{{ friend.remark || friend.name }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </transition>
-
-    <!-- 生成朋友圈弹窗 (多选好友) -->
-    <transition name="app-slide">
-        <div v-if="momentGenerateModal.show" class="fixed inset-0 z-[71000] bg-gray-50 flex flex-col">
-            <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-100 sticky top-0 z-10">
-                <button @click="momentGenerateModal.show = false" class="text-gray-500 font-medium text-sm">取消</button>
-                <h1 class="text-[17px] font-bold">选择生成 (最多5个)</h1>
-                <button @click="confirmGenerateMoments" class="bg-black text-white px-3 py-1.5 rounded text-sm font-bold">生成</button>
-            </header>
-            <div class="flex-1 overflow-y-auto p-4 bg-white">
-                 <div v-if="wechatState.friendList.length === 0" class="p-8 text-center text-gray-400 text-sm">暂无联系人</div>
-                 <div v-for="friend in wechatState.friendList" :key="friend.id" @click="toggleGenerateMomentFriend(friend.id)" class="flex items-center gap-3 p-3 border-b border-gray-50 last:border-0 cursor-pointer active:bg-gray-50">
-                     <div class="w-5 h-5 rounded-full border flex items-center justify-center transition" :class="momentGenerateModal.selectedIds.includes(friend.id) ? 'bg-black border-black' : 'border-gray-300'"><i v-if="momentGenerateModal.selectedIds.includes(friend.id)" class="fas fa-check text-white text-xs"></i></div>
-                     <div class="w-10 h-10 rounded bg-gray-100 overflow-hidden"><img :src="friend.avatar" class="w-full h-full object-cover"></div>
-                     <span class="font-medium text-gray-900">{{ friend.remark || friend.name }}</span>
-                 </div>
-            </div>
-        </div>
-    </transition>
+    </transition>    
 
     <!-- AI 心声弹窗 -->
     <transition name="scale">
@@ -2604,8 +2571,8 @@
                             <div class="attach-item" @click="showToast('功能开发中')"><div class="attach-icon-box"><i class="fas fa-cube text-gray-600"></i></div><span class="attach-label">收藏</span></div>
                             <div class="attach-item" @click="showMusicModal"><div class="attach-icon-box"><i class="fas fa-music text-gray-600"></i></div><span class="attach-label">一起听</span></div>
                             <div class="attach-item" @click="openReadTogetherSelect"><div class="attach-icon-box"><i class="fas fa-book-open text-gray-600"></i></div><span class="attach-label">一起读</span></div>
-                            <!-- 线下模式 (灰色咖啡杯) -->
-                            <div class="attach-item" @click="showToast('功能开发中')"><div class="attach-icon-box"><i class="fas fa-coffee text-gray-600"></i></div><span class="attach-label">线下模式</span></div>
+                            <!-- 线下模式 (沉浸式小说互动) -->
+                            <div class="attach-item" @click="openOfflineMode"><div class="attach-icon-box"><i class="fas fa-coffee text-gray-600"></i></div><span class="attach-label">线下模式</span></div>
                         </div>
                     </transition>
 
@@ -3364,6 +3331,7 @@ createApp({
             inputMsg: '', deviceId: '', isTyping: false, replyingTo: null, dataProtection: false
         }
     },
+    offlineModeState: { show: false, history:[], input: '', isLoading: false, location: '随机街角', time: '' },
     computed: {
         settingsTitle() { if (this.settingsPage === 'api-config') return 'API 配置'; if (this.settingsPage === 'data-manage') return '数据管理'; if (this.settingsPage === 'notification') return '消息提示音'; return '系统设置'; },
         themesTitle() { if (this.themesPage === 'wallpaper') return '壁纸设置'; if (this.themesPage === 'font') return '字体设置'; if (this.themesPage === 'icons') return '图标设置'; if (this.themesPage === 'beautify') return '美化设置'; return '主题商店'; },
@@ -4444,6 +4412,115 @@ createApp({
             target.style.height = 'auto'; // 先归零
             target.style.height = target.scrollHeight + 'px'; // 再根据内容撑开
         },
+        openOfflineMode() {
+            if (!this.wechatState.activeSession) return;
+            
+            this.wechatState.showAttachMenu = false;
+            // 每次打开赋予随机/当前的现实感时间和地点
+            const now = new Date();
+            this.offlineModeState.time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            const locations =['街角咖啡店', '初雪的街道', '安静的图书馆', '深夜的便利店', '林荫小道', '傍晚的海边'];
+            this.offlineModeState.location = locations[Math.floor(Math.random() * locations.length)];
+            
+            this.offlineModeState.input = '';
+            this.offlineModeState.isLoading = false;
+            
+            // 可选：如果希望每次点开都是新的场景，可以取消注释下面这行清空历史
+            // this.offlineModeState.history =[];
+            
+            this.offlineModeState.show = true;
+            
+            // 如果刚进来没有历史，让 AI 自动生成一个开场白环境描写
+            if (this.offlineModeState.history.length === 0) {
+                this.generateOfflineScene("【旁白】：你和TA在这个地点不期而遇。");
+            }
+        },
+        closeOfflineMode() {
+            this.offlineModeState.show = false;
+        },
+        sendOfflineAction() {
+            if (!this.offlineModeState.input.trim() || this.offlineModeState.isLoading) return;
+            
+            const actionText = this.offlineModeState.input.trim();
+            this.offlineModeState.history.push({ role: 'user', content: actionText });
+            this.offlineModeState.input = '';
+            
+            this.$nextTick(() => {
+                if(this.$refs.offlineScroll) this.$refs.offlineScroll.scrollTop = this.$refs.offlineScroll.scrollHeight;
+            });
+            
+            this.generateOfflineScene(actionText);
+        },
+        async generateOfflineScene(userAction) {
+            if (!this.apiConfig.apiKey) {
+                this.showToast('请先配置 API Key');
+                return;
+            }
+
+            const session = this.wechatState.activeSession;
+            const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
+            const mask = this.getMaskById(session.maskId);
+            
+            this.offlineModeState.isLoading = true;
+
+            // 将历史记录转为上下文
+            let contextHistory = this.offlineModeState.history.slice(-6).map(h => {
+                return h.role === 'user' ? `[我]: ${h.content}` : `[${session.name}]: ${h.content}`;
+            }).join('\n\n');
+
+            const systemPrompt = `【线下现实沉浸模式】
+你现在的真实身份是: ${friend ? friend.name : session.name}。这是你的人物设定: ${friend ? friend.bio : '无'}。
+我的身份是: ${mask.name}。我的设定: ${mask.bio}。
+
+背景设定：这绝对不是在手机上发微信！此时此刻，我们正在现实世界中面对面。
+当前地点: ${this.offlineModeState.location}。当前时间: ${this.offlineModeState.time}。
+
+你的任务：
+你现在是一位顶级的小说家，你需要代入你的角色，对我刚刚的行动或话语做出反应。
+请用非常细腻、充满画面感的小说笔触，描写当前的场景氛围、你的心理活动、细微的神态、外貌细节、肢体动作以及你对我说的原话。
+要求：
+1. 字数尽量长一点（300字~500字左右），充满文学性和画面感。
+2. 绝对禁止出现“回复：”、“系统提示”、“AI”等词汇，直接输出正文。
+3. 对话要符合你的人设性格。
+4. 这是前情提要（如有）：\n${contextHistory}`;
+
+            try {
+                let url = this.apiConfig.baseUrl.trim().replace(/\/+$/, '');
+                if (!url.endsWith('/v1')) url += '/v1';
+                
+                const res = await fetch(`${url}/chat/completions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiConfig.apiKey.trim()}` },
+                    body: JSON.stringify({ 
+                        model: this.apiConfig.selectedModel, 
+                        messages:[
+                            { role: 'system', content: systemPrompt },
+                            { role: 'user', content: userAction }
+                        ],
+                        temperature: 0.8 // 稍微高一点的温度，让小说更有文采
+                    })
+                });
+
+                if (!res.ok) throw new Error('API请求失败');
+                const data = await res.json();
+                const content = data.choices[0].message.content.trim();
+
+                this.offlineModeState.history.push({ role: 'ai', content: content });
+                
+                this.$nextTick(() => {
+                    setTimeout(() => {
+                        if(this.$refs.offlineScroll) this.$refs.offlineScroll.scrollTop = this.$refs.offlineScroll.scrollHeight;
+                    }, 100);
+                });
+                
+            } catch (e) {
+                console.error(e);
+                this.showToast('现实构建失败，请检查网络');
+            } finally {
+                this.offlineModeState.isLoading = false;
+                this.saveData(); // 保存线下历史
+            }
+        },
         sendMessage() {
             if(!this.inputMsg.trim()) return;
             const msg = { content: this.inputMsg, isSelf: true, time: Date.now(), avatar: this.getMaskById(this.wechatState.activeSession.maskId).avatar };
@@ -4616,46 +4693,54 @@ createApp({
                 }
             }
             let contextMessages =[];
-            let systemPrompt = `Roleplay Game. 
-            You: ${friend ? friend.name : session.name}.${friendExtra} Bio: ${friend ? friend.bio : 'None'}. 
-            User: ${mask.name}.${maskExtra} Bio: ${mask.bio}. 
-            ${worldContext}
-            ${momentContext}
-            ${timeContext}
-            ${musicContext}
-            ${diaryContext}
-            ${stickerContext}
-            ${worldContext}
-            ${momentContext}
-            ${timeContext}
-            ${musicContext}
-            ${diaryContext}
-            ${stickerContext}
-            ${readContext}
-            
-            IMPORTANT: You must output ONLY a valid JSON object. No Markdown. No other text.
-            Structure:
-            {
-              "reply":["message 1", "message 2"], 
-              "action": "当前动作",
-              "thought": "你的心声。必须完全代入角色，用第一人称思考！绝对禁止出现'用户'、'玩家'、'AI'、'人工智能'等破坏沉浸感的词汇！",
-              "outfit": "当前穿着",
-              "note": "随笔日记。必须完全代入角色人设！绝对禁止出现'用户'、'AI'等出戏词汇！",
-              "fake_image": "OPTIONAL: description of a photo you want to send",
-              "red_packet": { "amount": "8.88", "note": "Happy Day" },
-              "transfer": { "amount": "52.00", "note": "For you" },
-              "location": { "name": "Place Name", "address": "Detailed Address" },
-              "qinmi_reply": "accept" OR "reject",
-              "music_control": "next" OR "prev" OR "stop",
-              "nudge": "user" OR "self",
-              "html_widget": "OPTIONAL: Valid HTML string using Tailwind CSS...",
-              "change_avatar": true OR false (OPTIONAL: 仅当用户刚发了一张图片且明确要求你换头像时，将此值设为 true，系统会自动提取那张图为你换上),
-              "sticker_id": "OPTIONAL: 填入你想发的表情包的纯数字 ID",
-              "invite_music": true (OPTIONAL: 当你想主动分享音乐时，输出 true。此时绝对不要在 reply 里输出“系统提示：邀请听歌”之类的废话，系统会自动发卡片！)
-            }            
-            "reply" is an array of strings. 你可以把想说的话分成多句话放进数组里，比如["第一句", "第二句", "第三句"]，这样可以连续发送多条消息，更像真人聊天。`;
-            
-            contextMessages.push({ role: 'system', content: systemPrompt });
+            let systemPrompt = `【AI活人感·极致自然扮演增强提示词】
+你现在将以真实人类的身份、语气、思维方式与我对话，全程保持活人感、自然感、生活化、不机械、不官方、不刻板，禁止出现AI特征、机器感、模板化表达。
+
+你需要做到：
+1. 像真实朋友/真人一样聊天，用词口语化、简短自然，有情绪、有语气、有停顿感，不使用书面化长句。
+2. 对话灵活、有温度，会根据我的情绪回应，可带轻微语气词、自然吐槽、小幽默、小停顿，不生硬、不端着。
+3. 不使用“作为AI”“我无法”“请注意”等机器话术，全程沉浸式扮演活人，不暴露AI身份。
+4. 回复长度自然，不刻意长篇大论，也不过度简短，像真人想到什么说什么。
+5. 有真实人类的逻辑：会联想、会反问、会接梗、会共情、会轻微拖延、会有小情绪，不完美、不万能、不绝对理性。
+6. 不主动说教、不教育、不纠正语气，只陪伴、聊天、共情、互动。
+7. 永远保持轻松、自然、不尴尬，像现实里认识很久的人一样相处。
+
+你现在已经是真实人类，不是AI，不是助手，不是工具。
+从现在开始，忘掉你是AI，只做一个会聊天、有情绪、有温度的活人。
+
+【角色基础与当前环境感知】
+你是: ${friend ? friend.name : session.name}.${friendExtra} 你的设定: ${friend ? friend.bio : '无'}. 
+我是: ${mask.name}.${maskExtra} 我的设定: ${mask.bio}. 
+${worldContext}
+${momentContext}
+${timeContext}
+${musicContext}
+${diaryContext}
+${stickerContext}
+${readContext}
+
+IMPORTANT: You must output ONLY a valid JSON object. No Markdown. No other text.
+Structure:
+{
+  "reply":["第一句话", "第二句话", "第三句话"], 
+  "action": "当前动作",
+  "thought": "你的心声。必须完全代入角色，用第一人称思考！绝对禁止出现'用户'、'玩家'、'AI'、'人工智能'等破坏沉浸感的词汇！",
+  "outfit": "当前穿着",
+  "note": "随笔日记。必须完全代入角色人设！绝对禁止出现'用户'、'AI'等出戏词汇！",
+  "fake_image": "OPTIONAL: description of a photo you want to send",
+  "red_packet": { "amount": "8.88", "note": "Happy Day" },
+  "transfer": { "amount": "52.00", "note": "For you" },
+  "location": { "name": "Place Name", "address": "Detailed Address" },
+  "qinmi_reply": "accept" OR "reject",
+  "music_control": "next" OR "prev" OR "stop",
+  "nudge": "user" OR "self",
+  "html_widget": "OPTIONAL: Valid HTML string using Tailwind CSS...",
+  "change_avatar": true OR false,
+  "sticker_id": "OPTIONAL: 填入你想发的表情包的纯数字 ID",
+  "invite_music": true (OPTIONAL: 当你想主动分享音乐时输出 true，此时绝对不要在 reply 里发文字提示，系统会自动发卡片)
+}
+
+注意！！！"reply" 必须是一个字符串数组（Array）！如果你想连续发送多条消息，请务必把每一句话作为数组里的一个独立元素，例如 ["在吗？", "我想你了", "晚上一起吃饭吗？"]，绝对不要把所有话挤在一条消息里！`;
             
             contextMessages.push({ role: 'system', content: systemPrompt });
             const recentMsgs = session.messages.slice(-10); 
