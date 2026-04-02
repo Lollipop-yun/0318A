@@ -5394,6 +5394,16 @@ createApp({
             a.click(); 
         },
         triggerImport() { this.$refs.importInput.click(); },
+        async saveDataNow() {
+            // 核心修复：如果正在执行导入数据操作，绝对禁止网页自动覆盖保存旧数据！
+            if (window._isImporting) return;
+            
+            try { 
+                const dataStr = JSON.stringify(this.$data);
+                try { localStorage.setItem('onyunx_hybrid_v40', dataStr); } catch(err) { console.warn("浅层缓存已满，不影响大数据库"); }
+                await this.writeSafeData('onyunx_hybrid_v40', dataStr);
+            } catch(e) { console.warn("保存失败", e); } 
+        },
         handleImport(e) { 
             const f = e.target.files[0]; 
             if(!f) return; 
@@ -5403,7 +5413,6 @@ createApp({
                     const rawText = ev.target.result; 
                     if (!rawText || rawText.trim() === '') throw new Error('文件内容为空');
                     
-                    // 第一层保护：测试 JSON 是否能被安全解析
                     let parsedData;
                     try {
                         parsedData = JSON.parse(rawText);
@@ -5411,18 +5420,19 @@ createApp({
                         throw new Error('解析失败，文件已损坏或非标准 JSON 格式');
                     }
                     
-                    // 第二层保护：数据核验，防止导入不相干的错乱文件
                     if (!parsedData.wechatState && !parsedData.homeProfile) {
                         throw new Error('这不是 Aovein OS 的存档文件');
                     }
 
-                    // 核心导入：双管齐下存入两层数据库
+                    // 核心修复：设置全局拦截标志，防止网页刷新时触发 beforeunload 保存旧数据覆盖新数据！
+                    window._isImporting = true;
+
                     let saveSuccess = false;
                     try { 
                         localStorage.setItem('onyunx_hybrid_v40', rawText); 
                         saveSuccess = true;
                     } catch(err) { 
-                        console.warn('LocalStorage导入受限 (可能由于图库超大)'); 
+                        console.warn('LocalStorage导入受限'); 
                     }
                     
                     try { 
@@ -5432,20 +5442,20 @@ createApp({
                         console.error('IndexedDB 底层导入受阻', err); 
                     }
                     
-                    // 如果任意一个数据库写入成功，即视为成功并重启应用生效
                     if (saveSuccess) {
                         this.showToast('数据导入成功！系统即将刷新应用'); 
                         setTimeout(() => location.reload(), 1500); 
                     } else {
+                        window._isImporting = false; // 失败时解除拦截
                         throw new Error('设备可用存储空间不足，无法保存存档');
                     }
                 } catch(e) { 
+                    window._isImporting = false; // 失败时解除拦截
                     console.error("跨浏览器导入错误: ", e);
                     this.showToast(`导入中止: ${e.message}`); 
                 } 
             }; 
-            // 默认采用最安全的兼容读取方式
-            r.readAsText(f); 
+            r.readAsText(f, 'UTF-8'); 
             e.target.value = ''; 
         },
         
@@ -5499,13 +5509,68 @@ createApp({
             window._saveTimer = setTimeout(() => { this.saveDataNow(); }, 1500); 
         },
         async saveDataNow() {
+            // 核心修复：如果正在执行导入数据操作，绝对禁止网页自动覆盖保存旧数据！
+            if (window._isImporting) return;
+            
             try { 
                 const dataStr = JSON.stringify(this.$data);
-                // 必须用 try catch 独立包裹 localStorage，防止它报错卡死后面的执行！
                 try { localStorage.setItem('onyunx_hybrid_v40', dataStr); } catch(err) { console.warn("浅层缓存已满，不影响大数据库"); }
-                // 强制写入无限容量的底层数据库
                 await this.writeSafeData('onyunx_hybrid_v40', dataStr);
             } catch(e) { console.warn("保存失败", e); } 
+        },
+        handleImport(e) { 
+            const f = e.target.files[0]; 
+            if(!f) return; 
+            const r = new FileReader(); 
+            r.onload = async (ev) => { 
+                try { 
+                    const rawText = ev.target.result; 
+                    if (!rawText || rawText.trim() === '') throw new Error('文件内容为空');
+                    
+                    let parsedData;
+                    try {
+                        parsedData = JSON.parse(rawText);
+                    } catch(err) {
+                        throw new Error('解析失败，文件已损坏或非标准 JSON 格式');
+                    }
+                    
+                    if (!parsedData.wechatState && !parsedData.homeProfile) {
+                        throw new Error('这不是 Aovein OS 的存档文件');
+                    }
+
+                    // 核心修复：设置全局拦截标志，防止网页刷新时触发 beforeunload 保存旧数据覆盖新数据！
+                    window._isImporting = true;
+
+                    let saveSuccess = false;
+                    try { 
+                        localStorage.setItem('onyunx_hybrid_v40', rawText); 
+                        saveSuccess = true;
+                    } catch(err) { 
+                        console.warn('LocalStorage导入受限'); 
+                    }
+                    
+                    try { 
+                        await this.writeSafeData('onyunx_hybrid_v40', rawText); 
+                        saveSuccess = true;
+                    } catch(err) { 
+                        console.error('IndexedDB 底层导入受阻', err); 
+                    }
+                    
+                    if (saveSuccess) {
+                        this.showToast('数据导入成功！系统即将刷新应用'); 
+                        setTimeout(() => location.reload(), 1500); 
+                    } else {
+                        window._isImporting = false; // 失败时解除拦截
+                        throw new Error('设备可用存储空间不足，无法保存存档');
+                    }
+                } catch(e) { 
+                    window._isImporting = false; // 失败时解除拦截
+                    console.error("跨浏览器导入错误: ", e);
+                    this.showToast(`导入中止: ${e.message}`); 
+                } 
+            }; 
+            r.readAsText(f, 'UTF-8'); 
+            e.target.value = ''; 
         },
         async loadData() { 
             let dataStr = await this.readSafeData('onyunx_hybrid_v40');
