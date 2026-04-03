@@ -4601,6 +4601,7 @@ createApp({
                 this.diaryState.showGenerate = false;
                 this.diaryState.isWriting = false;
                 this.locationInputModal.show = false;
+                this.offlineState.show = false; // 修复退出时未关闭线下模式的BUG
             }, 300); 
         },
         navigateSettings(t) { if (t === 'back') { if (this.settingsPage === 'main') this.closeApp(); else this.settingsPage = 'main'; } else { this.settingsPage = t; } },
@@ -5139,9 +5140,14 @@ Structure:
                 let delay = 0;
                 segments.forEach((seg, index) => {
                     setTimeout(() => {
-                         if (this.currentApp !== 'wechat' || this.wechatState.activeNav !== 'room' || this.wechatState.activeSession.id !== session.id) {
-                             this.showGlobalNotification(session, seg);
+                         // 【修复BUG】必须把 msgType 声明放到最前面，否则下方检测推送时会抛出 ReferenceError 崩溃，导致消息无法存入！
+                         let msgType = 'text';
+                         let msgDuration = 0;
+                         if (seg.trim().length > 0 && Math.random() < 0.15) {
+                             msgType = 'voice';
+                             msgDuration = Math.max(1, Math.min(60, Math.ceil(seg.length / 3)));
                          }
+
                          // 判断是否不在当前聊天界面，或者浏览器被切到了手机后台 (document.hidden)
                          if (this.currentApp !== 'wechat' || this.wechatState.activeNav !== 'room' || this.wechatState.activeSession.id !== session.id || document.hidden) {
                              
@@ -5152,13 +5158,6 @@ Structure:
                              
                              // 只要满足条件，就向系统底层发送推送通知
                              this.sendPushNotification('微信新消息', session.name, msgType === 'voice' ? '[语音]' : seg.trim(), session.avatar);
-                         }
-                         
-                         let msgType = 'text';
-                         let msgDuration = 0;
-                         if (seg.trim().length > 0 && Math.random() < 0.15) {
-                             msgType = 'voice';
-                             msgDuration = Math.max(1, Math.min(60, Math.ceil(seg.length / 3)));
                          }
 
                          const aiMsg = { 
@@ -5366,7 +5365,14 @@ Structure:
         },
         jumpToChat(sessionId) {
             const session = this.wechatState.sessions.find(s => s.id === sessionId);
-            if (session) { this.openApp('wechat'); this.enterChatRoom(session); this.globalNotification.show = false; }
+            if (session) { 
+                this.openApp('wechat'); 
+                // 【加强稳定性】使用 nextTick 等待应用打开动画后再切入聊天室
+                this.$nextTick(() => { 
+                    this.enterChatRoom(session); 
+                });
+                this.globalNotification.show = false; 
+            }
         },
         showChatContextMenu(e, msg, index) {
             const rect = e.target.closest('.flex').getBoundingClientRect();
@@ -5902,6 +5908,7 @@ Structure:
             // 强制重置各种弹窗状态，解决幽灵卡死 Bug
             this.globalNotification.show = false;
             this.toast.show = false;
+            this.offlineState.show = false; // 修复一进微信就出现线下模式的BUG
             this.closeAllMenus();
 
             // 恢复系统级数据防清理状态
