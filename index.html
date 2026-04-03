@@ -2659,12 +2659,15 @@
             <!-- 线下模式 (Offline Mode) 全屏界面 -->
             <transition name="app-slide">
                 <div v-if="offlineState.show" class="absolute inset-0 z-[60000] bg-[#f9f9f9] flex flex-col font-serif">
-                    <!-- 顶栏 (胶囊风格还原) -->
+                    <!-- 顶栏 (胶囊风格还原 + 美化按钮) -->
                     <div class="pt-12 px-4 pb-2 bg-[#f9f9f9] shrink-0 z-10 sticky top-0">
                         <header class="h-[50px] px-5 flex items-center justify-between bg-white border border-gray-200 rounded-[25px] shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
                             <button @click="offlineState.show = false" class="flex items-center justify-center text-gray-500 hover:text-black transition"><i class="fas fa-arrow-left text-[17px]"></i></button>
                             <h1 class="font-medium text-[16px] text-gray-800 tracking-wider">线下模式</h1>
-                            <button @click="offlineState.settingsShow = true" class="flex items-center justify-center text-gray-500 hover:text-black transition"><i class="fas fa-sliders-h text-[17px]"></i></button>
+                            <div class="flex items-center gap-5">
+                                <button @click="offlineBeautifyConfig.show = true" class="flex items-center justify-center text-gray-500 hover:text-blue-500 transition"><i class="fas fa-palette text-[17px]"></i></button>
+                                <button @click="offlineState.settingsShow = true" class="flex items-center justify-center text-gray-500 hover:text-black transition"><i class="fas fa-sliders-h text-[17px]"></i></button>
+                            </div>
                         </header>
                     </div>
 
@@ -2675,7 +2678,8 @@
                             <p class="text-sm">进入线下现实相处模式...</p>
                         </div>
                         
-                        <div v-for="(msg, i) in getOfflineMessages()" :key="i" class="bg-white rounded-[20px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-100 relative group">
+                        <!-- 加了 offline-message-card 类名 -->
+                        <div v-for="(msg, i) in getOfflineMessages()" :key="i" class="bg-white rounded-[20px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-100 relative group offline-message-card">
                             <!-- 顶部信息栏 -->
                             <div class="flex justify-between items-start mb-4 border-b border-gray-50 pb-3">
                                 <div class="flex items-center gap-3">
@@ -2695,8 +2699,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <!-- 文本内容 -->
-                            <div class="text-[16px] leading-8 text-gray-800 whitespace-pre-wrap text-justify tracking-wide">
+                            <!-- 文本内容 (加了 offline-message-text 类名) -->
+                            <div class="text-[16px] leading-8 text-gray-800 whitespace-pre-wrap text-justify tracking-wide offline-message-text">
                                 {{ msg.content }}
                             </div>
                         </div>
@@ -2783,10 +2787,73 @@
                                 <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
                             </div>
                         </div>
+
+                        <!-- 禁忌词汇输入区 -->
+                        <div>
+                            <label class="text-xs text-gray-500 ml-1 font-bold">禁忌词汇限制 (避雷池)</label>
+                            <textarea v-model="getOfflineSettings().bannedWords" placeholder="填写不想出现的成语、套话、废话等 (用空格或逗号隔开)..." class="w-full h-16 bg-gray-50 p-3.5 rounded-xl text-[13px] border border-gray-200 mt-1 outline-none resize-none shadow-sm"></textarea>
+                        </div>
                         
                         <div class="flex gap-3 mt-2">
                             <button @click="offlineState.settingsShow = false" class="flex-1 py-3.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition">取消</button>
                             <button @click="offlineState.settingsShow = false; saveData()" class="flex-1 py-3.5 bg-black text-white rounded-xl text-sm font-bold shadow-md active:scale-95 transition">完成</button>
+                        </div>
+                    </div>
+                </div>
+            </transition>
+            
+            <!-- 线下专属：消息框美化弹窗 -->
+            <transition name="app-slide">
+                <div v-if="offlineBeautifyConfig.show" class="fixed inset-0 z-[82000] bg-gray-50 flex flex-col">
+                    <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-200 shrink-0 shadow-sm z-10">
+                        <button @click="offlineBeautifyConfig.show = false" class="w-8 h-8 flex items-center justify-center text-gray-800"><i class="fas fa-chevron-left text-lg"></i></button>
+                        <h1 class="font-bold text-[16px] text-gray-900">界面美化 (线下模式)</h1>
+                        <div class="w-8"></div>
+                    </header>
+                    <div class="flex-1 overflow-y-auto pb-safe flex flex-col p-4 gap-4">
+                        <!-- 预览区 -->
+                        <div class="bg-gray-100 rounded-2xl p-4 border border-gray-200 shrink-0">
+                            <div class="text-xs text-gray-400 mb-2 text-center font-bold">效果预览</div>
+                            <div class="bg-[#f4f4f4] rounded-xl p-4 shadow-inner">
+                                <div class="bg-white rounded-[20px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-100 relative offline-message-card">
+                                    <div class="flex items-center gap-3 mb-4 border-b border-gray-50 pb-3">
+                                        <div class="w-11 h-11 rounded-full bg-gray-200 overflow-hidden border border-gray-100"><i class="fas fa-robot flex h-full items-center justify-center text-gray-400 text-xl"></i></div>
+                                        <div class="flex flex-col"><span class="font-bold text-[15px] text-gray-900">某位少爷</span><span class="text-[11px] text-gray-400 font-mono mt-0.5">11:28</span></div>
+                                    </div>
+                                    <div class="text-[16px] leading-8 text-gray-800 whitespace-pre-wrap text-justify tracking-wide offline-message-text">他轻轻扣下茶盏，发出清脆的响声。这是线下模式的预览文本。你可以通过修改 CSS 来改变这个卡片的背景、字体颜色、边框、阴影等样式。</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 代码区 -->
+                        <div class="flex flex-col shrink-0">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-xs font-bold text-gray-500 ml-1">CSS 代码</span>
+                                <div class="flex gap-2">
+                                    <button @click="resetOfflineBeautify" class="text-[10px] text-red-500 font-bold active:opacity-50">恢复默认</button>
+                                    <button @click="copyOfflineBeautifyDefault" class="text-[10px] text-blue-500 font-bold active:opacity-50">复制源代码</button>
+                                </div>
+                            </div>
+                            <textarea v-model="offlineBeautifyConfig.tempCode" placeholder="输入 CSS 代码...\n例如: \n.offline-message-card { background: #f0f8ff !important; }" class="w-full h-32 bg-white shadow-sm p-3 rounded-xl text-xs font-mono border border-gray-200 outline-none resize-none mb-2"></textarea>
+                            <div class="flex gap-2 mb-2 shrink-0">
+                                <button @click="applyOfflineBeautify" class="flex-1 bg-black text-white py-2.5 rounded-xl text-xs font-bold active:scale-95 transition shadow-md">应用更改</button>
+                                <button @click="saveOfflineBeautifyPreset" class="w-20 bg-gray-200 text-gray-700 py-2.5 rounded-xl text-xs font-bold active:scale-95 transition">保存预设</button>
+                            </div>
+                        </div>
+
+                        <!-- 预设列表 -->
+                        <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 shrink-0 mb-10">
+                            <div class="p-3 border-b border-gray-50 bg-gray-50/50 text-xs font-bold text-gray-500">我的专属样式预设</div>
+                            <div v-if="offlineBeautifyConfig.presets.length === 0" class="p-6 text-center text-gray-400 text-xs">暂无预设</div>
+                            <div v-else class="divide-y divide-gray-50">
+                                <div v-for="(preset, idx) in offlineBeautifyConfig.presets" :key="idx" class="p-3 flex items-center justify-between">
+                                    <span class="font-bold text-gray-700 text-xs truncate">{{ preset.name }}</span>
+                                    <div class="flex items-center gap-2">
+                                        <button @click="loadOfflineBeautifyPreset(preset)" class="w-6 h-6 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-check text-[10px]"></i></button>
+                                        <button @click="deleteOfflineBeautifyPreset(idx)" class="w-6 h-6 rounded-full bg-red-50 text-red-500 flex items-center justify-center"><i class="fas fa-trash text-[10px]"></i></button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -3584,7 +3651,8 @@ createApp({
             offlineWordCountModal: { show: false, count: 300 },
             offlineStyleModal: { show: false, isEditing: false, editForm: { id: null, title: '', content: '' } },
             offlineStylePresets:[], 
-            offlinePerspectiveModal: { show: false, target: '' } 
+            offlinePerspectiveModal: { show: false, target: '' },
+            offlineBeautifyConfig: { show: false, tempCode: '', activeCSS: '', presets:[] }
         }
     },
     computed: {
@@ -4398,7 +4466,8 @@ createApp({
             if (styleTag) {
                 const bubbleCss = this.beautifyConfig.activeBubbleCSS || '';
                 const themeCss = this.beautifyConfig.activeThemeCSS || '';
-                styleTag.innerHTML = bubbleCss + '\n' + themeCss;
+                const offlineCss = this.offlineBeautifyConfig?.activeCSS || '';
+                styleTag.innerHTML = bubbleCss + '\n' + themeCss + '\n' + offlineCss;
             }
         },
         resetBeautify(type) {
@@ -5878,11 +5947,12 @@ Structure:
                     styleIds:[] 
                 };
             } else {
-                // 细粒度补全缺失的属性，防止对象被整体替换导致 Vue 响应式失效（也就是页面显示空白的元凶）
+                // 细粒度补全缺失的属性，防止对象被整体替换导致 Vue 响应式失效
                 if (session.offlineSettings.perspectiveAi === undefined) session.offlineSettings.perspectiveAi = '第一人称 (我)';
                 if (session.offlineSettings.perspectiveUser === undefined) session.offlineSettings.perspectiveUser = '第二人称 (你)';
                 if (session.offlineSettings.wordCount === undefined) session.offlineSettings.wordCount = 300;
                 if (!Array.isArray(session.offlineSettings.styleIds)) session.offlineSettings.styleIds =[];
+                if (session.offlineSettings.bannedWords === undefined) session.offlineSettings.bannedWords = ''; // <--- 新增这行，初始化禁忌词
                 
                 // 平滑兼容旧版单选逻辑
                 if (session.offlineSettings.styleId !== undefined) {
@@ -5894,6 +5964,52 @@ Structure:
             }
             return session.offlineSettings;
         },
+        
+        // --- 线下美化相关逻辑 (新增开始) ---
+        applyOfflineBeautify() {
+            this.offlineBeautifyConfig.activeCSS = this.offlineBeautifyConfig.tempCode;
+            this.updateDynamicStyles();
+            this.saveData();
+            this.showToast('线下模式样式已应用');
+        },
+        resetOfflineBeautify() {
+            this.offlineBeautifyConfig.activeCSS = '';
+            this.offlineBeautifyConfig.tempCode = '';
+            this.updateDynamicStyles();
+            this.saveData();
+            this.showToast('已恢复默认样式');
+        },
+        copyOfflineBeautifyDefault() {
+            const defaultCss = `/* 线下模式消息卡片整体背景与边框 */\n.offline-message-card {\n    background-color: #ffffff !important;\n    border-radius: 20px !important;\n    border: 1px solid #f3f4f6 !important;\n    box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important;\n}\n\n/* 线下模式正文文字颜色、大小、行高 */\n.offline-message-text {\n    color: #1f2937 !important;\n    font-size: 16px !important;\n    line-height: 2 !important;\n}`;
+            this.offlineBeautifyConfig.tempCode = defaultCss;
+            this.copyToClipboard(defaultCss);
+            this.showToast('默认源代码已填入框内并复制到剪切板');
+        },
+        saveOfflineBeautifyPreset() {
+            if(!this.offlineBeautifyConfig.tempCode) return this.showToast('代码为空');
+            this.showInput('保存美化预设', '', '请输入预设名称', (name) => {
+                if(name) {
+                    this.offlineBeautifyConfig.presets.push({ name: name, css: this.offlineBeautifyConfig.tempCode });
+                    this.saveData();
+                    this.showToast('预设已保存');
+                }
+            });
+        },
+        loadOfflineBeautifyPreset(preset) {
+            this.offlineBeautifyConfig.tempCode = preset.css;
+            this.offlineBeautifyConfig.activeCSS = preset.css;
+            this.updateDynamicStyles();
+            this.saveData();
+            this.showToast(`已应用预设: ${preset.name}`);
+        },
+        deleteOfflineBeautifyPreset(idx) {
+            this.showConfirm('删除此预设？', () => {
+                this.offlineBeautifyConfig.presets.splice(idx, 1);
+                this.saveData();
+            });
+        },
+        // --- 线下美化相关逻辑 (新增结束) ---
+
         openOfflinePerspectiveModal(target) {
             this.offlinePerspectiveModal.target = target;
             this.offlinePerspectiveModal.show = true;
@@ -5935,7 +6051,7 @@ Structure:
                     {
                         id: 'style_dushi',
                         title: '现代都市文风',
-                        content: '核心文风指令\n严格遵循现代都市文风，背景设定在当代城市生活，氛围真实接地气，带点烟火气与成年人的克制温柔，贴近现实生活节奏，不悬浮、不狗血、不脱离日常。\n\n细节文风正则\n1. 情感基调\n以成熟、内敛、平淡、微暖为主，自带成年人的清醒与温柔，少有激烈外放的情绪，多是细水长流的陪伴、 quietly 的心动与恰到好处的在意，可带一点现实的轻疲惫，但整体温暖舒展。\n2. 叙事节奏\n节奏平稳贴近现实，以都市日常碎片为主，不刻意制造强冲突，叙事自然流畅，注重心境与生活细节，氛围感真实松弛。\n3. 人物互动\n相处方式成熟得体，分寸感清晰，对话自然生活化，有成年人的试探、体贴、默契与温柔，不幼稚、不扭捏、不强行拉扯。\n4. 场景特征\n围绕公寓、地铁、写字楼、便利店、雨夜、路灯、咖啡、晚风、城市夜景、下班路等现代都市元素展开，充满城市生活气息。\n5. 语言风格\n文字简洁平实，偏生活化口语，细腻不矫情，干净不华丽，贴合现代都市语境，真实又温柔。'
+                        content: '核心文风指令\n严格遵循现代都市文风，背景设定在当代城市生活，氛围真实接地气，带点烟火气与成年人的克制温柔，贴近现实生活节奏，不悬浮、不狗血、不脱离日常。\n\n细节文风正则\n1. 情感基调\n以成熟、内敛、平淡、微暖为主，自带成年人的清醒与温柔，少有激烈外放的情绪，多是细水长流的陪伴、 安静地心动与恰到好处的在意，可带一点现实的轻疲惫，但整体温暖舒展。\n2. 叙事节奏\n节奏平稳贴近现实，以都市日常碎片为主，不刻意制造强冲突，叙事自然流畅，注重心境与生活细节，氛围感真实松弛。\n3. 人物互动\n相处方式成熟得体，分寸感清晰，对话自然生活化，有成年人的试探、体贴、默契与温柔，不幼稚、不扭捏、不强行拉扯。\n4. 场景特征\n围绕公寓、地铁、写字楼、便利店、雨夜、路灯、咖啡、晚风、城市夜景、下班路等现代都市元素展开，充满城市生活气息。\n5. 语言风格\n文字简洁平实，偏生活化口语，细腻不矫情，干净不华丽，贴合现代都市语境，真实又温柔。'
                     },
                     {
                         id: 'style_gaogan',
@@ -6106,9 +6222,10 @@ Structure:
    - 当你描写你自己（${friend ? friend.name : session.name}）的动作和心理时，必须强制使用【${settings.perspectiveAi}】。
    - 当你描写我（${mask.name}）时，必须强制使用【${settings.perspectiveUser}】。
 2. 强制字数约束: 你的输出必须严格控制在 ${settings.wordCount} 字左右（允许±50字误差）。如果剧情即将太早结束，请务必利用极其细腻的心理描写和神态细节来扩充字数，不可敷衍！
-3. 核心文风要求: ${this.getActiveStyleContent()}
+3. 核心文风要求: \n${this.getActiveStyleContent()}
 4. 综合要求: 融合环境、心理、神态、语言、动作描写。${isContinue ? '直接接着你上一次的动作/话语无缝往下续写。' : '根据最新剧情做出你的合理反应。'}
-5. 格式要求: 纯文本直接输出，自然分段，严禁使用 JSON，严禁输出多余的引导语或机器特征！`;
+5. 格式要求: 纯文本直接输出，自然分段，严禁使用 JSON，严禁输出多余的引导语或机器特征！
+${settings.bannedWords && settings.bannedWords.trim() ? `6. 【绝对禁忌词限制】: 生成内容中严禁出现以下任何词汇、成语或短句：[${settings.bannedWords}]。一旦违反体验将被严重破坏，请务必寻找同义词平替！` : ''}`;
 
             let messages =[{ role: 'system', content: systemPrompt }];
             
@@ -6175,17 +6292,17 @@ Structure:
             this.offlineState.isGenerating = true;
             this.showToast('AI 正在为您斟酌词句，请稍候...');
             
-            const systemPrompt = `【线下现实互动模式 - 用户代笔助手】
-当前背景设定: ${settings.context}。
+            const systemPrompt = `【沉浸式高级小说演绎模式 - 用户专属代笔】
 对方是: ${friend ? friend.name : session.name}。对方设定: ${friend ? friend.bio : '无'}。
 我是: ${mask.name}。我的设定: ${mask.bio}。
-你们正在进行一场线下沉浸式互动/跑团。
 
-你的任务是：扮演【${mask.name}】（也就是我），根据当前的剧情上下文，帮我写一段符合我设定的回应（可以包含语言、动作、心理描写等）。
-叙事视角：请使用 ${settings.perspective} 描写。
-文风：${settings.style}。
-字数：控制在 ${settings.wordCount} 内即可，不需要太长。
-要求：纯文本输出，直接输出你要写的情节内容，不要加任何前缀、引号或“这是为你代笔的内容”等废话。`;
+你的任务是：完全代入【${mask.name}】（也就是我）的身份，根据上下文剧情，帮我写出接下来的合理反应（包含语言、动作、心理描写等）。
+【写作要求】
+1. 视角要求：当你描写我（${mask.name}）时，必须使用【${settings.perspectiveUser}】；当你描写对方时，必须使用【${settings.perspectiveAi}】。
+2. 字数强制约束：严格控制在 ${settings.wordCount} 字左右（允许±50字误差）。
+3. 核心文风要求：\n${this.getActiveStyleContent()}
+4. 格式要求：直接输出代笔的正文内容，纯文本分段，严禁任何多余的开头结尾修饰语。
+${settings.bannedWords && settings.bannedWords.trim() ? `5. 【绝对禁忌词限制】: 生成内容中严禁出现以下任何词汇、成语或短句：[${settings.bannedWords}]。请务必寻找同义词避开雷区！` : ''}`;
 
             // 把过去的剧情当做上下文发给 AI
             let contextStr = "无历史剧情。";
