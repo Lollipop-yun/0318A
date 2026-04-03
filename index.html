@@ -2785,7 +2785,7 @@
                         </div>
                         
                         <div class="flex gap-3 mt-2">
-                            <button @click="offlineState.settingsShow = false" class="w-1/3 py-3.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition">取消</button>
+                            <button @click="offlineState.settingsShow = false" class="flex-1 py-3.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition">取消</button>
                             <button @click="offlineState.settingsShow = false; saveData()" class="flex-1 py-3.5 bg-black text-white rounded-xl text-sm font-bold shadow-md active:scale-95 transition">完成</button>
                         </div>
                     </div>
@@ -5868,24 +5868,30 @@ Structure:
         },
         getOfflineSettings() {
             const session = this.wechatState.activeSession;
-            if(!session) return {};
-            // 数据结构大升级：将 styleId 改为 styleIds 数组，加入人称
-            if(!session.offlineSettings || !session.offlineSettings.perspectiveAi) {
+            if (!session) return { wordCount: 300, perspectiveAi: '第一人称 (我)', perspectiveUser: '第二人称 (你)', styleIds:[] };
+            
+            if (!session.offlineSettings) {
                 session.offlineSettings = { 
                     wordCount: 300, 
                     perspectiveAi: '第一人称 (我)', 
                     perspectiveUser: '第二人称 (你)', 
                     styleIds:[] 
                 };
-            }
-            // 平滑兼容旧版单选
-            if (session.offlineSettings.styleId !== undefined) {
-                if (session.offlineSettings.styleId && !session.offlineSettings.styleIds) {
-                    session.offlineSettings.styleIds = [session.offlineSettings.styleId];
+            } else {
+                // 细粒度补全缺失的属性，防止对象被整体替换导致 Vue 响应式失效（也就是页面显示空白的元凶）
+                if (session.offlineSettings.perspectiveAi === undefined) session.offlineSettings.perspectiveAi = '第一人称 (我)';
+                if (session.offlineSettings.perspectiveUser === undefined) session.offlineSettings.perspectiveUser = '第二人称 (你)';
+                if (session.offlineSettings.wordCount === undefined) session.offlineSettings.wordCount = 300;
+                if (!Array.isArray(session.offlineSettings.styleIds)) session.offlineSettings.styleIds =[];
+                
+                // 平滑兼容旧版单选逻辑
+                if (session.offlineSettings.styleId !== undefined) {
+                    if (session.offlineSettings.styleId && session.offlineSettings.styleIds.length === 0) {
+                        session.offlineSettings.styleIds.push(session.offlineSettings.styleId);
+                    }
+                    delete session.offlineSettings.styleId;
                 }
-                delete session.offlineSettings.styleId;
             }
-            if (!session.offlineSettings.styleIds) session.offlineSettings.styleIds =[];
             return session.offlineSettings;
         },
         openOfflinePerspectiveModal(target) {
@@ -5908,6 +5914,17 @@ Structure:
             this.saveData();
         },
         openOfflineStyleModal() {
+            // 自动注入神级预设：“隐忍酸涩文风” (仅在列表为空且未注入过时触发)
+            if (this.offlineStylePresets.length === 0 && !this.offlineState.hasInjectedDefaultStyle) {
+                this.offlineStylePresets.push({
+                    id: 'style_yinren',
+                    title: '隐忍酸涩文风',
+                    content: '核心文风指令\n请严格遵循酸涩文文风进行内容生成，整体基调克制、细腻、带轻微钝痛感，情绪内敛不外放，文字清淡却藏着未说尽的委屈、遗憾与怅然，氛围偏安静、隐忍、微苦，不激烈、不狗血、不直白宣泄情绪。\n\n细节文风正则\n1. 情感基调\n以微涩、轻怅、淡憾为核心，情绪点到即止，不嘶吼、不崩溃、不浓烈煽情，保留心底未宣之于口的在意与落空，温柔中带一点凉，甜里裹一丝苦。\n2. 叙事节奏\n节奏舒缓平缓，侧重心理留白与细节暗示，多用环境、小动作、眼神映射内心，少直白心理描写，不堆砌辞藻，语言干净克制。\n3. 人物互动\n互动克制疏离又暗藏拉扯，话不说满、意不挑明，常有欲言又止、擦肩而过、默默注视、轻声试探后收回的举动，情感细腻敏感，带着小心翼翼的在意。\n4. 结局适配\n结局不强制BE，可平淡收尾、开放式留白、轻和解或浅圆满，但始终保留一丝未尽的酸涩余韵，不彻底甜腻、不强行圆满，留有淡淡余味。\n5. 语言风格\n文字简洁细腻，偏口语化但不粗俗，温柔清浅，带点文艺感，避免华丽浮夸、激烈冲突、狗血误会、直白告白，整体偏向安静、柔软、微苦的氛围感。'
+                });
+                this.offlineState.hasInjectedDefaultStyle = true;
+                this.saveData();
+            }
+            
             this.offlineStyleModal.isEditing = false;
             this.offlineStyleModal.show = true;
         },
@@ -5932,16 +5949,16 @@ Structure:
             const ids = this.getOfflineSettings().styleIds ||[];
             if (ids.length === 0) return '无需特定文风，自由发挥即可。';
             const selectedStyles = this.offlineStylePresets.filter(s => ids.includes(s.id));
-            // 将所有选中的文风组合成复合提示词交给大模型
-            return selectedStyles.map((s, index) => `${index + 1}. 【${s.title}】: ${s.content}`).join('\n');
+            return selectedStyles.map((s, index) => `${index + 1}. 【${s.title}】: ${s.content}`).join('\n\n');
         },
         toggleOfflineStyle(id) {
-            const ids = this.getOfflineSettings().styleIds;
-            const idx = ids.indexOf(id);
+            const settings = this.getOfflineSettings();
+            if (!Array.isArray(settings.styleIds)) settings.styleIds =[];
+            const idx = settings.styleIds.indexOf(id);
             if (idx > -1) {
-                ids.splice(idx, 1);
+                settings.styleIds.splice(idx, 1);
             } else {
-                ids.push(id);
+                settings.styleIds.push(id);
             }
             this.saveData();
         },
@@ -5970,15 +5987,20 @@ Structure:
         },
         deleteOfflineStyle(idx) {
             this.showConfirm("确定删除该文风吗？", () => {
-                const deletedId = this.offlineStylePresets[idx].id;
-                this.offlineStylePresets.splice(idx, 1);
-                
-                // 清理可能已经被勾选但在设置里的幽灵ID
-                const ids = this.getOfflineSettings().styleIds;
-                const idIndex = ids.indexOf(deletedId);
-                if (idIndex > -1) ids.splice(idIndex, 1);
-                
-                this.saveData();
+                try {
+                    const deletedId = this.offlineStylePresets[idx].id;
+                    this.offlineStylePresets.splice(idx, 1);
+                    
+                    // 安全清理已勾选记录，修复弹窗无法关闭的 JS 报错阻断 Bug
+                    const settings = this.getOfflineSettings();
+                    if (settings && Array.isArray(settings.styleIds)) {
+                        const idIndex = settings.styleIds.indexOf(deletedId);
+                        if (idIndex > -1) settings.styleIds.splice(idIndex, 1);
+                    }
+                    this.saveData();
+                } catch(e) {
+                    console.error("删除文风执行错误", e);
+                }
             });
         },
         getOfflineMessages() {
