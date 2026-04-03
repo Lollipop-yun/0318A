@@ -2748,7 +2748,7 @@
                 </div>
             </transition>
 
-            <!-- 线下模式设置弹窗 (重构版) -->
+            <!-- 线下模式设置弹窗 (高定版) -->
             <transition name="scale">
                 <div v-if="offlineState.settingsShow" class="fixed inset-0 z-[81000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
                     <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl p-6 flex flex-col gap-4">
@@ -2756,18 +2756,16 @@
                         
                         <div class="flex gap-3">
                             <div class="flex-1"><label class="text-xs text-gray-500 ml-1 font-bold">对【角色】的称呼</label>
-                                <div @click="openOfflinePerspectiveModal('ai')" class="w-full bg-gray-50 p-3.5 rounded-xl text-sm border border-gray-200 mt-1 cursor-pointer flex justify-between items-center active:bg-gray-100 transition shadow-sm">
-                                    <span class="text-gray-800 font-bold truncate">{{ getOfflineSettings().perspectiveAi }}</span>
-                                    <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
-                                </div>
-                            </div>
+                            <div @click="openOfflinePerspectiveModal('Ai')" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 mt-1 cursor-pointer flex justify-between items-center active:bg-gray-100 transition">
+                                <span class="text-gray-800 font-bold">{{ getOfflineSettings().perspectiveAi }}</span>
+                                <i class="fas fa-chevron-down text-gray-400 text-[10px]"></i>
+                            </div></div>
                             
                             <div class="flex-1"><label class="text-xs text-gray-500 ml-1 font-bold">对【我】的称呼</label>
-                                <div @click="openOfflinePerspectiveModal('user')" class="w-full bg-gray-50 p-3.5 rounded-xl text-sm border border-gray-200 mt-1 cursor-pointer flex justify-between items-center active:bg-gray-100 transition shadow-sm">
-                                    <span class="text-gray-800 font-bold truncate">{{ getOfflineSettings().perspectiveUser }}</span>
-                                    <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
-                                </div>
-                            </div>
+                            <div @click="openOfflinePerspectiveModal('User')" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 mt-1 cursor-pointer flex justify-between items-center active:bg-gray-100 transition">
+                                <span class="text-gray-800 font-bold">{{ getOfflineSettings().perspectiveUser }}</span>
+                                <i class="fas fa-chevron-down text-gray-400 text-[10px]"></i>
+                            </div></div>
                         </div>
                         
                         <div>
@@ -2786,9 +2784,33 @@
                             </div>
                         </div>
                         
-                        <div class="flex gap-3 mt-4">
-                            <button @click="offlineState.settingsShow = false" class="flex-1 py-3.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition">取消</button>
+                        <div class="flex gap-3 mt-2">
+                            <button @click="offlineState.settingsShow = false" class="w-1/3 py-3.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition">取消</button>
                             <button @click="offlineState.settingsShow = false; saveData()" class="flex-1 py-3.5 bg-black text-white rounded-xl text-sm font-bold shadow-md active:scale-95 transition">完成</button>
+                        </div>
+                    </div>
+                </div>
+            </transition>
+
+            <!-- 线下专属：人称选择弹窗 -->
+            <transition name="app-slide">
+                <div v-if="offlinePerspectiveModal.show" class="fixed inset-0 z-[82000]">
+                    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="offlinePerspectiveModal.show = false"></div>
+                    <div class="ios-list-modal">
+                        <div class="ios-list-header">选择指代人称 <button class="absolute right-4 text-gray-500 font-normal text-sm" @click="offlinePerspectiveModal.show = false">取消</button></div>
+                        <div class="ios-list-content p-0 bg-white">
+                            <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="selectOfflinePerspective('第一人称 (我)')">
+                                <span class="text-gray-900 font-medium">第一人称 (我)</span>
+                                <i v-if="getOfflineSettings()['perspective' + offlinePerspectiveModal.target] === '第一人称 (我)'" class="fas fa-check text-[#07c160]"></i>
+                            </div>
+                            <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="selectOfflinePerspective('第二人称 (你)')">
+                                <span class="text-gray-900 font-medium">第二人称 (你)</span>
+                                <i v-if="getOfflineSettings()['perspective' + offlinePerspectiveModal.target] === '第二人称 (你)'" class="fas fa-check text-[#07c160]"></i>
+                            </div>
+                            <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="selectOfflinePerspective('第三人称 (TA/名字)')">
+                                <span class="text-gray-900 font-medium">第三人称 (TA/名字)</span>
+                                <i v-if="getOfflineSettings()['perspective' + offlinePerspectiveModal.target] === '第三人称 (TA/名字)'" class="fas fa-check text-[#07c160]"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2807,44 +2829,26 @@
                     </div>
                 </div>
             </transition>
-            
-            <!-- 线下专属：人称选择弹窗 -->
-            <transition name="app-slide">
-                <div v-if="offlinePerspectiveModal.show" class="fixed inset-0 z-[83000]">
-                    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="offlinePerspectiveModal.show = false"></div>
-                    <div class="ios-list-modal">
-                        <div class="ios-list-header">选择称呼 <button class="absolute right-4 text-blue-500 font-normal text-sm" @click="offlinePerspectiveModal.show = false">取消</button></div>
-                        <div class="ios-list-content p-0 bg-white">
-                            <div v-for="p in['第一人称 (我)', '第二人称 (你)', '第三人称 (TA)']" :key="p" class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="selectOfflinePerspective(p)">
-                                <span class="text-gray-900 font-medium">{{ p }}</span>
-                                <i v-if="offlinePerspectiveModal.selected === p" class="fas fa-check text-[#07c160]"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </transition>
 
             <!-- 线下专属：文风预设库弹窗 -->
             <transition name="app-slide">
                 <div v-if="offlineStyleModal.show" class="fixed inset-0 z-[82000] bg-gray-50 flex flex-col">
                     <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-200 shrink-0 z-10 shadow-sm">
                         <button @click="closeOfflineStyleModal" class="w-8 h-8 flex items-center justify-center text-gray-800"><i class="fas fa-chevron-left"></i></button>
-                        <h1 class="font-bold text-[16px] text-gray-900">{{ offlineStyleModal.isEditing ? '编辑文风' : '文风预设库 (多选)' }}</h1>
+                        <h1 class="font-bold text-[16px] text-gray-900">{{ offlineStyleModal.isEditing ? '编辑文风' : '文风预设库' }}</h1>
                         <button v-if="!offlineStyleModal.isEditing" @click="addNewOfflineStyle" class="w-8 h-8 flex items-center justify-center text-gray-800"><i class="fas fa-plus"></i></button>
                         <button v-else @click="saveOfflineStyleEdit" class="text-blue-600 font-bold text-sm px-2">保存</button>
                     </header>
                     
-                    <!-- 列表模式 -->
+                    <!-- 列表模式 (支持多选) -->
                     <div v-if="!offlineStyleModal.isEditing" class="flex-1 overflow-y-auto p-4 space-y-3">
-                        <div v-if="offlineStylePresets.length === 0" class="text-center text-gray-400 mt-20 text-xs">暂无文风，请点击右上角添加</div>
+                        <div v-if="offlineStylePresets.length === 0" class="text-center text-gray-400 mt-20 text-xs">暂无文风预设，请点击右上角 "+" 添加</div>
                         <div v-for="(style, idx) in offlineStylePresets" :key="style.id" class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm relative group cursor-pointer active:bg-gray-50" @click="toggleOfflineStyle(style.id)">
                             <div class="flex justify-between items-start mb-2">
                                 <div class="flex items-center gap-2">
-                                    <!-- 多选打勾 -->
-                                    <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center transition" :class="{'bg-black border-black': getOfflineSettings().styleIds && getOfflineSettings().styleIds.includes(style.id)}">
-                                        <i v-if="getOfflineSettings().styleIds && getOfflineSettings().styleIds.includes(style.id)" class="fas fa-check text-white text-[10px]"></i>
+                                    <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center transition" :class="{'bg-black border-black': (getOfflineSettings().styleIds ||[]).includes(style.id)}">
+                                        <i v-if="(getOfflineSettings().styleIds ||[]).includes(style.id)" class="fas fa-check text-white text-[10px]"></i>
                                     </div>
-                        
                                     <h3 class="font-bold text-gray-900 text-sm">{{ style.title }}</h3>
                                 </div>
                                 <div class="flex gap-3 text-gray-400">
@@ -3578,9 +3582,9 @@ createApp({
             inputMsg: '', deviceId: '', isTyping: false, replyingTo: null, dataProtection: false,
             offlineState: { show: false, input: '', settingsShow: false, isGenerating: false, showContinueMenu: false },
             offlineWordCountModal: { show: false, count: 300 },
-            offlinePerspectiveModal: { show: false, target: 'ai', selected: '' },
             offlineStyleModal: { show: false, isEditing: false, editForm: { id: null, title: '', content: '' } },
-            offlineStylePresets:[]
+            offlineStylePresets:[], 
+            offlinePerspectiveModal: { show: false, target: '' } 
         }
     },
     computed: {
@@ -5865,8 +5869,7 @@ Structure:
         getOfflineSettings() {
             const session = this.wechatState.activeSession;
             if(!session) return {};
-            
-            // 数据结构升级兼容
+            // 数据结构大升级：将 styleId 改为 styleIds 数组，加入人称
             if(!session.offlineSettings || !session.offlineSettings.perspectiveAi) {
                 session.offlineSettings = { 
                     wordCount: 300, 
@@ -5875,33 +5878,25 @@ Structure:
                     styleIds:[] 
                 };
             }
-            
-            // 旧版本遗留字段兼容转换为数组
-            if (session.offlineSettings.styleId) {
-                session.offlineSettings.styleIds =[session.offlineSettings.styleId];
+            // 平滑兼容旧版单选
+            if (session.offlineSettings.styleId !== undefined) {
+                if (session.offlineSettings.styleId && !session.offlineSettings.styleIds) {
+                    session.offlineSettings.styleIds = [session.offlineSettings.styleId];
+                }
                 delete session.offlineSettings.styleId;
             }
-            if (!session.offlineSettings.styleIds) {
-                session.offlineSettings.styleIds =[];
-            }
-            
+            if (!session.offlineSettings.styleIds) session.offlineSettings.styleIds =[];
             return session.offlineSettings;
         },
-        
         openOfflinePerspectiveModal(target) {
             this.offlinePerspectiveModal.target = target;
-            this.offlinePerspectiveModal.selected = target === 'ai' ? this.getOfflineSettings().perspectiveAi : this.getOfflineSettings().perspectiveUser;
             this.offlinePerspectiveModal.show = true;
         },
         selectOfflinePerspective(val) {
-            if (this.offlinePerspectiveModal.target === 'ai') {
-                this.getOfflineSettings().perspectiveAi = val;
-            } else {
-                this.getOfflineSettings().perspectiveUser = val;
-            }
+            this.getOfflineSettings()['perspective' + this.offlinePerspectiveModal.target] = val;
+            this.saveData();
             this.offlinePerspectiveModal.show = false;
         },
-
         openOfflineWordCountModal() {
             this.offlineWordCountModal.count = this.getOfflineSettings().wordCount;
             this.offlineWordCountModal.show = true;
@@ -5910,8 +5905,8 @@ Structure:
             if (this.offlineWordCountModal.count < 10) return this.showToast('字数太少了吧');
             this.getOfflineSettings().wordCount = this.offlineWordCountModal.count;
             this.offlineWordCountModal.show = false;
+            this.saveData();
         },
-
         openOfflineStyleModal() {
             this.offlineStyleModal.isEditing = false;
             this.offlineStyleModal.show = true;
@@ -5923,43 +5918,33 @@ Structure:
                 this.offlineStyleModal.show = false;
             }
         },
-        
         getActiveStyleTitle() {
             const ids = this.getOfflineSettings().styleIds ||[];
-            if (ids.length === 0) return '自由发挥 (未选择)';
-            if (ids.length > 2) return `已综合 ${ids.length} 种文风`;
-            
-            const titles = ids.map(id => {
-                const s = this.offlineStylePresets.find(x => x.id === id);
-                return s ? s.title : '';
-            }).filter(Boolean);
-            
-            return titles.join(' + ') || '自由发挥 (未选择)';
+            if (ids.length === 0) return '未选择文风 (默认发挥)';
+            const selectedStyles = this.offlineStylePresets.filter(s => ids.includes(s.id));
+            if (selectedStyles.length <= 2) {
+                return selectedStyles.map(s => s.title).join(' + ');
+            } else {
+                return `已选 ${selectedStyles.length} 个文风`;
+            }
         },
         getActiveStyleContent() {
             const ids = this.getOfflineSettings().styleIds ||[];
-            if (ids.length === 0) return '自由发挥，顺其自然。';
-            
-            const contents = ids.map(id => {
-                const s = this.offlineStylePresets.find(x => x.id === id);
-                return s ? s.content : '';
-            }).filter(Boolean);
-            
-            // 组合多个文风的内容
-            return contents.join(' ；同时结合：');
+            if (ids.length === 0) return '无需特定文风，自由发挥即可。';
+            const selectedStyles = this.offlineStylePresets.filter(s => ids.includes(s.id));
+            // 将所有选中的文风组合成复合提示词交给大模型
+            return selectedStyles.map((s, index) => `${index + 1}. 【${s.title}】: ${s.content}`).join('\n');
         },
-        
         toggleOfflineStyle(id) {
             const ids = this.getOfflineSettings().styleIds;
             const idx = ids.indexOf(id);
             if (idx > -1) {
-                ids.splice(idx, 1); // 取消选择
+                ids.splice(idx, 1);
             } else {
-                ids.push(id); // 加入选择
+                ids.push(id);
             }
             this.saveData();
         },
-        
         addNewOfflineStyle() {
             this.offlineStyleModal.editForm = { id: null, title: '', content: '' };
             this.offlineStyleModal.isEditing = true;
@@ -5988,10 +5973,10 @@ Structure:
                 const deletedId = this.offlineStylePresets[idx].id;
                 this.offlineStylePresets.splice(idx, 1);
                 
-                // 从已选列表中清理掉被删除的 ID
+                // 清理可能已经被勾选但在设置里的幽灵ID
                 const ids = this.getOfflineSettings().styleIds;
-                const activeIdx = ids.indexOf(deletedId);
-                if (activeIdx > -1) ids.splice(activeIdx, 1);
+                const idIndex = ids.indexOf(deletedId);
+                if (idIndex > -1) ids.splice(idIndex, 1);
                 
                 this.saveData();
             });
