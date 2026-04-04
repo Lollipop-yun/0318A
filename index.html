@@ -2178,37 +2178,37 @@
                          </div>
                      </div>
                      
-                     <!-- 右侧：4个 App 网格 (去除了白底卡片，保留透明底) -->
-                     <div class="flex-1 h-full grid grid-cols-2 gap-x-2 gap-y-0 content-between py-1.5">
+                     <!-- 右侧：4个 App 网格 (恢复白底卡片，完美对齐左侧) -->
+                     <div class="flex-1 h-full grid grid-cols-2 gap-x-2 content-between py-0.5">
                          <!-- App 1: 情侣空间 -->
-                         <div class="flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition" @click="showToast('情侣空间')">
-                             <div class="w-[45px] h-[45px] flex items-center justify-center overflow-hidden">
-                                 <!-- 更换了全新的透明底情侣空间图标 -->
-                                 <img src="https://pic1.imgdb.cn/item/69ceb6496ccec478dfaee763.png" class="w-full h-full object-contain drop-shadow-sm">
+                         <div class="flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition" @click="showToast('情侣空间')">
+                             <div class="w-[46px] h-[46px] bg-white rounded-2xl shadow-[0_2px_8px_rgba(200,180,190,0.1)] border border-[#fdf5f7] flex items-center justify-center overflow-hidden">
+                                 <!-- 换回纯代码 FontAwesome 图标，彻底告别 404 -->
+                                 <i class="fas fa-heart text-[#d6b7be] text-2xl"></i>
                              </div>
                              <span class="text-[10px] font-bold text-[#8c7a7e]">情侣空间</span>
                          </div>
                          
                          <!-- App 2: 游戏大厅 -->
-                         <div class="flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition" @click="showToast('游戏大厅')">
-                             <div class="w-[45px] h-[45px] flex items-center justify-center overflow-hidden">
-                                 <i class="fas fa-gamepad text-[#e8d5d9] text-[34px] drop-shadow-md"></i>
+                         <div class="flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition" @click="showToast('游戏大厅')">
+                             <div class="w-[46px] h-[46px] bg-white rounded-2xl shadow-[0_2px_8px_rgba(200,180,190,0.1)] border border-[#fdf5f7] flex items-center justify-center overflow-hidden">
+                                 <i class="fas fa-gamepad text-[#e8d5d9] text-xl"></i>
                              </div>
                              <span class="text-[10px] font-bold text-[#8c7a7e]">游戏大厅</span>
                          </div>
                          
                          <!-- App 3: 占位 -->
-                         <div class="flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition" @click="showToast('待开发...')">
-                             <div class="w-[45px] h-[45px] flex items-center justify-center overflow-hidden">
-                                 <i class="fas fa-cube text-[#e8d5d9] text-[30px] drop-shadow-md"></i>
+                         <div class="flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition" @click="showToast('待开发...')">
+                             <div class="w-[46px] h-[46px] bg-white rounded-2xl shadow-[0_2px_8px_rgba(200,180,190,0.1)] border border-[#fdf5f7] flex items-center justify-center overflow-hidden">
+                                 <i class="fas fa-box-open text-[#e8d5d9] text-xl"></i>
                              </div>
                              <span class="text-[10px] font-bold text-[#8c7a7e]">占位</span>
                          </div>
                          
                          <!-- App 4: 占位 -->
-                         <div class="flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition" @click="showToast('待开发...')">
-                             <div class="w-[45px] h-[45px] flex items-center justify-center overflow-hidden">
-                                 <i class="fas fa-ghost text-[#e8d5d9] text-[30px] drop-shadow-md"></i>
+                         <div class="flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition" @click="showToast('待开发...')">
+                             <div class="w-[46px] h-[46px] bg-white rounded-2xl shadow-[0_2px_8px_rgba(200,180,190,0.1)] border border-[#fdf5f7] flex items-center justify-center overflow-hidden">
+                                 <i class="fas fa-compass text-[#e8d5d9] text-xl"></i>
                              </div>
                              <span class="text-[10px] font-bold text-[#8c7a7e]">占位</span>
                          </div>
