@@ -2069,59 +2069,60 @@
              </div> <!-- 第一页结束 -->
              
              <!-- 第二页 (向左滑动显示) -->
-             <div class="w-full h-full shrink-0 snap-center flex flex-col items-center overflow-y-auto scrollbar-hide relative pb-[120px] pt-12 px-5">
+             <div class="w-full h-full shrink-0 snap-center flex flex-col items-center overflow-y-auto scrollbar-hide relative pb-[120px] pt-8 px-5">
                  
-                 <!-- 顶部粉色气泡卡片 -->
-                 <div class="w-full bg-[#fdfafb] rounded-[30px] shadow-[0_8px_30px_rgba(200,180,190,0.15)] mt-12 relative flex flex-col items-center pb-5 pt-14 border border-[#fceef2]">
+                 <!-- 顶部粉色气泡卡片 (整体变小、往上移) -->
+                 <div class="w-[90%] max-w-[340px] bg-[#fdfafb] rounded-[28px] shadow-[0_8px_30px_rgba(200,180,190,0.15)] mt-6 relative flex flex-col items-center pb-4 pt-12 border border-[#fceef2]">
                      
-                     <!-- 绝对定位的头像 -->
-                     <div class="absolute -top-12 left-1/2 -translate-x-1/2 w-[90px] h-[90px] rounded-full border-[3px] border-[#ffe6eb] shadow-sm overflow-hidden bg-white cursor-pointer z-10" @click="triggerPage2AvatarUpload">
+                     <!-- 绝对定位的头像 (更换为和第一页相似的默认头像) -->
+                     <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-[80px] h-[80px] rounded-full border-[3px] border-[#ffe6eb] shadow-sm overflow-hidden bg-gray-100 cursor-pointer z-10 flex items-center justify-center" @click="triggerPage2AvatarUpload">
                          <img v-if="page2Profile.avatar" :src="page2Profile.avatar" class="w-full h-full object-cover">
-                         <img v-else src="https://pic1.imgdb.cn/item/69ba80aab96fa53fd04c3771.png" class="w-full h-full object-cover opacity-50 grayscale">
+                         <i v-else class="fas fa-user text-gray-300 text-3xl"></i>
                      </div>
                      
-                     <!-- 心情气泡与小圆点尾巴 -->
-                     <div class="absolute -top-2 left-[calc(50%+40px)] px-4 py-1.5 bg-white border border-[#fceef2] rounded-full text-[#a8989c] text-[11px] font-bold shadow-sm cursor-pointer z-20" @click="editPage2Profile('status')">
+                     <!-- 心情气泡与小圆点尾巴 (向右上角移动，悬空不挨着头像) -->
+                     <div class="absolute -top-7 left-[calc(50%+46px)] px-3.5 py-1 bg-white border border-[#fceef2] rounded-full text-[#a8989c] text-[11px] font-bold shadow-sm cursor-pointer z-20" @click="editPage2Profile('status')">
                          {{ page2Profile.status }}
                      </div>
-                     <div class="absolute top-5 left-[calc(50%+30px)] w-2.5 h-2.5 bg-white border border-[#fceef2] rounded-full z-20 shadow-sm"></div>
+                     <!-- 连接小圆点 (作为气泡的小尾巴) -->
+                     <div class="absolute -top-2 left-[calc(50%+42px)] w-2 h-2 bg-white border border-[#fceef2] rounded-full z-20 shadow-sm"></div>
                      
                      <!-- 气温、电量、心形图标行 -->
-                     <div class="w-full px-5 flex justify-between items-center mb-4">
+                     <div class="w-full px-5 flex justify-between items-center mb-3">
                          <!-- 左侧：气温与电量 -->
-                         <div class="flex gap-2.5 text-[#b09a9f] font-bold text-[11px]">
-                             <div class="bg-[#fcf3f5] px-3.5 py-1.5 rounded-full">{{ weatherTemp }}</div>
-                             <div class="bg-[#fcf3f5] px-3.5 py-1.5 rounded-full">{{ statusBar.batteryLevel }}%</div>
+                         <div class="flex gap-2 text-[#b09a9f] font-bold text-[11px]">
+                             <div class="bg-[#fcf3f5] px-3 py-1 rounded-full">{{ weatherTemp }}</div>
+                             <div class="bg-[#fcf3f5] px-3 py-1 rounded-full">{{ statusBar.batteryLevel }}%</div>
                          </div>
                          
-                         <!-- 右侧：三个爱心伪图标 -->
-                         <div class="flex gap-2">
+                         <!-- 右侧：三个爱心伪图标 (缩小爱心，放大蓝牙) -->
+                         <div class="flex gap-1.5">
                              <!-- Wifi -->
-                             <div class="relative w-[30px] h-[30px] flex items-center justify-center text-[#c2acb1] text-[10px]">
-                                 <svg class="absolute inset-0 text-[#fcf3f5] w-full h-full scale-[1.3]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                             <div class="relative w-[26px] h-[26px] flex items-center justify-center text-[#c2acb1] text-[10px]">
+                                 <svg class="absolute inset-0 text-[#fcf3f5] w-full h-full scale-[1.1]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                                  <i class="relative z-10 fas fa-wifi"></i>
                              </div>
                              <!-- 信号 -->
-                             <div class="relative w-[30px] h-[30px] flex items-center justify-center text-[#c2acb1] text-[10px]">
-                                 <svg class="absolute inset-0 text-[#fcf3f5] w-full h-full scale-[1.3]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                             <div class="relative w-[26px] h-[26px] flex items-center justify-center text-[#c2acb1] text-[10px]">
+                                 <svg class="absolute inset-0 text-[#fcf3f5] w-full h-full scale-[1.1]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                                  <i class="relative z-10 fas fa-broadcast-tower"></i>
                              </div>
                              <!-- 蓝牙 -->
-                             <div class="relative w-[30px] h-[30px] flex items-center justify-center text-[#c2acb1] text-[10px]">
-                                 <svg class="absolute inset-0 text-[#fcf3f5] w-full h-full scale-[1.3]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                             <div class="relative w-[26px] h-[26px] flex items-center justify-center text-[#c2acb1] text-[13px]">
+                                 <svg class="absolute inset-0 text-[#fcf3f5] w-full h-full scale-[1.1]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                                  <i class="relative z-10 fab fa-bluetooth-b"></i>
                              </div>
                          </div>
                      </div>
                      
-                     <!-- 名字与修改按钮居中 -->
-                     <div class="flex items-center gap-2 mb-5">
-                         <span class="text-[#8c7a7e] font-bold text-[14px] tracking-wide">{{ page2Profile.name }}</span>
+                     <!-- 名字与修改按钮居中 (缩小名字字体) -->
+                     <div class="flex items-center gap-2 mb-4">
+                         <span class="text-[#8c7a7e] font-bold text-[12px] tracking-wide">{{ page2Profile.name }}</span>
                          <span class="text-[9px] text-[#b09a9f] bg-[#fcf3f5] px-2 py-0.5 rounded-full cursor-pointer font-bold active:scale-95 transition" @click="editPage2Profile('name')">修改</span>
                      </div>
                      
                      <!-- 底部操作栏 -->
-                     <div class="w-[90%] bg-[#fcf3f5] rounded-xl py-3 flex justify-around items-center text-[#a8989c] text-[11px] font-bold">
+                     <div class="w-[92%] bg-[#fcf3f5] rounded-xl py-2.5 flex justify-around items-center text-[#a8989c] text-[11px] font-bold">
                          <div class="flex items-center gap-1.5 cursor-pointer active:scale-95 transition" @click="showToast('功能开发中')">
                              <i class="far fa-edit"></i> 修改资料
                          </div>
@@ -5868,8 +5869,8 @@ Structure:
         editPage2Profile(f) { let m = { 'name': '修改昵称', 'status': '修改心情状态' }; this.showInput(m[f], this.page2Profile[f], "请输入...", (v) => { if(v){ this.page2Profile[f]=v; this.saveData(); } }); },
         async fetchWeather() {
             try {
-                // 使用无需密钥的天气接口，根据访问IP自动获取当地气温（带摄氏度符号）
-                const res = await fetch('https://wttr.in/?format=%t');
+                // 使用无需密钥的天气接口，加上 &m 参数强制返回摄氏度(Metric)
+                const res = await fetch('https://wttr.in/?format=%t&m');
                 if(res.ok) {
                     const temp = await res.text();
                     this.weatherTemp = temp.trim();
