@@ -2136,6 +2136,82 @@
                          </div>
                      </div>
                  </div>
+
+                 <!-- 新增：下方的左右分栏结构 -->
+                 <div class="w-[90%] max-w-[340px] mt-5 flex gap-4 items-stretch">
+                     <!-- 左侧：好友申请 Widget 卡片 -->
+                     <div class="flex-1 bg-white rounded-[24px] shadow-[0_4px_15px_rgba(200,180,190,0.1)] p-3.5 flex flex-col items-center relative border border-[#fdf5f7]">
+                         <!-- 顶部栏 -->
+                         <div class="w-full flex justify-between items-center mb-1.5">
+                             <div class="px-2.5 py-0.5 bg-[#fdf5f7] rounded-full text-[#d6b7be] text-[10px] font-bold cursor-pointer" @click="editPage2Widget('title')">{{ page2Widget.title }}</div>
+                             <div class="flex gap-1 text-[#fceef2] text-[13px]">
+                                 <i class="far fa-heart"></i>
+                                 <i class="far fa-heart"></i>
+                             </div>
+                             <div class="w-[18px] h-[18px] rounded-full bg-[#fdfafb] flex items-center justify-center text-[#fceef2] text-[10px] shadow-sm"><i class="fas fa-times"></i></div>
+                         </div>
+                         
+                         <!-- 时间 (动态读取系统时间转换为 AM/PM) -->
+                         <div class="text-[#d6b7be] text-[10px] font-bold mb-2">{{ formatAMPM(statusBar.time) }}</div>
+                         
+                         <!-- 图片与左右箭头 -->
+                         <div class="w-full flex items-center justify-between mb-3">
+                             <div class="w-5 h-5 rounded-full border-[1.5px] border-[#fceef2] flex items-center justify-center text-[#fceef2] text-[8px]"><i class="fas fa-arrow-left"></i></div>
+                             <div class="w-[75px] h-[75px] bg-[#fcf3f5] rounded-[14px] overflow-hidden cursor-pointer border border-[#fdf5f7]" @click="triggerPage2WidgetImgUpload">
+                                 <img v-if="page2Widget.image" :src="page2Widget.image" class="w-full h-full object-cover">
+                                 <i v-else class="fas fa-image flex h-full items-center justify-center text-[#fceef2] text-2xl"></i>
+                             </div>
+                             <div class="w-5 h-5 rounded-full border-[1.5px] border-[#fceef2] flex items-center justify-center text-[#fceef2] text-[8px]"><i class="fas fa-arrow-right"></i></div>
+                         </div>
+                         
+                         <!-- 提示文字 -->
+                         <div class="flex items-center gap-1.5 text-[#a8989c] text-[10px] font-bold mb-3.5 cursor-pointer" @click="editPage2Widget('msg')">
+                             <i class="fas fa-mobile-alt text-[11px] text-[#e8d5d9]"></i>
+                             <span class="truncate max-w-[100px]">{{ page2Widget.msg }}</span>
+                         </div>
+                         
+                         <!-- 底部按钮 -->
+                         <div class="w-full flex gap-3 px-1">
+                             <button class="flex-1 py-1.5 bg-[#fdf5f7] text-[#d6b7be] rounded-full text-[10px] font-bold active:scale-95 transition" @click="showToast('已同意')">同意</button>
+                             <button class="flex-1 py-1.5 bg-[#fdf5f7] text-[#d6b7be] rounded-full text-[10px] font-bold active:scale-95 transition" @click="showToast('已拒绝')">拒絕</button>
+                         </div>
+                     </div>
+                     
+                     <!-- 右侧：4个 App 网格 -->
+                     <div class="w-[125px] grid grid-cols-2 gap-x-2.5 gap-y-4 content-start pt-1">
+                         <!-- App 1: 情侣空间 -->
+                         <div class="flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition" @click="showToast('情侣空间')">
+                             <div class="w-[48px] h-[48px] rounded-2xl flex items-center justify-center overflow-hidden">
+                                 <img src="https://pic1.imgdb.cn/item/69ce738f6ccec478dfad0c03.jpg" class="w-full h-full object-cover rounded-2xl">
+                             </div>
+                             <span class="text-[10px] font-bold text-[#8c7a7e]">情侣空间</span>
+                         </div>
+                         
+                         <!-- App 2: 游戏大厅 -->
+                         <div class="flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition" @click="showToast('游戏大厅')">
+                             <div class="w-[48px] h-[48px] bg-white rounded-2xl shadow-[0_2px_8px_rgba(200,180,190,0.1)] border border-[#fdf5f7] flex items-center justify-center overflow-hidden">
+                                 <i class="fas fa-gamepad text-[#e8d5d9] text-2xl"></i>
+                             </div>
+                             <span class="text-[10px] font-bold text-[#8c7a7e]">游戏大厅</span>
+                         </div>
+                         
+                         <!-- App 3: 占位 -->
+                         <div class="flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition" @click="showToast('待开发...')">
+                             <div class="w-[48px] h-[48px] bg-white rounded-2xl shadow-[0_2px_8px_rgba(200,180,190,0.1)] border border-[#fdf5f7] flex items-center justify-center overflow-hidden">
+                                 <i class="fas fa-box-open text-[#e8d5d9] text-xl"></i>
+                             </div>
+                             <span class="text-[10px] font-bold text-[#8c7a7e]">占位</span>
+                         </div>
+                         
+                         <!-- App 4: 占位 -->
+                         <div class="flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition" @click="showToast('待开发...')">
+                             <div class="w-[48px] h-[48px] bg-white rounded-2xl shadow-[0_2px_8px_rgba(200,180,190,0.1)] border border-[#fdf5f7] flex items-center justify-center overflow-hidden">
+                                 <i class="fas fa-compass text-[#e8d5d9] text-xl"></i>
+                             </div>
+                             <span class="text-[10px] font-bold text-[#8c7a7e]">占位</span>
+                         </div>
+                     </div>
+                 </div>
              </div>
              
          </div> <!-- 滑动分页容器结束 -->
@@ -2145,6 +2221,7 @@
         
         <input type="file" ref="homeAvatarInput" accept="image/*" class="hidden" @change="handleHomeAvatarChange"><input type="file" ref="cardAvatarInput" accept="image/*" class="hidden" @change="handleCardAvatarChange"><input type="file" ref="widgetImageInput" accept="image/*" class="hidden" @change="handleWidgetImageChange">
         <input type="file" ref="page2AvatarInput" accept="image/*" class="hidden" @change="handlePage2AvatarChange">
+        <input type="file" ref="page2WidgetImgInput" accept="image/*" class="hidden" @change="handlePage2WidgetImgChange">
     </div>
 
     <!-- ================= 微信 (WeChat) App ================= -->
@@ -3725,6 +3802,7 @@ createApp({
             cardProfile: { name: '输入文字', id: '输入文字', bio: '你對我來說是宇宙，但我對你来说只是一顆星嗎？', status: '该用户已注销', avatar: '' },
             homeProfile: { name: '点击修改名字', id: 'username', bio: '点击修改个性签名', location: '未知星系', avatar: '' },
             page2Profile: { name: '兔耳抹眼泪_', status: '呆', avatar: '' },
+            page2Widget: { title: '福熊兒', image: '', msg: 'Kitty 向您提出了好友申請' },
             weatherTemp: '获取中..',
             homeConfig: { widgetTitle: '输入文字', rightWidgetTitle: '输入文字' },
             customWidgets: [ { id: 1, bubble: '状态', image: '', label: '组件A' }, { id: 2, bubble: '心情', image: '', label: '组件B' } ],
@@ -5867,6 +5945,22 @@ Structure:
         triggerPage2AvatarUpload() { if(this.$refs.page2AvatarInput) this.$refs.page2AvatarInput.click(); },
         async handlePage2AvatarChange(e) { const f=e.target.files[0]; if(!f)return; try { this.page2Profile.avatar = await compressImage(f); this.saveData(); } catch(e){} },
         editPage2Profile(f) { let m = { 'name': '修改昵称', 'status': '修改心情状态' }; this.showInput(m[f], this.page2Profile[f], "请输入...", (v) => { if(v){ this.page2Profile[f]=v; this.saveData(); } }); },
+        
+        // --- 第二页左侧应用卡片逻辑 ---
+        triggerPage2WidgetImgUpload() { if(this.$refs.page2WidgetImgInput) this.$refs.page2WidgetImgInput.click(); },
+        async handlePage2WidgetImgChange(e) { const f=e.target.files[0]; if(!f)return; try { this.page2Widget.image = await compressImage(f, 300); this.saveData(); } catch(e){} },
+        editPage2Widget(f) { let m = { 'title': '修改左上角名称', 'msg': '修改底部提示文字' }; this.showInput(m[f], this.page2Widget[f], "请输入...", (v) => { if(v){ this.page2Widget[f]=v; this.saveData(); } }); },
+        formatAMPM(timeStr) {
+            if (!timeStr) return '';
+            let [h, m] = timeStr.split(':');
+            let hour = parseInt(h);
+            let ampm = hour >= 12 ? '下午' : '上午';
+            let hour12 = hour % 12;
+            hour12 = hour12 ? hour12 : 12;
+            return `${String(hour12).padStart(2, '0')}:${m} ${ampm}`;
+        },
+        // -----------------------
+
         async fetchWeather() {
             try {
                 // 使用无需密钥的天气接口，加上 &m 参数强制返回摄氏度(Metric)
