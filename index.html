@@ -2137,10 +2137,10 @@
                      </div>
                  </div>
 
-                 <!-- 新增：下方的左右分栏结构 (强制固定高度，完美等高齐平) -->
+                 <!-- 新增：第一排左右分栏结构 -->
                  <div class="w-[90%] max-w-[340px] mt-6 flex gap-4 h-[145px]">
                      
-                     <!-- 左侧：好友申请 Widget 卡片 (高度拉满，内部元素自动均匀分布) -->
+                     <!-- 左侧：好友申请 Widget 卡片 -->
                      <div class="w-[145px] h-full bg-white rounded-[24px] shadow-[0_4px_15px_rgba(200,180,190,0.1)] py-2.5 px-3 flex flex-col items-center justify-between border border-[#fdf5f7]">
                          <!-- 顶部栏 -->
                          <div class="w-full flex justify-between items-center">
@@ -2151,10 +2151,8 @@
                              </div>
                              <div class="w-[16px] h-[16px] rounded-full bg-[#fdfafb] flex items-center justify-center text-[#fceef2] text-[8px] shadow-sm"><i class="fas fa-times"></i></div>
                          </div>
-                         
                          <!-- 时间 (动态读取系统时间) -->
                          <div class="text-[#d6b7be] text-[10px] font-bold">{{ formatAMPM(statusBar.time) }}</div>
-                         
                          <!-- 图片与左右箭头 -->
                          <div class="w-full flex items-center justify-between px-1">
                              <div class="w-4 h-4 rounded-full border-[1.5px] border-[#fceef2] flex items-center justify-center text-[#fceef2] text-[7px]"><i class="fas fa-arrow-left"></i></div>
@@ -2164,13 +2162,11 @@
                              </div>
                              <div class="w-4 h-4 rounded-full border-[1.5px] border-[#fceef2] flex items-center justify-center text-[#fceef2] text-[7px]"><i class="fas fa-arrow-right"></i></div>
                          </div>
-                         
                          <!-- 提示文字 -->
                          <div class="flex items-center gap-1 text-[#a8989c] text-[9px] font-bold cursor-pointer" @click="editPage2Widget('msg')">
                              <i class="fas fa-mobile-alt text-[10px] text-[#e8d5d9]"></i>
                              <span class="truncate max-w-[80px]">{{ page2Widget.msg }}</span>
                          </div>
-                         
                          <!-- 底部按钮 -->
                          <div class="w-full flex gap-2 px-1">
                              <button class="flex-1 py-1 bg-[#fdf5f7] text-[#d6b7be] rounded-full text-[9px] font-bold active:scale-95 transition" @click="showToast('已同意')">同意</button>
@@ -2178,43 +2174,112 @@
                          </div>
                      </div>
                      
-                     <!-- 右侧：4个 App 网格 (恢复白底卡片，完美对齐左侧) -->
+                     <!-- 右侧：4个 App 网格 -->
                      <div class="flex-1 h-full grid grid-cols-2 gap-x-2 content-between py-0.5">
-                         <!-- App 1: 情侣空间 -->
                          <div class="flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition" @click="showToast('情侣空间')">
                              <div class="w-[46px] h-[46px] bg-white rounded-2xl shadow-[0_2px_8px_rgba(200,180,190,0.1)] border border-[#fdf5f7] flex items-center justify-center overflow-hidden">
-                                 <!-- 换回纯代码 FontAwesome 图标，彻底告别 404 -->
-                                 <i class="fas fa-heart text-[#d6b7be] text-2xl"></i>
+                                 <!-- 修改爱心颜色为较浅的 #e8d5d9 -->
+                                 <i class="fas fa-heart text-[#e8d5d9] text-2xl"></i>
                              </div>
                              <span class="text-[10px] font-bold text-[#8c7a7e]">情侣空间</span>
                          </div>
-                         
-                         <!-- App 2: 游戏大厅 -->
                          <div class="flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition" @click="showToast('游戏大厅')">
                              <div class="w-[46px] h-[46px] bg-white rounded-2xl shadow-[0_2px_8px_rgba(200,180,190,0.1)] border border-[#fdf5f7] flex items-center justify-center overflow-hidden">
                                  <i class="fas fa-gamepad text-[#e8d5d9] text-xl"></i>
                              </div>
                              <span class="text-[10px] font-bold text-[#8c7a7e]">游戏大厅</span>
                          </div>
-                         
-                         <!-- App 3: 占位 -->
                          <div class="flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition" @click="showToast('待开发...')">
                              <div class="w-[46px] h-[46px] bg-white rounded-2xl shadow-[0_2px_8px_rgba(200,180,190,0.1)] border border-[#fdf5f7] flex items-center justify-center overflow-hidden">
-                                 <i class="fas fa-box-open text-[#e8d5d9] text-xl"></i>
+                                 <i class="fas fa-cube text-[#e8d5d9] text-xl"></i>
                              </div>
                              <span class="text-[10px] font-bold text-[#8c7a7e]">占位</span>
                          </div>
-                         
-                         <!-- App 4: 占位 -->
                          <div class="flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition" @click="showToast('待开发...')">
                              <div class="w-[46px] h-[46px] bg-white rounded-2xl shadow-[0_2px_8px_rgba(200,180,190,0.1)] border border-[#fdf5f7] flex items-center justify-center overflow-hidden">
-                                 <i class="fas fa-compass text-[#e8d5d9] text-xl"></i>
+                                 <i class="fas fa-ghost text-[#e8d5d9] text-xl"></i>
                              </div>
                              <span class="text-[10px] font-bold text-[#8c7a7e]">占位</span>
                          </div>
                      </div>
                  </div>
-             </div>
+
+                 <!-- 新增：第二排分栏结构 (左边4个App，右边虚线 Widget) -->
+                 <div class="w-[90%] max-w-[340px] mt-6 flex gap-4 h-[145px]">
+                     <!-- 左侧：4个占位 App 网格 -->
+                     <div class="flex-1 h-full grid grid-cols-2 gap-x-2 content-between py-0.5">
+                         <div class="flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition" @click="showToast('待开发...')">
+                             <div class="w-[46px] h-[46px] bg-white rounded-2xl shadow-[0_2px_8px_rgba(200,180,190,0.1)] border border-[#fdf5f7] flex items-center justify-center overflow-hidden">
+                                 <i class="fas fa-star text-[#e8d5d9] text-xl"></i>
+                             </div>
+                             <span class="text-[10px] font-bold text-[#8c7a7e]">占位</span>
+                         </div>
+                         <div class="flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition" @click="showToast('待开发...')">
+                             <div class="w-[46px] h-[46px] bg-white rounded-2xl shadow-[0_2px_8px_rgba(200,180,190,0.1)] border border-[#fdf5f7] flex items-center justify-center overflow-hidden">
+                                 <i class="fas fa-moon text-[#e8d5d9] text-xl"></i>
+                             </div>
+                             <span class="text-[10px] font-bold text-[#8c7a7e]">占位</span>
+                         </div>
+                         <div class="flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition" @click="showToast('待开发...')">
+                             <div class="w-[46px] h-[46px] bg-white rounded-2xl shadow-[0_2px_8px_rgba(200,180,190,0.1)] border border-[#fdf5f7] flex items-center justify-center overflow-hidden">
+                                 <i class="fas fa-cloud text-[#e8d5d9] text-xl"></i>
+                             </div>
+                             <span class="text-[10px] font-bold text-[#8c7a7e]">占位</span>
+                         </div>
+                         <div class="flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition" @click="showToast('待开发...')">
+                             <div class="w-[46px] h-[46px] bg-white rounded-2xl shadow-[0_2px_8px_rgba(200,180,190,0.1)] border border-[#fdf5f7] flex items-center justify-center overflow-hidden">
+                                 <i class="fas fa-leaf text-[#e8d5d9] text-xl"></i>
+                             </div>
+                             <span class="text-[10px] font-bold text-[#8c7a7e]">占位</span>
+                         </div>
+                     </div>
+
+                     <!-- 右侧：带小翅膀的虚线框卡片 -->
+                     <div class="w-[145px] h-full relative flex items-center justify-center">
+                         <!-- 左侧小翅膀 -->
+                         <img src="https://pic1.imgdb.cn/item/69ca59329547e6ce4e3f7d60.png" class="absolute -left-[14px] top-1/2 w-[28px] h-[28px] object-contain pointer-events-none z-10" style="transform: translateY(-50%); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.06));">
+                         
+                         <!-- 卡片主体 -->
+                         <div class="w-full h-full bg-white rounded-[20px] border-2 border-dashed border-[#e8d5d9] flex flex-col items-center p-2.5 relative z-20 shadow-[0_4px_15px_rgba(200,180,190,0.1)]">
+                             <!-- 顶部电量与状态栏 -->
+                             <div class="w-full flex justify-between items-center px-1 text-[#c2acb1]">
+                                 <div class="flex items-center gap-1">
+                                     <span class="text-[9px] font-bold">{{ statusBar.batteryLevel }}%</span>
+                                     <!-- 动态小电池 UI -->
+                                     <div class="w-[16px] h-[8px] border-[1px] border-[#c2acb1] rounded-[2px] p-[1px] relative flex items-center">
+                                         <div class="h-full rounded-[1px] transition-all" :class="statusBar.isCharging ? 'bg-green-400' : 'bg-[#c2acb1]'" :style="{ width: statusBar.batteryLevel + '%' }"></div>
+                                         <div class="absolute -right-[2px] top-1/2 -translate-y-1/2 w-[1px] h-[3px] bg-[#c2acb1] rounded-r-[1px]"></div>
+                                     </div>
+                                 </div>
+                                 <div class="flex gap-1.5 text-[10px]">
+                                     <i class="fas fa-wifi"></i>
+                                     <i class="far fa-heart"></i>
+                                 </div>
+                             </div>
+                             
+                             <!-- 中央头像区域 -->
+                             <div class="relative mt-2">
+                                 <div class="w-[85px] h-[85px] bg-[#fcf3f5] rounded-[16px] overflow-hidden cursor-pointer shadow-inner border border-[#fdf5f7]" @click="triggerPage2Widget2AvatarUpload">
+                                     <img v-if="page2Widget2.avatar" :src="page2Widget2.avatar" class="w-full h-full object-cover">
+                                     <i v-else class="fas fa-image flex h-full items-center justify-center text-[#fceef2] text-3xl"></i>
+                                 </div>
+                                 <!-- 右上角气泡与小圆点 -->
+                                 <div class="absolute -right-4 -top-2 px-2 py-0.5 bg-white border border-[#fceef2] rounded-full text-[#a8989c] text-[9px] font-bold shadow-sm cursor-pointer z-30" @click="editPage2Widget2('status')">
+                                     {{ page2Widget2.status }}
+                                 </div>
+                                 <div class="absolute right-1 top-3 w-1.5 h-1.5 bg-white border border-[#fceef2] rounded-full z-30 shadow-sm"></div>
+                             </div>
+                             
+                             <!-- 底部猫爪按钮 -->
+                             <div class="mt-auto mb-0.5 w-9 h-[18px] bg-[#fdf5f7] rounded-full flex items-center justify-center text-[#d6b7be] text-[10px] cursor-pointer active:scale-95 transition shadow-sm" @click="showToast('🐾 喵~')">
+                                 <i class="fas fa-paw"></i>
+                             </div>
+                         </div>
+
+                         <!-- 右侧小翅膀 -->
+                         <img src="https://pic1.imgdb.cn/item/69ca59329547e6ce4e3f7d60.png" class="absolute -right-[14px] top-1/2 w-[28px] h-[28px] object-contain pointer-events-none z-10" style="transform: translateY(-50%) scaleX(-1); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.06));">
+                     </div>
+                 </div>
              
          </div> <!-- 滑动分页容器结束 -->
 
@@ -2224,6 +2289,7 @@
         <input type="file" ref="homeAvatarInput" accept="image/*" class="hidden" @change="handleHomeAvatarChange"><input type="file" ref="cardAvatarInput" accept="image/*" class="hidden" @change="handleCardAvatarChange"><input type="file" ref="widgetImageInput" accept="image/*" class="hidden" @change="handleWidgetImageChange">
         <input type="file" ref="page2AvatarInput" accept="image/*" class="hidden" @change="handlePage2AvatarChange">
         <input type="file" ref="page2WidgetImgInput" accept="image/*" class="hidden" @change="handlePage2WidgetImgChange">
+        <input type="file" ref="page2Widget2AvatarInput" accept="image/*" class="hidden" @change="handlePage2Widget2AvatarChange">
     </div>
 
     <!-- ================= 微信 (WeChat) App ================= -->
@@ -3805,6 +3871,7 @@ createApp({
             homeProfile: { name: '点击修改名字', id: 'username', bio: '点击修改个性签名', location: '未知星系', avatar: '' },
             page2Profile: { name: '兔耳抹眼泪_', status: '呆', avatar: '' },
             page2Widget: { title: '福熊兒', image: '', msg: 'Kitty 向您提出了好友申請' },
+            page2Widget2: { avatar: '', status: '呆呆嘟' },
             weatherTemp: '获取中..',
             homeConfig: { widgetTitle: '输入文字', rightWidgetTitle: '输入文字' },
             customWidgets: [ { id: 1, bubble: '状态', image: '', label: '组件A' }, { id: 2, bubble: '心情', image: '', label: '组件B' } ],
@@ -5952,6 +6019,13 @@ Structure:
         triggerPage2WidgetImgUpload() { if(this.$refs.page2WidgetImgInput) this.$refs.page2WidgetImgInput.click(); },
         async handlePage2WidgetImgChange(e) { const f=e.target.files[0]; if(!f)return; try { this.page2Widget.image = await compressImage(f, 300); this.saveData(); } catch(e){} },
         editPage2Widget(f) { let m = { 'title': '修改左上角名称', 'msg': '修改底部提示文字' }; this.showInput(m[f], this.page2Widget[f], "请输入...", (v) => { if(v){ this.page2Widget[f]=v; this.saveData(); } }); },
+        
+        // --- 第二页右侧翅膀卡片逻辑 ---
+        triggerPage2Widget2AvatarUpload() { if(this.$refs.page2Widget2AvatarInput) this.$refs.page2Widget2AvatarInput.click(); },
+        async handlePage2Widget2AvatarChange(e) { const f=e.target.files[0]; if(!f)return; try { this.page2Widget2.avatar = await compressImage(f, 300); this.saveData(); } catch(e){} },
+        editPage2Widget2(f) { this.showInput('修改心情气泡', this.page2Widget2[f], "请输入...", (v) => { if(v){ this.page2Widget2[f]=v; this.saveData(); } }); },
+        // -----------------------------
+
         formatAMPM(timeStr) {
             if (!timeStr) return '';
             let [h, m] = timeStr.split(':');
