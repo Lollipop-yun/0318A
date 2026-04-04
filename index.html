@@ -2021,118 +2021,46 @@
         </div>
     </transition>
 
-    <!-- 主界面 Wrapper -->
-    <div class="h-full w-full relative overflow-hidden transition-all duration-300" :class="[{'scale-95 opacity-80': isAppOpen}]">
-        
-        <!-- Swipe Container (滑动容器) -->
-        <div class="w-full h-full flex transition-transform duration-300 ease-out"
-             :style="{ transform: `translateX(-${(currentPage - 1) * 100}%)` }"
-             @touchstart="handleHomeTouchStart" @touchend="handleHomeTouchEnd">
-            
-            <!-- ====== 第一页 ====== -->
-            <div class="w-full h-full shrink-0 flex flex-col items-center overflow-y-auto scrollbar-hide pb-32 bg-center bg-cover"
-                 :style="{ backgroundImage: (themeConfig.wallpaper1 || themeConfig.wallpaper) ? `url(${themeConfig.wallpaper1 || themeConfig.wallpaper})` : '', backgroundColor: (themeConfig.wallpaper1 || themeConfig.wallpaper) ? 'transparent' : '#f3f4f6' }"
-                 :class="[hideStatusBar ? 'pt-0' : 'pt-[44px]']">
-                
-                <div class="w-full flex flex-col items-center skin-text-container">
-                    <div class="w-[90%] z-20 mt-2 mb-2 shrink-0"><div class="bg-white/90 backdrop-blur-sm rounded-[20px] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] relative"><div class="flex justify-between items-start mb-3"><div class="flex gap-3"><div class="w-[52px] h-[52px] border border-gray-100 rounded-lg p-0.5 flex flex-col items-center justify-between shrink-0 cursor-pointer active:scale-95 transition bg-white" @click="triggerCardAvatarUpload"><div class="w-full h-[70%] rounded-md overflow-hidden bg-gray-50 relative"><img v-if="cardProfile.avatar" :src="cardProfile.avatar" class="w-full h-full object-cover grayscale opacity-80"><i v-else class="fas fa-user text-gray-300 text-xl flex h-full items-center justify-center"></i></div><span class="text-[8px] opacity-60 scale-90 origin-bottom font-medium truncate w-full text-center" @click.stop="editCardProfile('status')">{{ cardProfile.status }}</span></div><div class="flex flex-col pt-0.5" style="font-size: var(--custom-font-size)"><h2 @click="editCardProfile('name')" class="text-[14px] font-bold tracking-wider mb-0.5 cursor-pointer active:opacity-50" :style="{color: themeConfig.fontColor}">{{ cardProfile.name }}</h2><p @click="editCardProfile('id')" class="text-[10px] opacity-60 font-mono tracking-wide cursor-pointer active:opacity-50" :style="{color: themeConfig.fontColor}">@ {{ cardProfile.id }}</p></div></div><div class="flex items-center gap-1 text-[10px] opacity-60 font-medium pt-1" :style="{color: themeConfig.fontColor}"><span>{{ displayDate.dateString }}</span><i class="fas fa-heart text-[8px]"></i><span>{{ displayDate.dayString }}</span></div></div><div @click="editCardProfile('bio')" class="text-[12px] leading-relaxed font-medium tracking-wide text-justify cursor-pointer active:opacity-50 border-t border-gray-50/20 pt-2" :style="{color: themeConfig.fontColor, fontSize: 'calc(var(--custom-font-size) * 0.9)'}">{{ cardProfile.bio }}</div></div></div>
-                    <div class="flex flex-col items-center w-full mb-3 z-10 shrink-0" style="font-size: var(--custom-font-size)"><div class="w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-gray-200 to-white shadow-lg mb-2 cursor-pointer active:scale-95 transition" @click="triggerHomeAvatarUpload"><div class="w-full h-full rounded-full overflow-hidden bg-gray-100 relative"><img v-if="homeProfile.avatar" :src="homeProfile.avatar" class="w-full h-full object-cover"><i v-else class="fas fa-user text-gray-300 text-3xl flex h-full items-center justify-center"></i></div></div><h2 @click="editHomeProfile('name')" class="text-lg font-bold tracking-wide cursor-pointer active:opacity-50 transition" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow-md': (themeConfig.wallpaper1 || themeConfig.wallpaper)}">{{ homeProfile.name }}</h2><p @click="editHomeProfile('id')" class="text-xs opacity-80 mt-1 font-mono tracking-wider cursor-pointer active:opacity-50 transition" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': (themeConfig.wallpaper1 || themeConfig.wallpaper)}">@{{ homeProfile.id }}</p><p @click="editHomeProfile('bio')" class="text-[10px] opacity-80 mt-2 tracking-[0.1em] cursor-pointer active:opacity-50 transition px-8 text-center" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': (themeConfig.wallpaper1 || themeConfig.wallpaper)}">{{ homeProfile.bio }}</p><div @click="editHomeProfile('location')" class="mt-3 flex items-center gap-1 text-xs opacity-80 cursor-pointer active:opacity-50 transition" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': (themeConfig.wallpaper1 || themeConfig.wallpaper)}"><i class="fas fa-map-marker-alt"></i><span>{{ homeProfile.location }}</span></div></div>
-                    <div class="w-full px-8 grid grid-cols-2 gap-6 mb-auto z-10 items-start shrink-0" style="font-size: var(--custom-font-size)"><div class="flex flex-col items-center"><h3 @click="editHomeConfig('widgetTitle', '修改左侧标题')" class="text-sm font-bold mb-4 cursor-pointer active:opacity-50 transition self-start pl-2" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow-md': (themeConfig.wallpaper1 || themeConfig.wallpaper)}">{{ homeConfig.widgetTitle }}</h3><div class="grid grid-cols-2 gap-x-5 gap-y-5 justify-items-center w-full"><div v-for="id in ['wechat', 'themes', 'worldbook', 'settings']" :key="id" class="flex flex-col items-center gap-1.5 home-icon cursor-pointer" :class="{'home-icon-custom': hasCustomIcon(id)}" @click="handleAppClick(id)"><div class="w-12 h-12 rounded-xl bg-white text-gray-400 flex items-center justify-center text-xl shadow-sm border border-gray-100 overflow-hidden"><img v-if="hasCustomIcon(id)" :src="getAppIcon(id)" class="w-full h-full object-cover"><i v-else :class="getDefaultIconClass(id)"></i></div><span class="text-[10px] font-bold" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': (themeConfig.wallpaper1 || themeConfig.wallpaper)}">{{ getAppName(id) }}</span></div></div></div><div class="flex flex-col items-center">
-                        <div class="flex gap-2 justify-center items-end mt-2">
-                            <div class="flex flex-col items-center relative w-16">
-                                <div @click="editCustomWidget(0, 'bubble')" class="widget-bubble cursor-pointer active:scale-95 transition !bg-white/95 !backdrop-blur-sm !text-gray-600 !rounded-2xl !px-3 !py-1.5 !shadow-sm !font-bold mb-1">{{ customWidgets[0].bubble }}</div>
-                                <div class="w-[60px] h-[60px] rounded-full border-[3px] border-white/95 shadow-[0_2px_10px_rgba(0,0,0,0.1)] overflow-hidden bg-gray-100 cursor-pointer active:scale-95 transition" @click="triggerWidgetImageUpload(0)"><img v-if="customWidgets[0].image" :src="customWidgets[0].image" class="w-full h-full object-cover"><div v-else class="w-full h-full flex items-center justify-center text-gray-300 text-xs">图1</div></div>
-                            </div>
-                            <div class="flex flex-col items-center relative w-16">
-                                <div @click="editCustomWidget(1, 'bubble')" class="widget-bubble cursor-pointer active:scale-95 transition !bg-white/95 !backdrop-blur-sm !text-gray-600 !rounded-2xl !px-3 !py-1.5 !shadow-sm !font-bold mb-1">{{ customWidgets[1].bubble }}</div>
-                                <div class="w-[60px] h-[60px] rounded-full border-[3px] border-white/95 shadow-[0_2px_10px_rgba(0,0,0,0.1)] overflow-hidden bg-gray-100 cursor-pointer active:scale-95 transition" @click="triggerWidgetImageUpload(1)"><img v-if="customWidgets[1].image" :src="customWidgets[1].image" class="w-full h-full object-cover"><div v-else class="w-full h-full flex items-center justify-center text-gray-300 text-xs">图2</div></div>
-                            </div>
-                        </div>
-                        <!-- 天数记录 -->
-                        <div class="relative mt-6 min-w-[120px] w-fit px-5 h-[40px] bg-[#f0f0f0] rounded-[20px] flex items-center justify-center shadow-[inset_0_2px_5px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] cursor-pointer active:scale-95 transition border-2 border-white" @click="editHomeConfig('rightWidgetTitle', '修改天数')">
-                            <img src="https://pic1.imgdb.cn/item/69ca59329547e6ce4e3f7d60.png" class="absolute -left-[18px] top-1/2 w-[32px] h-[32px] object-contain pointer-events-none" style="transform: translateY(-50%); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.06));">
-                            <span class="text-[14px] font-bold text-[#999999] tracking-wider z-10" :style="{color: themeConfig.fontColor}">{{ homeConfig.rightWidgetTitle || '6440天' }}</span>
-                            <img src="https://pic1.imgdb.cn/item/69ca59329547e6ce4e3f7d60.png" class="absolute -right-[18px] top-1/2 w-[32px] h-[32px] object-contain pointer-events-none" style="transform: translateY(-50%) scaleX(-1); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.06));">
-                        </div>
-                    </div></div>
-                </div>
+    <!-- 主界面 -->
+    <div class="h-full w-full flex flex-col items-center pb-safe relative overflow-hidden overflow-y-auto scrollbar-hide transition-all duration-300 bg-center bg-cover" 
+         :style="{ backgroundImage: themeConfig.wallpaper ? `url(${themeConfig.wallpaper})` : '', backgroundColor: themeConfig.wallpaper ? 'transparent' : '#f3f4f6' }"
+         :class="[hideStatusBar ? 'pt-0' : 'pt-[44px]', {'scale-95 opacity-80': isAppOpen}]">
+         <div class="w-full flex flex-col items-center skin-text-container">
+            <div class="w-[90%] z-20 mt-2 mb-2 shrink-0"><div class="bg-white/90 backdrop-blur-sm rounded-[20px] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] relative"><div class="flex justify-between items-start mb-3"><div class="flex gap-3"><div class="w-[52px] h-[52px] border border-gray-100 rounded-lg p-0.5 flex flex-col items-center justify-between shrink-0 cursor-pointer active:scale-95 transition bg-white" @click="triggerCardAvatarUpload"><div class="w-full h-[70%] rounded-md overflow-hidden bg-gray-50 relative"><img v-if="cardProfile.avatar" :src="cardProfile.avatar" class="w-full h-full object-cover grayscale opacity-80"><i v-else class="fas fa-user text-gray-300 text-xl flex h-full items-center justify-center"></i></div><span class="text-[8px] opacity-60 scale-90 origin-bottom font-medium truncate w-full text-center" @click.stop="editCardProfile('status')">{{ cardProfile.status }}</span></div><div class="flex flex-col pt-0.5" style="font-size: var(--custom-font-size)"><h2 @click="editCardProfile('name')" class="text-[14px] font-bold tracking-wider mb-0.5 cursor-pointer active:opacity-50" :style="{color: themeConfig.fontColor}">{{ cardProfile.name }}</h2><p @click="editCardProfile('id')" class="text-[10px] opacity-60 font-mono tracking-wide cursor-pointer active:opacity-50" :style="{color: themeConfig.fontColor}">@ {{ cardProfile.id }}</p></div></div><div class="flex items-center gap-1 text-[10px] opacity-60 font-medium pt-1" :style="{color: themeConfig.fontColor}"><span>{{ displayDate.dateString }}</span><i class="fas fa-heart text-[8px]"></i><span>{{ displayDate.dayString }}</span></div></div><div @click="editCardProfile('bio')" class="text-[12px] leading-relaxed font-medium tracking-wide text-justify cursor-pointer active:opacity-50 border-t border-gray-50/20 pt-2" :style="{color: themeConfig.fontColor, fontSize: 'calc(var(--custom-font-size) * 0.9)'}">{{ cardProfile.bio }}</div></div></div>
+            <div class="flex flex-col items-center w-full mb-3 z-10 shrink-0" style="font-size: var(--custom-font-size)"><div class="w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-gray-200 to-white shadow-lg mb-2 cursor-pointer active:scale-95 transition" @click="triggerHomeAvatarUpload"><div class="w-full h-full rounded-full overflow-hidden bg-gray-100 relative"><img v-if="homeProfile.avatar" :src="homeProfile.avatar" class="w-full h-full object-cover"><i v-else class="fas fa-user text-gray-300 text-3xl flex h-full items-center justify-center"></i></div></div><h2 @click="editHomeProfile('name')" class="text-lg font-bold tracking-wide cursor-pointer active:opacity-50 transition" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow-md': themeConfig.wallpaper}">{{ homeProfile.name }}</h2><p @click="editHomeProfile('id')" class="text-xs opacity-80 mt-1 font-mono tracking-wider cursor-pointer active:opacity-50 transition" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': themeConfig.wallpaper}">@{{ homeProfile.id }}</p><p @click="editHomeProfile('bio')" class="text-[10px] opacity-80 mt-2 tracking-[0.1em] cursor-pointer active:opacity-50 transition px-8 text-center" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': themeConfig.wallpaper}">{{ homeProfile.bio }}</p><div @click="editHomeProfile('location')" class="mt-3 flex items-center gap-1 text-xs opacity-80 cursor-pointer active:opacity-50 transition" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': themeConfig.wallpaper}"><i class="fas fa-map-marker-alt"></i><span>{{ homeProfile.location }}</span></div></div>
+            <div class="w-full px-8 grid grid-cols-2 gap-6 mb-auto z-10 items-start shrink-0" style="font-size: var(--custom-font-size)"><div class="flex flex-col items-center"><h3 @click="editHomeConfig('widgetTitle', '修改左侧标题')" class="text-sm font-bold mb-4 cursor-pointer active:opacity-50 transition self-start pl-2" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow-md': themeConfig.wallpaper}">{{ homeConfig.widgetTitle }}</h3><div class="grid grid-cols-2 gap-x-5 gap-y-5 justify-items-center w-full"><div v-for="id in ['wechat', 'themes', 'worldbook', 'settings']" :key="id" class="flex flex-col items-center gap-1.5 home-icon cursor-pointer" :class="{'home-icon-custom': hasCustomIcon(id)}" @click="handleAppClick(id)"><div class="w-12 h-12 rounded-xl bg-white text-gray-400 flex items-center justify-center text-xl shadow-sm border border-gray-100 overflow-hidden"><img v-if="hasCustomIcon(id)" :src="getAppIcon(id)" class="w-full h-full object-cover"><i v-else :class="getDefaultIconClass(id)"></i></div><span class="text-[10px] font-bold" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': themeConfig.wallpaper}">{{ getAppName(id) }}</span></div></div></div><div class="flex flex-col items-center">
+    <!-- 顶部两个头像和气泡 -->
+    <div class="flex gap-2 justify-center items-end mt-2">
+        <div class="flex flex-col items-center relative w-16">
+            <div @click="editCustomWidget(0, 'bubble')" class="widget-bubble cursor-pointer active:scale-95 transition !bg-white/95 !backdrop-blur-sm !text-gray-600 !rounded-2xl !px-3 !py-1.5 !shadow-sm !font-bold mb-1">{{ customWidgets[0].bubble }}</div>
+            <div class="w-[60px] h-[60px] rounded-full border-[3px] border-white/95 shadow-[0_2px_10px_rgba(0,0,0,0.1)] overflow-hidden bg-gray-100 cursor-pointer active:scale-95 transition" @click="triggerWidgetImageUpload(0)">
+                <img v-if="customWidgets[0].image" :src="customWidgets[0].image" class="w-full h-full object-cover">
+                <div v-else class="w-full h-full flex items-center justify-center text-gray-300 text-xs">图1</div>
             </div>
-
-            <!-- ====== 第二页 (新开发 UI) ====== -->
-            <div class="w-full h-full shrink-0 flex flex-col items-center overflow-y-auto scrollbar-hide pb-32 bg-center bg-cover"
-                 :style="{ backgroundImage: themeConfig.wallpaper2 ? `url(${themeConfig.wallpaper2})` : ((themeConfig.wallpaper1 || themeConfig.wallpaper) ? `url(${themeConfig.wallpaper1 || themeConfig.wallpaper})` : ''), backgroundColor: themeConfig.wallpaper2 || themeConfig.wallpaper1 || themeConfig.wallpaper ? 'transparent' : '#f3f4f6' }"
-                 :class="[hideStatusBar ? 'pt-0' : 'pt-[44px]']">
-                
-                <div class="w-full px-6 flex flex-col gap-6 mt-8 items-center">
-                    <!-- 顶部宽版组件 (模拟好友申请框) -->
-                    <div class="w-full bg-white/70 backdrop-blur-md rounded-3xl p-4 shadow-sm flex items-center gap-4 cursor-pointer active:scale-95 transition">
-                        <div class="w-20 h-20 bg-pink-50 rounded-2xl overflow-hidden shrink-0 border border-white">
-                            <img src="https://pic1.imgdb.cn/item/69ca59329547e6ce4e3f7d60.png" class="w-full h-full object-cover opacity-90">
-                        </div>
-                        <div class="flex-1 flex flex-col">
-                            <span class="text-xs text-gray-500 mb-3 font-medium" :style="{color: themeConfig.fontColor}">🍼 占位名称 向您提出了好友申请</span>
-                            <div class="flex gap-2">
-                                <button class="flex-1 bg-pink-100/80 text-pink-500 text-xs font-bold py-1.5 rounded-full backdrop-blur-sm border border-pink-200">同意</button>
-                                <button class="flex-1 bg-gray-100/80 text-gray-500 text-xs font-bold py-1.5 rounded-full backdrop-blur-sm border border-gray-200">拒绝</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 栅格区域：左侧 2x2 应用，右侧大组件 -->
-                    <div class="w-full grid grid-cols-2 gap-4">
-                        <!-- 左侧：应用图标网格 -->
-                        <div class="grid grid-cols-2 gap-y-5 gap-x-2 place-items-center self-center">
-                            <div class="flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition" @click="showToast('占位应用')">
-                                <div class="w-14 h-14 rounded-[22px] bg-white/80 backdrop-blur-sm shadow-sm flex items-center justify-center border border-white"><i class="fas fa-comment-dots text-pink-300 text-2xl"></i></div>
-                                <span class="text-[10px] font-bold text-gray-600" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': (themeConfig.wallpaper2 || themeConfig.wallpaper)}">应用一</span>
-                            </div>
-                            <div class="flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition" @click="showToast('占位应用')">
-                                <div class="w-14 h-14 rounded-[22px] bg-white/80 backdrop-blur-sm shadow-sm flex items-center justify-center border border-white"><i class="fas fa-camera-retro text-orange-300 text-2xl"></i></div>
-                                <span class="text-[10px] font-bold text-gray-600" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': (themeConfig.wallpaper2 || themeConfig.wallpaper)}">应用二</span>
-                            </div>
-                            <div class="flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition" @click="showToast('占位应用')">
-                                <div class="w-14 h-14 rounded-[22px] bg-white/80 backdrop-blur-sm shadow-sm flex items-center justify-center border border-white"><i class="fas fa-gamepad text-blue-300 text-2xl"></i></div>
-                                <span class="text-[10px] font-bold text-gray-600" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': (themeConfig.wallpaper2 || themeConfig.wallpaper)}">应用三</span>
-                            </div>
-                            <div class="flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition" @click="showToast('占位应用')">
-                                <div class="w-14 h-14 rounded-[22px] bg-white/80 backdrop-blur-sm shadow-sm flex items-center justify-center border border-white"><i class="fas fa-headphones-alt text-purple-300 text-2xl"></i></div>
-                                <span class="text-[10px] font-bold text-gray-600" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': (themeConfig.wallpaper2 || themeConfig.wallpaper)}">应用四</span>
-                            </div>
-                        </div>
-
-                        <!-- 右侧：电量照片大组件 -->
-                        <div class="bg-white/70 backdrop-blur-md rounded-3xl p-3 shadow-sm flex flex-col border border-white/80 h-[170px] relative cursor-pointer active:scale-95 transition">
-                            <div class="flex justify-between items-center mb-2 px-1">
-                                <span class="text-[10px] font-bold text-gray-500">{{ statusBar.batteryLevel }}% <i class="fas fa-battery-three-quarters text-[9px] ml-0.5"></i></span>
-                                <div class="flex gap-1.5 text-gray-400 text-[10px]"><i class="fas fa-wifi"></i><i class="fas fa-heart text-pink-300"></i></div>
-                            </div>
-                            <div class="flex-1 bg-gray-100 rounded-2xl overflow-hidden relative border border-gray-100">
-                                <img src="https://pic1.imgdb.cn/item/69ba80aab96fa53fd04c3771.png" class="w-full h-full object-cover opacity-90">
-                                <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-8 h-5 bg-white/80 backdrop-blur rounded-full flex items-center justify-center shadow-sm">
-                                    <i class="fas fa-paw text-[10px] text-gray-400"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 底部搜寻药丸按钮 -->
-                    <div class="mt-4 mb-2 bg-gray-400/20 backdrop-blur-md px-6 py-2 rounded-full flex items-center gap-2 cursor-pointer shadow-inner border border-white/20 active:scale-95 transition">
-                        <i class="fas fa-search text-gray-600 text-xs" :style="{color: themeConfig.fontColor}"></i>
-                        <span class="text-xs font-bold text-gray-600 tracking-widest" :style="{color: themeConfig.fontColor}">搜寻</span>
-                    </div>
-                </div>
-            </div>
-
         </div>
-
-        <!-- Dock 栏 (固定在主界面底部悬浮) -->
-        <div class="dock-container w-[90%] left-1/2 -translate-x-1/2 h-24 flex items-center justify-around px-4 mb-4 absolute bottom-4 z-50 pointer-events-auto shrink-0">
-            <div v-for="id in ['icity', 'forum', 'check', 'pinxixi']" :key="id" class="flex flex-col items-center gap-1 home-icon cursor-pointer" :class="{'home-icon-custom': hasCustomIcon(id)}" @click="showToast('仅作为展示')">
-                <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-400 text-lg overflow-hidden"><img v-if="hasCustomIcon(id)" :src="getAppIcon(id)" class="w-full h-full object-cover"><i v-else :class="getDefaultIconClass(id)"></i></div>
-                <span class="text-[10px] font-bold text-gray-600">{{ getAppName(id) }}</span>
+        <div class="flex flex-col items-center relative w-16">
+            <div @click="editCustomWidget(1, 'bubble')" class="widget-bubble cursor-pointer active:scale-95 transition !bg-white/95 !backdrop-blur-sm !text-gray-600 !rounded-2xl !px-3 !py-1.5 !shadow-sm !font-bold mb-1">{{ customWidgets[1].bubble }}</div>
+            <div class="w-[60px] h-[60px] rounded-full border-[3px] border-white/95 shadow-[0_2px_10px_rgba(0,0,0,0.1)] overflow-hidden bg-gray-100 cursor-pointer active:scale-95 transition" @click="triggerWidgetImageUpload(1)">
+                <img v-if="customWidgets[1].image" :src="customWidgets[1].image" class="w-full h-full object-cover">
+                <div v-else class="w-full h-full flex items-center justify-center text-gray-300 text-xs">图2</div>
             </div>
         </div>
     </div>
+    
+    <!-- 下方的天数记录 (带翅膀的药丸容器) -->
+    <div class="relative mt-6 min-w-[120px] w-fit px-5 h-[40px] bg-[#f0f0f0] rounded-[20px] flex items-center justify-center shadow-[inset_0_2px_5px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] cursor-pointer active:scale-95 transition border-2 border-white" @click="editHomeConfig('rightWidgetTitle', '修改天数')">
+        <!-- 左侧翅膀 (进一步缩小) -->
+        <img src="https://pic1.imgdb.cn/item/69ca59329547e6ce4e3f7d60.png" class="absolute -left-[18px] top-1/2 w-[32px] h-[32px] object-contain pointer-events-none" style="transform: translateY(-50%); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.06));">
+        
+        <!-- 天数文字 -->
+        <span class="text-[18px] font-bold text-[#999999] tracking-wider z-10" :style="{color: themeConfig.fontColor}">{{ homeConfig.rightWidgetTitle || '6440天' }}</span>
+        
+        <!-- 右侧翅膀 (进一步缩小并翻转) -->
+        <img src="https://pic1.imgdb.cn/item/69ca59329547e6ce4e3f7d60.png" class="absolute -right-[18px] top-1/2 w-[32px] h-[32px] object-contain pointer-events-none" style="transform: translateY(-50%) scaleX(-1); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.06));">
+    </div>
+</div></div>
+        </div>
+        <div class="dock-container w-full h-24 flex items-center justify-around px-4 mt-6 mb-4 absolute bottom-4 shrink-0"><div v-for="id in ['icity', 'forum', 'check', 'pinxixi']" :key="id" class="flex flex-col items-center gap-1 home-icon cursor-pointer" :class="{'home-icon-custom': hasCustomIcon(id)}" @click="showToast('仅作为展示')"><div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-400 text-lg overflow-hidden"><img v-if="hasCustomIcon(id)" :src="getAppIcon(id)" class="w-full h-full object-cover"><i v-else :class="getDefaultIconClass(id)"></i></div><span class="text-[10px] font-bold text-gray-600">{{ getAppName(id) }}</span></div></div>
         <input type="file" ref="homeAvatarInput" accept="image/*" class="hidden" @change="handleHomeAvatarChange"><input type="file" ref="cardAvatarInput" accept="image/*" class="hidden" @change="handleCardAvatarChange"><input type="file" ref="widgetImageInput" accept="image/*" class="hidden" @change="handleWidgetImageChange">
     </div>
 
@@ -3481,24 +3409,7 @@
             </div>                                  </div>
     </transition>
 
-    <transition name="page-slide"><div v-if="themesPage === 'wallpaper'" class="absolute inset-0 p-4 space-y-6">
-        <div class="flex gap-4 justify-center mb-2">
-            <button @click="settingWallpaperPage = 1" :class="settingWallpaperPage === 1 ? 'bg-black text-white shadow-md' : 'bg-gray-200 text-gray-600'" class="px-5 py-2 rounded-full text-xs font-bold transition">第一页</button>
-            <button @click="settingWallpaperPage = 2" :class="settingWallpaperPage === 2 ? 'bg-black text-white shadow-md' : 'bg-gray-200 text-gray-600'" class="px-5 py-2 rounded-full text-xs font-bold transition">第二页</button>
-        </div>
-        <div class="w-full aspect-[9/16] bg-gray-200 rounded-3xl overflow-hidden shadow-lg relative mx-auto max-w-[240px] border-4 border-white transition-all">
-            <!-- 预览图逻辑 -->
-            <img v-if="settingWallpaperPage === 1 && (themeConfig.wallpaper1 || themeConfig.wallpaper)" :src="themeConfig.wallpaper1 || themeConfig.wallpaper" class="w-full h-full object-cover">
-            <img v-else-if="settingWallpaperPage === 2 && themeConfig.wallpaper2" :src="themeConfig.wallpaper2" class="w-full h-full object-cover">
-            <img v-else-if="settingWallpaperPage === 2 && (themeConfig.wallpaper1 || themeConfig.wallpaper)" :src="themeConfig.wallpaper1 || themeConfig.wallpaper" class="w-full h-full object-cover opacity-60">
-            <div v-else class="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-100"><i class="fas fa-image text-3xl mb-2"></i><span class="text-xs">{{ settingWallpaperPage === 2 && (themeConfig.wallpaper1 || themeConfig.wallpaper) ? '跟随第一页' : '默认壁纸' }}</span></div>
-        </div>
-        <div class="flex flex-col gap-3">
-            <button @click="triggerWallpaperUpload" class="w-full bg-gray-900 text-white py-3.5 rounded-2xl font-bold active:scale-95 transition shadow-lg">从相册选择</button>
-            <button @click="resetWallpaper" class="w-full bg-white text-gray-600 py-3.5 rounded-2xl font-bold border border-gray-200 active:bg-gray-50 transition">{{ settingWallpaperPage === 2 ? '跟随第一页壁纸' : '恢复默认' }}</button>
-        </div>
-        <input type="file" ref="wallpaperInput" accept="image/*" class="hidden" @change="handleWallpaperUpload">
-    </div></transition><transition name="page-slide"><div v-if="themesPage === 'font'" class="absolute inset-0 p-4 pb-20"><div class="space-y-6"><div class="bg-gray-100 rounded-2xl p-6 text-center border border-gray-200" :style="{fontFamily: previewFontFamily || themeConfig.fontFamily}"><div class="text-2xl font-bold mb-2" :style="{color: themeConfig.fontColor}">12:30</div><div class="text-lg" :style="{color: themeConfig.fontColor}">Hello World</div><div class="text-sm opacity-60" :style="{color: themeConfig.fontColor}">预览字体效果</div></div><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-3"><label class="text-xs font-bold text-gray-500 ml-1">字体 URL</label><div class="flex gap-2"><input v-model="fontInputUrl" placeholder="https://..." class="w-2/3 bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none"><button @click="previewFontFromUrl" :disabled="isLoading" class="flex-1 bg-gray-100 text-gray-600 px-2 rounded-xl font-bold text-xs active:scale-95 transition"><span v-if="!isLoading">预览</span><i v-else class="fas fa-spinner fa-spin"></i></button><button @click="applyFontFromUrl" class="flex-1 bg-black text-white px-2 rounded-xl font-bold text-xs active:scale-95 transition">应用</button></div><button @click="resetFont" class="w-full bg-white text-red-500 py-2 rounded-xl font-bold text-xs border border-gray-100 active:bg-gray-50">恢复默认字体</button></div><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-4"><div><div class="flex justify-between mb-2"><span class="text-xs font-bold text-gray-500">大小</span><span class="text-xs text-gray-400">{{ (themeConfig.fontSize * 100).toFixed(0) }}%</span></div><input type="range" min="0.8" max="1.2" step="0.05" v-model.number="themeConfig.fontSize" @change="saveData" class="w-full h-2 bg-gray-200 rounded-lg cursor-pointer"></div><div><div class="flex justify-between mb-2"><span class="text-xs font-bold text-gray-500">色号</span></div><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full border border-gray-200 shadow-sm shrink-0" :style="{backgroundColor: themeConfig.fontColor}"></div><input type="text" v-model="themeConfig.fontColor" @change="saveData" placeholder="#000000" class="flex-1 bg-gray-50 px-3 py-2 rounded-xl text-sm border border-gray-200 font-mono outline-none uppercase"></div></div></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">预设</span><button @click="saveFontPreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="fontPresets.length === 0" class="p-6 text-center text-gray-400 text-xs">无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(fp, idx) in fontPresets" :key="idx" class="p-4 flex items-center justify-between"><div class="flex-1 min-w-0 mr-2"><div class="font-bold text-gray-800 text-sm truncate" :style="{fontFamily: fp.fontFamily}">{{ fp.name }}</div></div><div class="flex items-center gap-2"><button @click="applyFontPreset(fp)" class="w-7 h-7 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-check text-[10px]"></i></button><button @click="deleteFontPreset(idx)" class="w-7 h-7 rounded-full bg-red-50 text-red-500 flex items-center justify-center"><i class="fas fa-trash text-[10px]"></i></button></div></div></div></div></div></div></transition><transition name="page-slide"><div v-if="themesPage === 'icons'" class="absolute inset-0 p-4 pb-20"><div class="space-y-4"><div class="flex justify-end"><button @click="resetAllIcons" class="text-xs text-red-500 font-bold px-3 py-1 bg-red-50 rounded-lg active:bg-red-100">重置所有</button></div><div class="space-y-3"><div v-for="appId in appList" :key="appId" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col gap-3"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-xl border border-gray-100 overflow-hidden flex items-center justify-center bg-gray-50 shrink-0 home-icon-custom"><img v-if="hasCustomIcon(appId)" :src="getAppIcon(appId)" class="w-full h-full object-cover"><i v-else :class="getDefaultIconClass(appId) + ' text-gray-400 text-xl'"></i></div><div class="flex-1"><label class="text-[10px] font-bold text-gray-400 mb-1 block">应用名称</label><input :value="getAppName(appId)" @input="(e)=>setAppName(appId, e.target.value)" class="w-full bg-gray-50 px-2 py-1.5 rounded-lg text-sm border border-gray-200 outline-none"></div></div><div class="flex gap-2"><input v-model="tempIconUrls[appId]" placeholder="图标 URL" class="flex-1 bg-gray-50 px-3 py-2 rounded-lg text-xs border border-gray-200 outline-none"><button @click="setAppIcon(appId, tempIconUrls[appId])" class="px-3 bg-black text-white rounded-lg text-xs font-bold">确定</button><button @click="triggerIconUpload(appId)" class="px-3 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold active:bg-gray-200"><i class="fas fa-image"></i></button><button @click="resetApp(appId)" class="px-3 bg-red-50 text-red-500 rounded-lg text-xs active:bg-red-100"><i class="fas fa-undo"></i></button></div></div></div><input type="file" ref="iconUploadInput" accept="image/*" class="hidden" @change="handleIconFile"></div></div></transition></main></div></transition>
+    <transition name="page-slide"><div v-if="themesPage === 'wallpaper'" class="absolute inset-0 p-4 space-y-6"><div class="w-full aspect-[9/16] bg-gray-200 rounded-3xl overflow-hidden shadow-lg relative mx-auto max-w-[240px] border-4 border-white"><img v-if="themeConfig.wallpaper" :src="themeConfig.wallpaper" class="w-full h-full object-cover"><div v-else class="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-100"><i class="fas fa-image text-3xl mb-2"></i><span class="text-xs">默认壁纸</span></div></div><div class="flex flex-col gap-3"><button @click="triggerWallpaperUpload" class="w-full bg-gray-900 text-white py-3.5 rounded-2xl font-bold active:scale-95 transition shadow-lg">从相册选择</button><button @click="resetWallpaper" class="w-full bg-white text-gray-600 py-3.5 rounded-2xl font-bold border border-gray-200 active:bg-gray-50 transition">恢复默认</button></div><input type="file" ref="wallpaperInput" accept="image/*" class="hidden" @change="handleWallpaperUpload"></div></transition><transition name="page-slide"><div v-if="themesPage === 'font'" class="absolute inset-0 p-4 pb-20"><div class="space-y-6"><div class="bg-gray-100 rounded-2xl p-6 text-center border border-gray-200" :style="{fontFamily: previewFontFamily || themeConfig.fontFamily}"><div class="text-2xl font-bold mb-2" :style="{color: themeConfig.fontColor}">12:30</div><div class="text-lg" :style="{color: themeConfig.fontColor}">Hello World</div><div class="text-sm opacity-60" :style="{color: themeConfig.fontColor}">预览字体效果</div></div><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-3"><label class="text-xs font-bold text-gray-500 ml-1">字体 URL</label><div class="flex gap-2"><input v-model="fontInputUrl" placeholder="https://..." class="w-2/3 bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none"><button @click="previewFontFromUrl" :disabled="isLoading" class="flex-1 bg-gray-100 text-gray-600 px-2 rounded-xl font-bold text-xs active:scale-95 transition"><span v-if="!isLoading">预览</span><i v-else class="fas fa-spinner fa-spin"></i></button><button @click="applyFontFromUrl" class="flex-1 bg-black text-white px-2 rounded-xl font-bold text-xs active:scale-95 transition">应用</button></div><button @click="resetFont" class="w-full bg-white text-red-500 py-2 rounded-xl font-bold text-xs border border-gray-100 active:bg-gray-50">恢复默认字体</button></div><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-4"><div><div class="flex justify-between mb-2"><span class="text-xs font-bold text-gray-500">大小</span><span class="text-xs text-gray-400">{{ (themeConfig.fontSize * 100).toFixed(0) }}%</span></div><input type="range" min="0.8" max="1.2" step="0.05" v-model.number="themeConfig.fontSize" @change="saveData" class="w-full h-2 bg-gray-200 rounded-lg cursor-pointer"></div><div><div class="flex justify-between mb-2"><span class="text-xs font-bold text-gray-500">色号</span></div><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full border border-gray-200 shadow-sm shrink-0" :style="{backgroundColor: themeConfig.fontColor}"></div><input type="text" v-model="themeConfig.fontColor" @change="saveData" placeholder="#000000" class="flex-1 bg-gray-50 px-3 py-2 rounded-xl text-sm border border-gray-200 font-mono outline-none uppercase"></div></div></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">预设</span><button @click="saveFontPreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="fontPresets.length === 0" class="p-6 text-center text-gray-400 text-xs">无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(fp, idx) in fontPresets" :key="idx" class="p-4 flex items-center justify-between"><div class="flex-1 min-w-0 mr-2"><div class="font-bold text-gray-800 text-sm truncate" :style="{fontFamily: fp.fontFamily}">{{ fp.name }}</div></div><div class="flex items-center gap-2"><button @click="applyFontPreset(fp)" class="w-7 h-7 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-check text-[10px]"></i></button><button @click="deleteFontPreset(idx)" class="w-7 h-7 rounded-full bg-red-50 text-red-500 flex items-center justify-center"><i class="fas fa-trash text-[10px]"></i></button></div></div></div></div></div></div></transition><transition name="page-slide"><div v-if="themesPage === 'icons'" class="absolute inset-0 p-4 pb-20"><div class="space-y-4"><div class="flex justify-end"><button @click="resetAllIcons" class="text-xs text-red-500 font-bold px-3 py-1 bg-red-50 rounded-lg active:bg-red-100">重置所有</button></div><div class="space-y-3"><div v-for="appId in appList" :key="appId" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col gap-3"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-xl border border-gray-100 overflow-hidden flex items-center justify-center bg-gray-50 shrink-0 home-icon-custom"><img v-if="hasCustomIcon(appId)" :src="getAppIcon(appId)" class="w-full h-full object-cover"><i v-else :class="getDefaultIconClass(appId) + ' text-gray-400 text-xl'"></i></div><div class="flex-1"><label class="text-[10px] font-bold text-gray-400 mb-1 block">应用名称</label><input :value="getAppName(appId)" @input="(e)=>setAppName(appId, e.target.value)" class="w-full bg-gray-50 px-2 py-1.5 rounded-lg text-sm border border-gray-200 outline-none"></div></div><div class="flex gap-2"><input v-model="tempIconUrls[appId]" placeholder="图标 URL" class="flex-1 bg-gray-50 px-3 py-2 rounded-lg text-xs border border-gray-200 outline-none"><button @click="setAppIcon(appId, tempIconUrls[appId])" class="px-3 bg-black text-white rounded-lg text-xs font-bold">确定</button><button @click="triggerIconUpload(appId)" class="px-3 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold active:bg-gray-200"><i class="fas fa-image"></i></button><button @click="resetApp(appId)" class="px-3 bg-red-50 text-red-500 rounded-lg text-xs active:bg-red-100"><i class="fas fa-undo"></i></button></div></div></div><input type="file" ref="iconUploadInput" accept="image/*" class="hidden" @change="handleIconFile"></div></div></transition></main></div></transition>
     
     <!-- 世界书 App -->
     <transition name="app-slide"><div v-if="currentApp === 'worldbook'" class="absolute inset-0 z-[1000] bg-gray-50 flex flex-col overflow-hidden"><header class="bg-white/80 backdrop-blur h-[90px] pt-10 flex items-center justify-between px-4 border-b border-gray-200 sticky top-0 z-10"><button @click="closeApp" class="w-8 h-8 flex items-center justify-center text-gray-800 bg-gray-100 rounded-full active:bg-gray-200 transition"><i class="fas fa-times text-sm"></i></button><h1 class="font-bold text-gray-900 text-[17px]">世界书</h1><div class="flex gap-2"><button @click="openWorldModal('folder')" class="w-8 h-8 flex items-center justify-center text-yellow-600 bg-yellow-50 rounded-full"><i class="fas fa-folder-plus text-xs"></i></button><button @click="openWorldModal('file')" class="w-8 h-8 flex items-center justify-center text-blue-600 bg-blue-50 rounded-full"><i class="fas fa-file-circle-plus text-xs"></i></button></div></header><main class="flex-1 overflow-y-auto p-4 space-y-2"><div v-if="folders.length === 0 && rootFiles.length === 0" class="text-center text-gray-400 mt-20 text-xs">暂无内容，请点击右上角添加</div><div v-for="folder in folders" :key="folder.id" class="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm"><div @click="toggleFolder(folder.id)" class="p-4 flex items-center justify-between active:bg-gray-50 transition cursor-pointer"><div class="flex items-center gap-3"><i class="fas fa-folder text-yellow-400 text-lg"></i><span class="font-bold text-gray-800 text-sm">{{ folder.name }}</span></div><div class="flex items-center gap-3"><button @click.stop="deleteWorldItem(folder.id)" class="text-gray-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button><i class="fas fa-chevron-right text-gray-300 text-xs transition-transform duration-200" :class="{'rotate-90': expandedFolders.includes(folder.id)}"></i></div></div><transition name="expand"><div v-if="expandedFolders.includes(folder.id)" class="bg-gray-50 border-t border-gray-100"><div v-if="getFiles(folder.id).length===0" class="p-3 text-center text-xs text-gray-400">空文件夹</div><div v-for="file in getFiles(folder.id)" :key="file.id" @click="viewFile(file)" class="p-3 pl-10 border-b border-gray-100 last:border-0 flex items-center justify-between active:bg-gray-100 cursor-pointer"><div class="flex items-center gap-3"><i class="fas fa-file-alt text-blue-400 text-sm"></i><span class="text-sm text-gray-700">{{ file.name }}</span></div><div class="flex items-center gap-3"><div @click.stop class="flex items-center"><input type="checkbox" class="switch-checkbox-sm" :id="'wf-'+file.id" :checked="file.isActive !== false" @change="toggleFileActive(file)"><label :for="'wf-'+file.id" class="switch-label-sm"><div class="switch-button-sm"></div></label></div><button @click.stop="deleteWorldItem(file.id)" class="text-gray-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button></div></div></div></transition></div><div v-for="file in rootFiles" :key="file.id" @click="viewFile(file)" class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between active:scale-[0.98] transition cursor-pointer"><div class="flex items-center gap-3"><i class="fas fa-file-alt text-gray-400 text-lg"></i><span class="font-bold text-gray-800 text-sm">{{ file.name }}</span></div><div class="flex items-center gap-3"><div @click.stop class="flex items-center"><input type="checkbox" class="switch-checkbox-sm" :id="'wf-'+file.id" :checked="file.isActive !== false" @change="toggleFileActive(file)"><label :for="'wf-'+file.id" class="switch-label-sm"><div class="switch-button-sm"></div></label></div><button @click.stop="deleteWorldItem(file.id)" class="text-gray-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button></div></div></main></div></transition>
@@ -3589,8 +3500,7 @@ createApp({
             notificationConfig: { currentSound: null, currentName: '默认提示音' }, soundPresets:[],
             pushConfig: { enabled: false }, // 新增推送设置
             
-            themeConfig: { wallpaper: '', wallpaper1: '', wallpaper2: '', fontFamily: '', fontUrl: '', fontSize: 1.0, fontColor: '#000000', isDarkMode: false }, fontPresets:[], fontInputUrl: '',
-            currentPage: 1, touchStartX: 0, settingWallpaperPage: 1, // 新增：页面滑动状态与壁纸设置页码
+            themeConfig: { wallpaper: '', fontFamily: '', fontUrl: '', fontSize: 1.0, fontColor: '#000000', isDarkMode: false }, fontPresets:[], fontInputUrl: '',
             
             // 美化配置
             beautifyConfig: {
@@ -5736,50 +5646,9 @@ Structure:
 
         saveFontPreset() { this.showInput("预设名称", "", "", (n) => { if(n) { this.fontPresets.push({ name:n, fontFamily:this.themeConfig.fontFamily, fontUrl:this.themeConfig.fontUrl, fontSize:this.themeConfig.fontSize, fontColor:this.themeConfig.fontColor }); this.saveData(); } }); },        
         deleteFontPreset(i) { this.showConfirm("删除？",()=>{this.fontPresets.splice(i,1);this.saveData();}); },
-        // --- 桌面滑动逻辑 ---
-        handleHomeTouchStart(e) {
-            this.touchStartX = e.touches[0].clientX;
-        },
-        handleHomeTouchEnd(e) {
-            const touchEndX = e.changedTouches[0].clientX;
-            const diff = this.touchStartX - touchEndX;
-            // 左滑进入第二页
-            if (diff > 50 && this.currentPage === 1) {
-                this.currentPage = 2;
-            } 
-            // 右滑回到第一页
-            else if (diff < -50 && this.currentPage === 2) {
-                this.currentPage = 1;
-            }
-        },
-
-        // --- 壁纸设置逻辑升级 ---
         triggerWallpaperUpload() { this.$refs.wallpaperInput.click(); },
-        async handleWallpaperUpload(e) { 
-            const f = e.target.files[0]; 
-            if(!f) return; 
-            try { 
-                const url = await compressImage(f, 1080); 
-                if (this.settingWallpaperPage === 2) {
-                    this.themeConfig.wallpaper2 = url;
-                } else {
-                    this.themeConfig.wallpaper1 = url;
-                    this.themeConfig.wallpaper = url; // 兼容旧版数据
-                }
-                this.saveData(); 
-            } catch(e){} 
-            e.target.value = '';
-        },
-        resetWallpaper() { 
-            if (this.settingWallpaperPage === 2) {
-                this.themeConfig.wallpaper2 = '';
-            } else {
-                this.themeConfig.wallpaper1 = '';
-                this.themeConfig.wallpaper = '';
-            }
-            this.saveData(); 
-            this.showToast(this.settingWallpaperPage === 2 ? '第二页将跟随第一页壁纸' : '已恢复默认壁纸');
-        },
+        async handleWallpaperUpload(e) { const f=e.target.files[0]; if(!f)return; try { this.themeConfig.wallpaper = await compressImage(f, 1080); this.saveData(); } catch(e){} },
+        resetWallpaper() { this.themeConfig.wallpaper=''; this.saveData(); },
         triggerAudioUpload() { this.$refs.audioInput.click(); },
         triggerAudioUrl() {
             this.showInput('网络提示音', '', '请输入音频URL直链(如 .mp3)', (val) => {
