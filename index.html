@@ -2236,13 +2236,15 @@
 
                      <!-- 右侧：带小翅膀的虚线框卡片 -->
                      <div class="w-[145px] h-full relative flex items-center justify-center">
-                         <!-- 左侧小翅膀 -->
-                         <img src="https://pic1.imgdb.cn/item/69ca59329547e6ce4e3f7d60.png" class="absolute -left-[14px] top-1/2 w-[28px] h-[28px] object-contain pointer-events-none z-10" style="transform: translateY(-50%); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.06));">
+                         <!-- 左侧小翅膀 (纯代码 SVG 绘制，完美复刻参考图的粉嫩感，不会失效) -->
+                         <svg class="absolute left-[0px] top-1/2 -translate-y-1/2 w-[26px] h-[26px] pointer-events-none z-10 drop-shadow-sm" viewBox="0 0 64 64" fill="#fffafb" stroke="#f4d3db" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                             <path d="M48 16 C36 10 20 14 12 26 C18 24 24 24 28 26 C20 32 14 38 12 44 C18 40 26 36 32 34 C26 42 22 50 20 56 C30 52 42 40 48 28 C52 22 52 18 48 16 Z" />
+                         </svg>
                          
-                         <!-- 卡片主体 -->
-                         <div class="w-full h-full bg-white rounded-[20px] border-2 border-dashed border-[#e8d5d9] flex flex-col items-center p-2.5 relative z-20 shadow-[0_4px_15px_rgba(200,180,190,0.1)]">
+                         <!-- 卡片主体 (宽度调小为 115px，只动白色的部分，留出两边翅膀的挂载空间) -->
+                         <div class="w-[115px] h-full bg-white rounded-[20px] border-2 border-dashed border-[#e8d5d9] flex flex-col items-center py-2.5 px-2 relative z-20 shadow-[0_4px_15px_rgba(200,180,190,0.1)]">
                              <!-- 顶部电量与状态栏 -->
-                             <div class="w-full flex justify-between items-center px-1 text-[#c2acb1]">
+                             <div class="w-full flex justify-between items-center px-0.5 text-[#c2acb1]">
                                  <div class="flex items-center gap-1">
                                      <span class="text-[9px] font-bold">{{ statusBar.batteryLevel }}%</span>
                                      <!-- 动态小电池 UI -->
@@ -2251,7 +2253,7 @@
                                          <div class="absolute -right-[2px] top-1/2 -translate-y-1/2 w-[1px] h-[3px] bg-[#c2acb1] rounded-r-[1px]"></div>
                                      </div>
                                  </div>
-                                 <div class="flex gap-1.5 text-[10px]">
+                                 <div class="flex gap-1 text-[9px]">
                                      <i class="fas fa-wifi"></i>
                                      <i class="far fa-heart"></i>
                                  </div>
@@ -2259,25 +2261,28 @@
                              
                              <!-- 中央头像区域 -->
                              <div class="relative mt-2">
-                                 <div class="w-[85px] h-[85px] bg-[#fcf3f5] rounded-[16px] overflow-hidden cursor-pointer shadow-inner border border-[#fdf5f7]" @click="triggerPage2Widget2AvatarUpload">
+                                 <!-- 头像稍微改小一点点适应变窄的卡片 -->
+                                 <div class="w-[78px] h-[78px] bg-[#fcf3f5] rounded-[16px] overflow-hidden cursor-pointer shadow-inner border border-[#fdf5f7]" @click="triggerPage2Widget2AvatarUpload">
                                      <img v-if="page2Widget2.avatar" :src="page2Widget2.avatar" class="w-full h-full object-cover">
                                      <i v-else class="fas fa-image flex h-full items-center justify-center text-[#fceef2] text-3xl"></i>
                                  </div>
-                                 <!-- 右上角气泡与小圆点 -->
-                                 <div class="absolute -right-4 -top-2 px-2 py-0.5 bg-white border border-[#fceef2] rounded-full text-[#a8989c] text-[9px] font-bold shadow-sm cursor-pointer z-30" @click="editPage2Widget2('status')">
+                                 <!-- 右上角气泡与小圆点 (往里收一点) -->
+                                 <div class="absolute -right-2.5 -top-2 px-2 py-0.5 bg-white border border-[#fceef2] rounded-full text-[#a8989c] text-[9px] font-bold shadow-sm cursor-pointer z-30" @click="editPage2Widget2('status')">
                                      {{ page2Widget2.status }}
                                  </div>
                                  <div class="absolute right-1 top-3 w-1.5 h-1.5 bg-white border border-[#fceef2] rounded-full z-30 shadow-sm"></div>
                              </div>
                              
-                             <!-- 底部猫爪按钮 -->
-                             <div class="mt-auto mb-0.5 w-9 h-[18px] bg-[#fdf5f7] rounded-full flex items-center justify-center text-[#d6b7be] text-[10px] cursor-pointer active:scale-95 transition shadow-sm" @click="showToast('🐾 喵~')">
+                             <!-- 底部猫爪按钮 (往下移一点，translate-y-1.5 配合 mt-auto 紧贴底部) -->
+                             <div class="mt-auto translate-y-1.5 w-9 h-[18px] bg-[#fdf5f7] rounded-full flex items-center justify-center text-[#d6b7be] text-[10px] cursor-pointer active:scale-95 transition shadow-sm" @click="showToast('🐾 喵~')">
                                  <i class="fas fa-paw"></i>
                              </div>
                          </div>
 
-                         <!-- 右侧小翅膀 -->
-                         <img src="https://pic1.imgdb.cn/item/69ca59329547e6ce4e3f7d60.png" class="absolute -right-[14px] top-1/2 w-[28px] h-[28px] object-contain pointer-events-none z-10" style="transform: translateY(-50%) scaleX(-1); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.06));">
+                         <!-- 右侧小翅膀 (SVG 绘制，镜像翻转) -->
+                         <svg class="absolute right-[0px] top-1/2 -translate-y-1/2 w-[26px] h-[26px] pointer-events-none z-10 drop-shadow-sm" style="transform: translateY(-50%) scaleX(-1);" viewBox="0 0 64 64" fill="#fffafb" stroke="#f4d3db" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                             <path d="M48 16 C36 10 20 14 12 26 C18 24 24 24 28 26 C20 32 14 38 12 44 C18 40 26 36 32 34 C26 42 22 50 20 56 C30 52 42 40 48 28 C52 22 52 18 48 16 Z" />
+                         </svg>
                      </div>
                  </div>
              
