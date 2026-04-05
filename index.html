@@ -2237,14 +2237,14 @@
                      <!-- 右侧：带小翅膀的虚线框卡片 (卡片收窄，纯代码重绘翅膀) -->
                      <div class="w-[145px] h-full relative flex items-center justify-center">
                          
-                         <!-- 左侧小翅膀 (纯 SVG 绘制) -->
-                         <div class="absolute left-[1px] top-1/2 w-[24px] h-[24px] pointer-events-none z-10" style="transform: translateY(-50%); filter: drop-shadow(0 2px 2px rgba(244,196,207,0.3));">
+                         <!-- 左侧小翅膀 (向左移出，不再被卡片完全挡住) -->
+                         <div class="absolute -left-[6px] top-1/2 w-[24px] h-[24px] pointer-events-none z-10" style="transform: translateY(-50%); filter: drop-shadow(0 2px 2px rgba(244,196,207,0.3));">
                              <svg viewBox="0 0 32 32" class="w-full h-full" fill="none" stroke="#f4c4cf" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                  <path d="M28 12 C 20 8 10 12 8 18 C 5 16 2 19 4 23 C 2 25 4 29 9 28 C 12 30 16 28 18 24" fill="#ffffff"/>
                              </svg>
                          </div>
                          
-                         <!-- 卡片主体 (宽度缩小到 125px，缩减底部 padding 让猫爪贴近边缘) -->
+                         <!-- 卡片主体 -->
                          <div class="w-[125px] h-full bg-white rounded-[20px] border-[1.5px] border-dashed border-[#e8d5d9] flex flex-col items-center pt-2.5 pb-1.5 px-2 relative z-20 shadow-[0_4px_15px_rgba(200,180,190,0.1)]">
                              <!-- 顶部电量与状态栏 -->
                              <div class="w-full flex justify-between items-center px-1 text-[#c2acb1]">
@@ -2266,24 +2266,24 @@
                              <div class="relative mt-2">
                                  <div class="w-[80px] h-[80px] bg-[#fcf3f5] rounded-[16px] overflow-hidden cursor-pointer shadow-inner border border-[#fdf5f7]" @click="triggerPage2Widget2AvatarUpload">
                                      <img v-if="page2Widget2.avatar" :src="page2Widget2.avatar" class="w-full h-full object-cover">
-                                     <!-- 初始头像不再使用图片URL，改回第一页那种灰色用户Icon占位 -->
+                                     <!-- 初始头像使用第一页那种灰色用户Icon占位 -->
                                      <i v-else class="fas fa-user flex h-full items-center justify-center text-gray-300 text-3xl"></i>
                                  </div>
-                                 <!-- 右上角气泡与小圆点 -->
-                                 <div class="absolute -right-4 -top-3 px-2 py-0.5 bg-white border border-[#fceef2] rounded-full text-[#a8989c] text-[9px] font-bold shadow-sm cursor-pointer z-30" @click="editPage2Widget2('status')">
+                                 <!-- 右上角气泡与小圆点 (整体往下移，避免遮挡顶部的 WiFi 和爱心) -->
+                                 <div class="absolute -right-4 top-0.5 px-2 py-0.5 bg-white border border-[#fceef2] rounded-full text-[#a8989c] text-[9px] font-bold shadow-sm cursor-pointer z-30" @click="editPage2Widget2('status')">
                                      {{ page2Widget2.status }}
                                  </div>
-                                 <div class="absolute right-0 top-2 w-1.5 h-1.5 bg-white border border-[#fceef2] rounded-full z-30 shadow-sm"></div>
+                                 <div class="absolute right-0 top-5 w-1.5 h-1.5 bg-white border border-[#fceef2] rounded-full z-30 shadow-sm"></div>
                              </div>
                              
-                             <!-- 底部猫爪按钮 (利用 mt-auto 和 mb-0 下沉到底部) -->
+                             <!-- 底部猫爪按钮 -->
                              <div class="mt-auto mb-0 w-9 h-[18px] bg-[#fdf5f7] rounded-full flex items-center justify-center text-[#d6b7be] text-[10px] cursor-pointer active:scale-95 transition shadow-sm" @click="showToast('🐾 喵~')">
                                  <i class="fas fa-paw"></i>
                              </div>
                          </div>
 
-                         <!-- 右侧小翅膀 (纯 SVG 绘制并水平翻转) -->
-                         <div class="absolute right-[1px] top-1/2 w-[24px] h-[24px] pointer-events-none z-10" style="transform: translateY(-50%) scaleX(-1); filter: drop-shadow(0 2px 2px rgba(244,196,207,0.3));">
+                         <!-- 右侧小翅膀 (向右移出，不再被卡片完全挡住) -->
+                         <div class="absolute -right-[6px] top-1/2 w-[24px] h-[24px] pointer-events-none z-10" style="transform: translateY(-50%) scaleX(-1); filter: drop-shadow(0 2px 2px rgba(244,196,207,0.3));">
                              <svg viewBox="0 0 32 32" class="w-full h-full" fill="none" stroke="#f4c4cf" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                  <path d="M28 12 C 20 8 10 12 8 18 C 5 16 2 19 4 23 C 2 25 4 29 9 28 C 12 30 16 28 18 24" fill="#ffffff"/>
                              </svg>
