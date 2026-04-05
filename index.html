@@ -2029,99 +2029,92 @@
          <!-- 滑动分页容器 -->
          <div class="flex-1 w-full flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory scrollbar-hide">
              
-             <!-- 第一页 (原主屏幕 - 灰白色调统一) -->
+             <!-- ================= 第一页 ================= -->
              <div class="w-full h-full shrink-0 snap-center flex flex-col items-center overflow-y-auto scrollbar-hide relative pb-[120px]">
                  <div class="w-full flex flex-col items-center skin-text-container">
                     
-                    <!-- 顶部名片 (灰白通透 UI) -->
+                    <!-- 顶部名片 -->
                     <div class="w-[90%] z-20 mt-2 mb-2 shrink-0">
-                        <div class="bg-white/95 backdrop-blur-sm rounded-[24px] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-100 relative">
+                        <div class="bg-white/90 backdrop-blur-sm rounded-[20px] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] relative">
                             <div class="flex justify-between items-start mb-3">
                                 <div class="flex gap-3">
-                                    <div class="w-[52px] h-[52px] border-[2px] border-white rounded-[14px] p-0.5 flex flex-col items-center justify-between shrink-0 cursor-pointer active:scale-95 transition bg-gray-50 shadow-sm" @click="triggerCardAvatarUpload">
-                                        <div class="w-full h-[70%] rounded-md overflow-hidden bg-gray-100 relative">
-                                            <img v-if="cardProfile.avatar" :src="cardProfile.avatar" class="w-full h-full object-cover">
+                                    <div class="w-[52px] h-[52px] border border-gray-100 rounded-lg p-0.5 flex flex-col items-center justify-between shrink-0 cursor-pointer active:scale-95 transition bg-white">
+                                        <div class="w-full h-[70%] rounded-md overflow-hidden bg-gray-50 relative">
+                                            <img v-if="cardProfile.avatar" :src="cardProfile.avatar" class="w-full h-full object-cover grayscale opacity-80">
                                             <i v-else class="fas fa-user text-gray-300 text-xl flex h-full items-center justify-center"></i>
                                         </div>
-                                        <span class="text-[8px] text-gray-400 scale-90 origin-bottom font-bold truncate w-full text-center" @click.stop="editCardProfile('status')">{{ cardProfile.status }}</span>
+                                        <span class="text-[8px] opacity-60 scale-90 origin-bottom font-medium truncate w-full text-center" @click.stop="editCardProfile('status')">{{ cardProfile.status }}</span>
                                     </div>
                                     <div class="flex flex-col pt-0.5" style="font-size: var(--custom-font-size)">
-                                        <h2 @click="editCardProfile('name')" class="text-[14px] font-bold tracking-wider mb-0.5 cursor-pointer active:opacity-50 text-gray-700" :style="{color: themeConfig.fontColor}">{{ cardProfile.name }}</h2>
-                                        <p @click="editCardProfile('id')" class="text-[10px] text-gray-400 font-mono tracking-wide cursor-pointer active:opacity-50" :style="{color: themeConfig.fontColor}">@ {{ cardProfile.id }}</p>
+                                        <h2 @click="editCardProfile('name')" class="text-[14px] font-bold tracking-wider mb-0.5 cursor-pointer active:opacity-50" :style="{color: themeConfig.fontColor}">{{ cardProfile.name }}</h2>
+                                        <p @click="editCardProfile('id')" class="text-[10px] opacity-60 font-mono tracking-wide cursor-pointer active:opacity-50" :style="{color: themeConfig.fontColor}">@ {{ cardProfile.id }}</p>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-1 text-[10px] text-gray-400 font-bold pt-1" :style="{color: themeConfig.fontColor}">
+                                <div class="flex items-center gap-1 text-[10px] opacity-60 font-medium pt-1" :style="{color: themeConfig.fontColor}">
                                     <span>{{ displayDate.dateString }}</span>
-                                    <i class="fas fa-heart text-[8px] text-gray-200"></i>
+                                    <i class="fas fa-heart text-[8px]"></i>
                                     <span>{{ displayDate.dayString }}</span>
                                 </div>
                             </div>
-                            <div @click="editCardProfile('bio')" class="text-[12px] leading-relaxed font-bold tracking-wide text-justify cursor-pointer active:opacity-50 border-t border-gray-100 pt-2 text-gray-500" :style="{color: themeConfig.fontColor, fontSize: 'calc(var(--custom-font-size) * 0.9)'}">{{ cardProfile.bio }}</div>
+                            <div @click="editCardProfile('bio')" class="text-[12px] leading-relaxed font-medium tracking-wide text-justify cursor-pointer active:opacity-50 border-t border-gray-50/20 pt-2" :style="{color: themeConfig.fontColor, fontSize: 'calc(var(--custom-font-size) * 0.9)'}">{{ cardProfile.bio }}</div>
                         </div>
                     </div>
 
                     <!-- 中部个人信息 -->
                     <div class="flex flex-col items-center w-full mb-3 z-10 shrink-0" style="font-size: var(--custom-font-size)">
-                        <div class="w-[84px] h-[84px] rounded-full border-[3px] border-white bg-gray-50 shadow-sm mb-2 cursor-pointer active:scale-95 transition p-0.5" @click="triggerHomeAvatarUpload">
+                        <div class="w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-gray-200 to-white shadow-lg mb-2 cursor-pointer active:scale-95 transition" @click="triggerHomeAvatarUpload">
                             <div class="w-full h-full rounded-full overflow-hidden bg-gray-100 relative">
                                 <img v-if="homeProfile.avatar" :src="homeProfile.avatar" class="w-full h-full object-cover">
                                 <i v-else class="fas fa-user text-gray-300 text-3xl flex h-full items-center justify-center"></i>
                             </div>
                         </div>
-                        <h2 @click="editHomeProfile('name')" class="text-lg font-bold tracking-wide cursor-pointer active:opacity-50 transition text-gray-700" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow-md': themeConfig.wallpaper}">{{ homeProfile.name }}</h2>
-                        <p @click="editHomeProfile('id')" class="text-xs text-gray-400 font-bold mt-1 font-mono tracking-wider cursor-pointer active:opacity-50 transition" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': themeConfig.wallpaper}">@{{ homeProfile.id }}</p>
-                        <p @click="editHomeProfile('bio')" class="text-[10px] text-gray-500 font-bold mt-2 tracking-[0.1em] cursor-pointer active:opacity-50 transition px-8 text-center" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': themeConfig.wallpaper}">{{ homeProfile.bio }}</p>
-                        <div @click="editHomeProfile('location')" class="mt-3 flex items-center gap-1 text-xs font-bold text-gray-400 cursor-pointer active:opacity-50 transition" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': themeConfig.wallpaper}">
-                            <i class="fas fa-map-marker-alt text-gray-300"></i><span>{{ homeProfile.location }}</span>
+                        <h2 @click="editHomeProfile('name')" class="text-lg font-bold tracking-wide cursor-pointer active:opacity-50 transition" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow-md': themeConfig.wallpaper}">{{ homeProfile.name }}</h2>
+                        <p @click="editHomeProfile('id')" class="text-xs opacity-80 mt-1 font-mono tracking-wider cursor-pointer active:opacity-50 transition" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': themeConfig.wallpaper}">@{{ homeProfile.id }}</p>
+                        <p @click="editHomeProfile('bio')" class="text-[10px] opacity-80 mt-2 tracking-[0.1em] cursor-pointer active:opacity-50 transition px-8 text-center" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': themeConfig.wallpaper}">{{ homeProfile.bio }}</p>
+                        <div @click="editHomeProfile('location')" class="mt-3 flex items-center gap-1 text-xs opacity-80 cursor-pointer active:opacity-50 transition" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': themeConfig.wallpaper}">
+                            <i class="fas fa-map-marker-alt"></i><span>{{ homeProfile.location }}</span>
                         </div>
                     </div>
 
                     <!-- 下方 App 与小部件矩阵 -->
                     <div class="w-full px-8 grid grid-cols-2 gap-6 mb-auto z-10 items-start shrink-0" style="font-size: var(--custom-font-size)">
-                        <!-- 左侧4个App -->
                         <div class="flex flex-col items-center">
-                            <h3 @click="editHomeConfig('widgetTitle', '修改左侧标题')" class="text-sm font-bold mb-4 cursor-pointer active:opacity-50 transition self-start pl-2 text-gray-600" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow-md': themeConfig.wallpaper}">{{ homeConfig.widgetTitle }}</h3>
+                            <h3 @click="editHomeConfig('widgetTitle', '修改左侧标题')" class="text-sm font-bold mb-4 cursor-pointer active:opacity-50 transition self-start pl-2" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow-md': themeConfig.wallpaper}">{{ homeConfig.widgetTitle }}</h3>
                             <div class="grid grid-cols-2 gap-x-5 gap-y-5 justify-items-center w-full">
                                 <div v-for="id in ['wechat', 'themes', 'worldbook', 'settings']" :key="id" class="flex flex-col items-center gap-1.5 home-icon cursor-pointer" :class="{'home-icon-custom': hasCustomIcon(id)}" @click="handleAppClick(id)">
-                                    <div class="w-12 h-12 rounded-2xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-gray-100 flex items-center justify-center text-xl overflow-hidden">
+                                    <div class="w-12 h-12 rounded-xl bg-white text-gray-400 flex items-center justify-center text-xl shadow-sm border border-gray-100 overflow-hidden">
                                         <img v-if="hasCustomIcon(id)" :src="getAppIcon(id)" class="w-full h-full object-cover">
-                                        <i v-else :class="getDefaultIconClass(id)" class="text-gray-400"></i>
+                                        <i v-else :class="getDefaultIconClass(id)"></i>
                                     </div>
-                                    <span class="text-[10px] font-bold text-gray-500" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': themeConfig.wallpaper}">{{ getAppName(id) }}</span>
+                                    <span class="text-[10px] font-bold" :style="{color: themeConfig.fontColor}" :class="{'drop-shadow': themeConfig.wallpaper}">{{ getAppName(id) }}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 右侧两张图与虚线翅膀卡片 -->
-                        <div class="flex flex-col items-center pt-8">
-                            <!-- 顶部两个头像和气泡 -->
-                            <div class="flex gap-3 justify-center items-end mt-2">
-                                <div class="flex flex-col items-center relative w-[60px]">
-                                    <div @click="editCustomWidget(0, 'bubble')" class="absolute -top-7 px-3 py-1 bg-white border border-gray-100 rounded-full text-gray-400 text-[10px] font-bold shadow-sm cursor-pointer z-20 whitespace-nowrap">{{ customWidgets[0].bubble }}</div>
-                                    <div class="absolute -top-2 w-1.5 h-1.5 bg-white border border-gray-100 rounded-full z-20 shadow-sm"></div>
-                                    
-                                    <div class="w-[60px] h-[60px] rounded-[16px] border-[2px] border-white shadow-[0_2px_10px_rgba(0,0,0,0.03)] overflow-hidden bg-gray-50 cursor-pointer active:scale-95 transition relative z-10" @click="triggerWidgetImageUpload(0)">
+                        <div class="flex flex-col items-center">
+                            <div class="flex gap-2 justify-center items-end mt-2">
+                                <div class="flex flex-col items-center relative w-16">
+                                    <div @click="editCustomWidget(0, 'bubble')" class="widget-bubble cursor-pointer active:scale-95 transition !bg-white/95 !backdrop-blur-sm !text-gray-600 !rounded-2xl !px-3 !py-1.5 !shadow-sm !font-bold mb-1">{{ customWidgets[0].bubble }}</div>
+                                    <div class="w-[60px] h-[60px] rounded-full border-[3px] border-white/95 shadow-[0_2px_10px_rgba(0,0,0,0.1)] overflow-hidden bg-gray-100 cursor-pointer active:scale-95 transition" @click="triggerWidgetImageUpload(0)">
                                         <img v-if="customWidgets[0].image" :src="customWidgets[0].image" class="w-full h-full object-cover">
-                                        <i v-else class="fas fa-image flex h-full items-center justify-center text-gray-200 text-xl"></i>
+                                        <div v-else class="w-full h-full flex items-center justify-center text-gray-300 text-xs">图1</div>
                                     </div>
                                 </div>
-                                <div class="flex flex-col items-center relative w-[60px]">
-                                    <div @click="editCustomWidget(1, 'bubble')" class="absolute -top-7 px-3 py-1 bg-white border border-gray-100 rounded-full text-gray-400 text-[10px] font-bold shadow-sm cursor-pointer z-20 whitespace-nowrap">{{ customWidgets[1].bubble }}</div>
-                                    <div class="absolute -top-2 w-1.5 h-1.5 bg-white border border-gray-100 rounded-full z-20 shadow-sm"></div>
-
-                                    <div class="w-[60px] h-[60px] rounded-[16px] border-[2px] border-white shadow-[0_2px_10px_rgba(0,0,0,0.03)] overflow-hidden bg-gray-50 cursor-pointer active:scale-95 transition relative z-10" @click="triggerWidgetImageUpload(1)">
+                                <div class="flex flex-col items-center relative w-16">
+                                    <div @click="editCustomWidget(1, 'bubble')" class="widget-bubble cursor-pointer active:scale-95 transition !bg-white/95 !backdrop-blur-sm !text-gray-600 !rounded-2xl !px-3 !py-1.5 !shadow-sm !font-bold mb-1">{{ customWidgets[1].bubble }}</div>
+                                    <div class="w-[60px] h-[60px] rounded-full border-[3px] border-white/95 shadow-[0_2px_10px_rgba(0,0,0,0.1)] overflow-hidden bg-gray-100 cursor-pointer active:scale-95 transition" @click="triggerWidgetImageUpload(1)">
                                         <img v-if="customWidgets[1].image" :src="customWidgets[1].image" class="w-full h-full object-cover">
-                                        <i v-else class="fas fa-image flex h-full items-center justify-center text-gray-200 text-xl"></i>
+                                        <div v-else class="w-full h-full flex items-center justify-center text-gray-300 text-xs">图2</div>
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- 下方的天数记录 -->
-                            <div class="relative mt-8 min-w-[120px] max-w-[140px] w-fit px-4 min-h-[36px] h-auto py-2 bg-white rounded-[20px] flex items-center justify-center shadow-[0_4px_15px_rgba(0,0,0,0.03)] cursor-pointer active:scale-95 transition border-[1.5px] border-dashed border-gray-300" @click="editHomeConfig('rightWidgetTitle', '修改天数')">
+                            <!-- 天数记录 -->
+                            <div class="relative mt-6 min-w-[120px] max-w-[240px] w-fit px-5 min-h-[40px] h-auto py-2 bg-[#f0f0f0] rounded-[20px] flex items-center justify-center shadow-[inset_0_2px_5px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] cursor-pointer active:scale-95 transition border-2 border-white" @click="editHomeConfig('rightWidgetTitle', '修改天数')">
                                 <div class="absolute -left-[14px] top-1/2 w-[32px] h-[32px] pointer-events-none z-30" style="transform: translateY(-50%); filter: drop-shadow(0 2px 2px rgba(0,0,0,0.06));">
                                     <img src="https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png" class="w-full h-full object-contain grayscale opacity-80">
                                 </div>
-                                <span class="text-[13px] font-bold text-gray-400 tracking-wider z-10 text-center break-words whitespace-pre-wrap leading-snug" :style="{color: themeConfig.fontColor}">{{ homeConfig.rightWidgetTitle || '6440天' }}</span>
+                                <span class="text-[13px] font-bold text-[#999999] tracking-wider z-10 text-center break-words whitespace-pre-wrap leading-snug" :style="{color: themeConfig.fontColor}">{{ homeConfig.rightWidgetTitle || '6440天' }}</span>
                                 <div class="absolute -right-[14px] top-1/2 w-[32px] h-[32px] pointer-events-none z-30" style="transform: translateY(-50%) scaleX(-1); filter: drop-shadow(0 2px 2px rgba(0,0,0,0.06));">
                                     <img src="https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png" class="w-full h-full object-contain grayscale opacity-80">
                                 </div>
@@ -2131,7 +2124,7 @@
                 </div>
              </div> <!-- 第一页结束 -->
 
-             <!-- 第二页 (向左滑动显示) -->
+             <!-- ================= 第二页 ================= -->
              <div class="w-full h-full shrink-0 snap-center flex flex-col items-center overflow-y-auto scrollbar-hide relative pb-[120px] pt-8 px-5">
                  
                  <!-- 顶部灰白卡片 -->
@@ -2152,7 +2145,6 @@
                              <div class="bg-gray-100 px-3 py-1 rounded-full">{{ weatherTemp }}</div>
                              <div class="bg-gray-100 px-3 py-1 rounded-full">{{ statusBar.batteryLevel }}%</div>
                          </div>
-                         
                          <div class="flex gap-1.5">
                              <div class="relative w-[26px] h-[26px] flex items-center justify-center text-gray-400 text-[10px]">
                                  <svg class="absolute inset-0 text-gray-100 w-full h-full scale-[1.1]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
@@ -2168,12 +2160,10 @@
                              </div>
                          </div>
                      </div>
-                     
                      <div class="flex items-center gap-2 mb-4">
                          <span class="text-gray-700 font-bold text-[12px] tracking-wide">{{ page2Profile.name }}</span>
                          <span class="text-[9px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full cursor-pointer font-bold active:scale-95 transition" @click="editPage2Profile('name')">修改</span>
                      </div>
-                     
                      <div class="w-[92%] bg-gray-50 border border-gray-100 rounded-xl py-2.5 flex justify-around items-center text-gray-400 text-[11px] font-bold">
                          <div class="flex items-center gap-1.5 cursor-pointer active:scale-95 transition" @click="showToast('功能开发中')">
                              <i class="far fa-edit"></i> 修改资料
@@ -2323,25 +2313,26 @@
              
          </div> <!-- 闭合滑动分页容器 -->
 
-         <!-- 底部Dock栏 (绝对定位，悬浮在两页的最上方，采用灰白色系UI统一) -->
-        <div class="dock-container w-[92%] left-[4%] h-24 flex items-center justify-around px-4 absolute bottom-4 shrink-0 z-20 shadow-[0_8px_30px_rgba(0,0,0,0.05)] border border-gray-100 bg-white/90 backdrop-blur-md">
-            <div v-for="id in ['icity', 'forum', 'check', 'pinxixi']" :key="id" class="flex flex-col items-center gap-1.5 home-icon cursor-pointer" :class="{'home-icon-custom': hasCustomIcon(id)}" @click="showToast('仅作为展示')">
-                <div class="w-12 h-12 rounded-2xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-gray-100 flex items-center justify-center text-xl overflow-hidden">
+         <!-- 底部Dock栏 -->
+         <div class="dock-container w-[92%] left-[4%] h-24 flex items-center justify-around px-4 absolute bottom-4 shrink-0 z-20 shadow-sm bg-white/60 backdrop-blur-md">
+            <div v-for="id in ['icity', 'forum', 'check', 'pinxixi']" :key="id" class="flex flex-col items-center gap-1 home-icon cursor-pointer" :class="{'home-icon-custom': hasCustomIcon(id)}" @click="showToast('仅作为展示')">
+                <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-400 text-lg overflow-hidden">
                     <img v-if="hasCustomIcon(id)" :src="getAppIcon(id)" class="w-full h-full object-cover">
-                    <i v-else :class="getDefaultIconClass(id)" class="text-gray-300"></i>
+                    <i v-else :class="getDefaultIconClass(id)"></i>
                 </div>
-                <span class="text-[10px] font-bold text-gray-500">{{ getAppName(id) }}</span>
+                <span class="text-[10px] font-bold text-gray-600">{{ getAppName(id) }}</span>
             </div>
         </div>
-
+        
+        <!-- 文件上传 Inputs -->
         <input type="file" ref="homeAvatarInput" accept="image/*" class="hidden" @change="handleHomeAvatarChange">
         <input type="file" ref="cardAvatarInput" accept="image/*" class="hidden" @change="handleCardAvatarChange">
         <input type="file" ref="widgetImageInput" accept="image/*" class="hidden" @change="handleWidgetImageChange">
         <input type="file" ref="page2AvatarInput" accept="image/*" class="hidden" @change="handlePage2AvatarChange">
         <input type="file" ref="page2WidgetImgInput" accept="image/*" class="hidden" @change="handlePage2WidgetImgChange">
         <input type="file" ref="page2Widget2AvatarInput" accept="image/*" class="hidden" @change="handlePage2Widget2AvatarChange">
-        
-    </div> <!-- 【修复致命Bug！！！】：这里必须有一个闭合标签，让微信App脱离主屏幕的魔爪！ -->
+
+    </div> <!-- 【修复致命Bug！！！】：彻底闭合主界面 -->
 
     <!-- ================= 微信 (WeChat) App ================= -->
     <transition name="app-slide">
