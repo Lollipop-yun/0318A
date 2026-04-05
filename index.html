@@ -2234,14 +2234,14 @@
                          </div>
                      </div>
 
-                     <!-- 右侧：带小翅膀的虚线框卡片 (全新云朵胖翅膀，大幅外移防遮挡) -->
+                     <!-- 右侧：带小翅膀的虚线框卡片 (严格还原图片：极简三瓣云朵翅膀) -->
                      <div class="w-[145px] h-full relative flex items-center justify-center">
                          
-                         <!-- 左侧小翅膀 (置于底层，大幅向左移出，纯代码绘制超软萌云朵形) -->
-                         <div class="absolute -left-[22px] top-1/2 w-[34px] h-[34px] pointer-events-none z-10" style="transform: translateY(-50%); filter: drop-shadow(0 2px 2px rgba(232,213,217,0.5));">
-                             <svg viewBox="0 0 100 100" class="w-full h-full" fill="#ffffff" stroke="#e8d5d9" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-                                 <!-- 三个胖嘟嘟的小肉垫形状 -->
-                                 <path d="M 80 25 C 55 5, 20 20, 35 45 C 10 45, 10 75, 35 70 C 30 90, 60 90, 80 80 Z"/>
+                         <!-- 左侧小翅膀 (极简云朵状，颜色对齐边框，向外移出) -->
+                         <div class="absolute -left-[11px] top-1/2 w-[26px] h-[26px] pointer-events-none z-30" style="transform: translateY(-50%); filter: drop-shadow(0 1px 2px rgba(232,213,217,0.4));">
+                             <svg viewBox="0 0 100 100" class="w-full h-full" fill="#ffffff" stroke="#e8d5d9" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+                                 <!-- 三瓣云朵状贝塞尔曲线 -->
+                                 <path d="M 75 35 C 45 5, 5 25, 20 60 C 0 80, 25 105, 50 85 C 65 110, 100 90, 85 60 C 95 45, 85 35, 75 35 Z" />
                              </svg>
                          </div>
                          
@@ -2269,12 +2269,11 @@
                                      <img v-if="page2Widget2.avatar" :src="page2Widget2.avatar" class="w-full h-full object-cover">
                                      <i v-else class="fas fa-user flex h-full items-center justify-center text-gray-300 text-3xl"></i>
                                  </div>
-                                 <!-- 右上角气泡与小圆点 (大幅度向下移动，彻底避开 WiFi 图标) -->
-                                 <div class="absolute -right-4 top-5 px-2 py-0.5 bg-white border border-[#fceef2] rounded-full text-[#a8989c] text-[9px] font-bold shadow-sm cursor-pointer z-30" @click="editPage2Widget2('status')">
+                                 <!-- 右上角气泡与小圆点 -->
+                                 <div class="absolute -right-4 top-2 px-2 py-0.5 bg-white border border-[#fceef2] rounded-full text-[#a8989c] text-[9px] font-bold shadow-sm cursor-pointer z-30" @click="editPage2Widget2('status')">
                                      {{ page2Widget2.status }}
                                  </div>
-                                 <!-- 小尾巴跟着下移 -->
-                                 <div class="absolute right-0 top-9 w-1.5 h-1.5 bg-white border border-[#fceef2] rounded-full z-30 shadow-sm"></div>
+                                 <div class="absolute right-0 top-6 w-1.5 h-1.5 bg-white border border-[#fceef2] rounded-full z-30 shadow-sm"></div>
                              </div>
                              
                              <!-- 底部猫爪按钮 -->
@@ -2283,10 +2282,10 @@
                              </div>
                          </div>
 
-                         <!-- 右侧小翅膀 (水平翻转) -->
-                         <div class="absolute -right-[22px] top-1/2 w-[34px] h-[34px] pointer-events-none z-10" style="transform: translateY(-50%) scaleX(-1); filter: drop-shadow(0 2px 2px rgba(232,213,217,0.5));">
-                             <svg viewBox="0 0 100 100" class="w-full h-full" fill="#ffffff" stroke="#e8d5d9" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-                                 <path d="M 80 25 C 55 5, 20 20, 35 45 C 10 45, 10 75, 35 70 C 30 90, 60 90, 80 80 Z"/>
+                         <!-- 右侧小翅膀 (直接复用并水平翻转) -->
+                         <div class="absolute -right-[11px] top-1/2 w-[26px] h-[26px] pointer-events-none z-30" style="transform: translateY(-50%) scaleX(-1); filter: drop-shadow(0 1px 2px rgba(232,213,217,0.4));">
+                             <svg viewBox="0 0 100 100" class="w-full h-full" fill="#ffffff" stroke="#e8d5d9" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+                                 <path d="M 75 35 C 45 5, 5 25, 20 60 C 0 80, 25 105, 50 85 C 65 110, 100 90, 85 60 C 95 45, 85 35, 75 35 Z" />
                              </svg>
                          </div>
                      </div>
