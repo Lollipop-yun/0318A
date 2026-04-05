@@ -2234,20 +2234,20 @@
                          </div>
                      </div>
 
-                     <!-- 右侧：带小翅膀的虚线框卡片 -->
-                     <div class="w-[145px] h-full relative flex items-center justify-center">
-                         <!-- 右侧：带小翅膀的虚线框卡片 -->
+                     <!-- 右侧：带小翅膀的虚线框卡片 (卡片收窄，纯代码重绘翅膀) -->
                      <div class="w-[145px] h-full relative flex items-center justify-center">
                          
-                         <!-- 左侧小翅膀 (纯代码精绘，三片小羽毛圆润可爱，不会被挡住) -->
-                         <svg class="absolute -left-[1px] top-[46%] -translate-y-1/2 w-[38px] h-[38px] pointer-events-none z-10 drop-shadow-sm" viewBox="0 0 100 100" fill="#ffffff" stroke="#e8d5d9" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
-                             <path d="M 90 35 C 90 10, 50 15, 35 30 C 15 35, 10 60, 25 70 C 30 70, 35 65, 40 68 C 40 85, 65 85, 70 70 C 75 65, 80 65, 85 68 C 90 80, 110 70, 100 50 C 95 45, 90 40, 90 35 Z" />
-                         </svg>
+                         <!-- 左侧小翅膀 (纯 SVG 绘制) -->
+                         <div class="absolute left-[1px] top-1/2 w-[24px] h-[24px] pointer-events-none z-10" style="transform: translateY(-50%); filter: drop-shadow(0 2px 2px rgba(244,196,207,0.3));">
+                             <svg viewBox="0 0 32 32" class="w-full h-full" fill="none" stroke="#f4c4cf" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                 <path d="M28 12 C 20 8 10 12 8 18 C 5 16 2 19 4 23 C 2 25 4 29 9 28 C 12 30 16 28 18 24" fill="#ffffff"/>
+                             </svg>
+                         </div>
                          
-                         <!-- 卡片主体 (宽度调小为 105px，让翅膀完美露出来) -->
-                         <div class="w-[105px] h-full bg-white rounded-[20px] border-2 border-dashed border-[#e8d5d9] flex flex-col items-center py-2.5 px-2 relative z-20 shadow-[0_4px_15px_rgba(200,180,190,0.1)]">
+                         <!-- 卡片主体 (宽度缩小到 125px，缩减底部 padding 让猫爪贴近边缘) -->
+                         <div class="w-[125px] h-full bg-white rounded-[20px] border-[1.5px] border-dashed border-[#e8d5d9] flex flex-col items-center pt-2.5 pb-1.5 px-2 relative z-20 shadow-[0_4px_15px_rgba(200,180,190,0.1)]">
                              <!-- 顶部电量与状态栏 -->
-                             <div class="w-full flex justify-between items-center px-0.5 text-[#c2acb1]">
+                             <div class="w-full flex justify-between items-center px-1 text-[#c2acb1]">
                                  <div class="flex items-center gap-1">
                                      <span class="text-[9px] font-bold">{{ statusBar.batteryLevel }}%</span>
                                      <!-- 动态小电池 UI -->
@@ -2256,35 +2256,38 @@
                                          <div class="absolute -right-[2px] top-1/2 -translate-y-1/2 w-[1px] h-[3px] bg-[#c2acb1] rounded-r-[1px]"></div>
                                      </div>
                                  </div>
-                                 <div class="flex gap-1 text-[9px]">
+                                 <div class="flex gap-1.5 text-[10px]">
                                      <i class="fas fa-wifi"></i>
                                      <i class="far fa-heart"></i>
                                  </div>
                              </div>
                              
-                             <!-- 中央头像区域 (同步微调大小适应卡片) -->
+                             <!-- 中央头像区域 -->
                              <div class="relative mt-2">
-                                 <div class="w-[72px] h-[72px] bg-[#fcf3f5] rounded-[16px] overflow-hidden cursor-pointer shadow-inner border border-[#fdf5f7]" @click="triggerPage2Widget2AvatarUpload">
+                                 <div class="w-[80px] h-[80px] bg-[#fcf3f5] rounded-[16px] overflow-hidden cursor-pointer shadow-inner border border-[#fdf5f7]" @click="triggerPage2Widget2AvatarUpload">
                                      <img v-if="page2Widget2.avatar" :src="page2Widget2.avatar" class="w-full h-full object-cover">
-                                     <i v-else class="fas fa-image flex h-full items-center justify-center text-[#fceef2] text-3xl"></i>
+                                     <!-- 初始头像不再使用图片URL，改回第一页那种灰色用户Icon占位 -->
+                                     <i v-else class="fas fa-user flex h-full items-center justify-center text-gray-300 text-3xl"></i>
                                  </div>
-                                 <!-- 右上角气泡与小圆点 (往外扩一点悬空) -->
-                                 <div class="absolute -right-3 -top-2.5 px-2 py-0.5 bg-white border border-[#fceef2] rounded-full text-[#a8989c] text-[9px] font-bold shadow-sm cursor-pointer z-30" @click="editPage2Widget2('status')">
+                                 <!-- 右上角气泡与小圆点 -->
+                                 <div class="absolute -right-4 -top-3 px-2 py-0.5 bg-white border border-[#fceef2] rounded-full text-[#a8989c] text-[9px] font-bold shadow-sm cursor-pointer z-30" @click="editPage2Widget2('status')">
                                      {{ page2Widget2.status }}
                                  </div>
-                                 <div class="absolute right-0 top-3 w-1.5 h-1.5 bg-white border border-[#fceef2] rounded-full z-30 shadow-sm"></div>
+                                 <div class="absolute right-0 top-2 w-1.5 h-1.5 bg-white border border-[#fceef2] rounded-full z-30 shadow-sm"></div>
                              </div>
                              
-                             <!-- 底部猫爪按钮 (进一步下移，完美压在底部虚线边框上) -->
-                             <div class="mt-auto translate-y-3 w-9 h-[18px] bg-[#fdf5f7] rounded-full flex items-center justify-center text-[#d6b7be] text-[10px] cursor-pointer active:scale-95 transition shadow-sm" @click="showToast('🐾 喵~')">
+                             <!-- 底部猫爪按钮 (利用 mt-auto 和 mb-0 下沉到底部) -->
+                             <div class="mt-auto mb-0 w-9 h-[18px] bg-[#fdf5f7] rounded-full flex items-center justify-center text-[#d6b7be] text-[10px] cursor-pointer active:scale-95 transition shadow-sm" @click="showToast('🐾 喵~')">
                                  <i class="fas fa-paw"></i>
                              </div>
                          </div>
 
-                         <!-- 右侧小翅膀 (纯代码 SVG，利用 scale-x-[-1] 镜像翻转) -->
-                         <svg class="absolute -right-[1px] top-[46%] -translate-y-1/2 w-[38px] h-[38px] pointer-events-none z-10 drop-shadow-sm scale-x-[-1]" viewBox="0 0 100 100" fill="#ffffff" stroke="#e8d5d9" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
-                             <path d="M 90 35 C 90 10, 50 15, 35 30 C 15 35, 10 60, 25 70 C 30 70, 35 65, 40 68 C 40 85, 65 85, 70 70 C 75 65, 80 65, 85 68 C 90 80, 110 70, 100 50 C 95 45, 90 40, 90 35 Z" />
-                         </svg>
+                         <!-- 右侧小翅膀 (纯 SVG 绘制并水平翻转) -->
+                         <div class="absolute right-[1px] top-1/2 w-[24px] h-[24px] pointer-events-none z-10" style="transform: translateY(-50%) scaleX(-1); filter: drop-shadow(0 2px 2px rgba(244,196,207,0.3));">
+                             <svg viewBox="0 0 32 32" class="w-full h-full" fill="none" stroke="#f4c4cf" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                 <path d="M28 12 C 20 8 10 12 8 18 C 5 16 2 19 4 23 C 2 25 4 29 9 28 C 12 30 16 28 18 24" fill="#ffffff"/>
+                             </svg>
+                         </div>
                      </div>
                  </div>
              
