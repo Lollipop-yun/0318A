@@ -2053,17 +2053,23 @@
         </div>
     </div>
     
-    <!-- 下方的天数记录 (带翅膀的药丸容器) -->
-    <div class="relative mt-6 min-w-[120px] max-w-[240px] w-fit px-5 min-h-[40px] h-auto py-2 bg-[#f0f0f0] rounded-[20px] flex items-center justify-center shadow-[inset_0_2px_5px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] cursor-pointer active:scale-95 transition border-2 border-white" @click="editHomeConfig('rightWidgetTitle', '修改天数')">
-        <!-- 左侧翅膀 (放大一点点) -->
-        <img src="https://pic1.imgdb.cn/item/69ca59329547e6ce4e3f7d60.png" class="absolute -left-[20px] top-1/2 w-[38px] h-[38px] object-contain pointer-events-none" style="transform: translateY(-50%); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.06));">
-        
-        <!-- 天数文字 (缩小字号，允许换行居中) -->
-        <span class="text-[13px] font-bold text-[#999999] tracking-wider z-10 text-center break-words whitespace-pre-wrap leading-snug" :style="{color: themeConfig.fontColor}">{{ homeConfig.rightWidgetTitle || '6440天' }}</span>
-        
-        <!-- 右侧翅膀 (放大一点点) -->
-        <img src="https://pic1.imgdb.cn/item/69ca59329547e6ce4e3f7d60.png" class="absolute -right-[20px] top-1/2 w-[38px] h-[38px] object-contain pointer-events-none" style="transform: translateY(-50%) scaleX(-1); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.06));">
-    </div>
+    <!-- 下方的天数记录 (使用最新翅膀图片，灰白悬浮UI) -->
+                            <div class="relative mt-6 min-w-[120px] max-w-[240px] w-fit px-5 min-h-[40px] h-auto py-2 bg-[#f0f0f0] rounded-[20px] flex items-center justify-center shadow-[inset_0_2px_5px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] cursor-pointer active:scale-95 transition border-2 border-white" @click="editHomeConfig('rightWidgetTitle', '修改天数')">
+                                
+                                <!-- 左侧图片翅膀 (z-30 悬浮在外，去色变灰) -->
+                                <div class="absolute -left-[14px] top-1/2 w-[32px] h-[32px] pointer-events-none z-30" style="transform: translateY(-50%); filter: drop-shadow(0 2px 2px rgba(0,0,0,0.06));">
+                                    <img src="https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png" class="w-full h-full object-contain grayscale opacity-80">
+                                </div>
+                                
+                                <!-- 天数文字 -->
+                                <span class="text-[13px] font-bold text-[#999999] tracking-wider z-10 text-center break-words whitespace-pre-wrap leading-snug" :style="{color: themeConfig.fontColor}">{{ homeConfig.rightWidgetTitle || '6440天' }}</span>
+                                
+                                <!-- 右侧图片翅膀 (水平翻转，z-30 悬浮在外，去色变灰) -->
+                                <div class="absolute -right-[14px] top-1/2 w-[32px] h-[32px] pointer-events-none z-30" style="transform: translateY(-50%) scaleX(-1); filter: drop-shadow(0 2px 2px rgba(0,0,0,0.06));">
+                                    <img src="https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png" class="w-full h-full object-contain grayscale opacity-80">
+                                </div>
+                                
+                            </div>
 </div></div>
         </div>
              </div> <!-- 第一页结束 -->
