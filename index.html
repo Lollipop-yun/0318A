@@ -2234,15 +2234,12 @@
                          </div>
                      </div>
 
-                     <!-- 右侧：带小翅膀的虚线框卡片 (严格还原图片：极简三瓣云朵翅膀) -->
+                     <!-- 右侧：带小翅膀的虚线框卡片 (翅膀置于顶层，使用自定义图片) -->
                      <div class="w-[145px] h-full relative flex items-center justify-center">
                          
-                         <!-- 左侧小翅膀 (极简云朵状，颜色对齐边框，向外移出) -->
-                         <div class="absolute -left-[11px] top-1/2 w-[26px] h-[26px] pointer-events-none z-30" style="transform: translateY(-50%); filter: drop-shadow(0 1px 2px rgba(232,213,217,0.4));">
-                             <svg viewBox="0 0 100 100" class="w-full h-full" fill="#ffffff" stroke="#e8d5d9" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
-                                 <!-- 三瓣云朵状贝塞尔曲线 -->
-                                 <path d="M 75 35 C 45 5, 5 25, 20 60 C 0 80, 25 105, 50 85 C 65 110, 100 90, 85 60 C 95 45, 85 35, 75 35 Z" />
-                             </svg>
+                         <!-- 左侧小翅膀 (z-30置于卡片之上，向外移出避免遮挡) -->
+                         <div class="absolute -left-[14px] top-1/2 w-[32px] h-[32px] pointer-events-none z-30" style="transform: translateY(-50%); filter: drop-shadow(0 2px 2px rgba(244,196,207,0.3));">
+                             <img src="https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png" class="w-full h-full object-contain">
                          </div>
                          
                          <!-- 卡片主体 -->
@@ -2269,7 +2266,7 @@
                                      <img v-if="page2Widget2.avatar" :src="page2Widget2.avatar" class="w-full h-full object-cover">
                                      <i v-else class="fas fa-user flex h-full items-center justify-center text-gray-300 text-3xl"></i>
                                  </div>
-                                 <!-- 右上角气泡与小圆点 -->
+                                 <!-- 右上角气泡与小圆点 (位于头像右下，避开顶部图标) -->
                                  <div class="absolute -right-4 top-2 px-2 py-0.5 bg-white border border-[#fceef2] rounded-full text-[#a8989c] text-[9px] font-bold shadow-sm cursor-pointer z-30" @click="editPage2Widget2('status')">
                                      {{ page2Widget2.status }}
                                  </div>
@@ -2282,11 +2279,9 @@
                              </div>
                          </div>
 
-                         <!-- 右侧小翅膀 (直接复用并水平翻转) -->
-                         <div class="absolute -right-[11px] top-1/2 w-[26px] h-[26px] pointer-events-none z-30" style="transform: translateY(-50%) scaleX(-1); filter: drop-shadow(0 1px 2px rgba(232,213,217,0.4));">
-                             <svg viewBox="0 0 100 100" class="w-full h-full" fill="#ffffff" stroke="#e8d5d9" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
-                                 <path d="M 75 35 C 45 5, 5 25, 20 60 C 0 80, 25 105, 50 85 C 65 110, 100 90, 85 60 C 95 45, 85 35, 75 35 Z" />
-                             </svg>
+                         <!-- 右侧小翅膀 (使用新图片并水平翻转, z-30置于卡片之上) -->
+                         <div class="absolute -right-[14px] top-1/2 w-[32px] h-[32px] pointer-events-none z-30" style="transform: translateY(-50%) scaleX(-1); filter: drop-shadow(0 2px 2px rgba(244,196,207,0.3));">
+                             <img src="https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png" class="w-full h-full object-contain">
                          </div>
                      </div>
                  </div>
