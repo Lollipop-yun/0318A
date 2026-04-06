@@ -1017,20 +1017,39 @@
     <!-- 弹窗组件 -->
     <transition name="scale"><div v-if="modelSelectModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[60vh]"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><h3 class="font-bold text-lg text-gray-900">选择模型</h3><button @click="modelSelectModal.show = false" class="text-gray-400 font-medium text-sm">关闭</button></div><div class="flex-1 overflow-y-auto p-2 space-y-1"><div v-if="availableModels.length===0" class="p-4 text-center text-xs text-gray-400">列表为空</div><div v-for="model in availableModels" :key="model" @click="selectModel(model)" class="p-3.5 rounded-xl flex items-center justify-between active:bg-gray-50 transition" :class="apiConfig.selectedModel === model ? 'bg-blue-50' : ''"><span class="font-bold text-sm text-gray-800">{{ model }}</span><i v-if="apiConfig.selectedModel === model" class="fas fa-check text-blue-500"></i></div></div></div></div></transition>
 
-    <!-- 世界书绑定弹窗 -->
+    <!-- 世界书绑定弹窗 (支持文件夹与单文件细粒度勾选) -->
     <transition name="scale">
         <div v-if="worldBinderModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[60vh]">
-                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><h3 class="font-bold text-lg text-gray-900">绑定世界书 (多选)</h3><button @click="worldBinderModal.show = false" class="text-blue-500 font-bold text-sm">完成</button></div>
-                <div class="flex-1 overflow-y-auto p-2 space-y-1">
-                    <div @click="bindWorldFolder(null)" class="p-3.5 rounded-xl border border-dashed border-gray-200 text-center text-gray-400 text-xs active:bg-gray-50 mb-2">不绑定 (默认)</div>
-                    <div v-for="folder in folders" :key="folder.id" @click="toggleWorldBinding(folder.id)" class="p-3.5 rounded-xl flex items-center justify-between active:bg-gray-50 transition border border-gray-50">
-                        <div class="flex items-center gap-3"><i class="fas fa-folder text-yellow-400"></i><span class="font-bold text-sm text-gray-800">{{ folder.name }}</span></div>
-                        <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center transition" :class="isFolderBound(folder.id) ? 'bg-black border-black' : ''">
-                            <i v-if="isFolderBound(folder.id)" class="fas fa-check text-white text-xs"></i>
+            <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[70vh]">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white shrink-0"><h3 class="font-bold text-lg text-gray-900">绑定世界书</h3><button @click="worldBinderModal.show = false" class="text-blue-500 font-bold text-sm">完成</button></div>
+                <div class="flex-1 overflow-y-auto p-3 space-y-2">
+                    <div @click="bindWorldFolder(null)" class="p-3.5 rounded-xl border border-dashed border-gray-200 text-center text-gray-400 text-xs active:bg-gray-50 mb-2 cursor-pointer">不绑定任何内容 (清空)</div>
+                    <div v-for="folder in folders" :key="folder.id" class="border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                        <!-- 文件夹头部 -->
+                        <div class="p-3.5 flex items-center justify-between active:bg-gray-50 transition cursor-pointer bg-white" @click="toggleBinderFolder(folder.id)">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-folder text-yellow-400 text-lg"></i>
+                                <span class="font-bold text-sm text-gray-800">{{ folder.name }}</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center transition" :class="isFolderBound(folder.id) ? 'bg-black border-black' : 'bg-white'" @click.stop="toggleWorldBinding(folder.id)">
+                                    <i v-if="isFolderBound(folder.id)" class="fas fa-check text-white text-[10px]"></i>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-300 text-xs transition-transform" :class="{'rotate-90': worldBinderModal.expanded.includes(folder.id)}"></i>
+                            </div>
+                        </div>
+                        <!-- 展开的文件列表 -->
+                        <div v-show="worldBinderModal.expanded.includes(folder.id)" class="bg-gray-50/50 border-t border-gray-50">
+                            <div v-if="getFiles(folder.id).length===0" class="p-3 text-center text-xs text-gray-400">该文件夹为空</div>
+                            <div v-for="file in getFiles(folder.id)" :key="file.id" class="p-3 pl-10 border-b border-gray-50 last:border-0 flex items-center justify-between cursor-pointer active:bg-gray-100 transition" @click="toggleWorldFileBinding(file.id)">
+                                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-file-alt text-gray-400 text-xs shrink-0"></i><span class="text-xs text-gray-700 truncate">{{ file.name }}</span></div>
+                                <div class="w-4 h-4 rounded-[4px] border border-gray-300 flex items-center justify-center transition shrink-0" :class="isFileBound(file.id) ? 'bg-black border-black' : 'bg-white'">
+                                    <i v-if="isFileBound(file.id)" class="fas fa-check text-white text-[8px]"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div v-if="folders.length===0" class="text-center text-xs text-gray-400 py-8">暂无文件夹</div>
+                    <div v-if="folders.length===0" class="text-center text-xs text-gray-400 py-8">暂无文件夹，请去世界书创建</div>
                 </div>
             </div>
         </div>
@@ -2128,6 +2147,42 @@
                                         <div class="forward-content">{{ msg.content }}</div>
                                     </div>
                                     
+                                    <!-- 外卖代付请求卡片 (黑白灰UI) -->
+                                    <div v-else-if="msg.type === 'food_payment'" class="bg-white border border-gray-200 rounded-xl w-[230px] overflow-hidden shadow-sm flex flex-col cursor-default">
+                                        <div class="p-3 border-b border-gray-100 flex items-center gap-3 bg-gray-50">
+                                            <div class="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center shrink-0"><i class="fas fa-utensils text-sm"></i></div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm font-bold text-gray-900 truncate">外卖代付请求</div>
+                                                <div class="text-[10px] text-gray-500 mt-0.5 truncate">{{ msg.item }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="p-4 flex flex-col items-center justify-center">
+                                            <div class="text-2xl font-bold text-gray-900 font-mono mb-1">¥{{ msg.amount }}</div>
+                                            <div class="text-[10px] text-gray-400 mb-4">{{ msg.status === 'pending' ? '等待你付款' : (msg.status === 'accepted' ? '已付款' : '已拒绝') }}</div>
+                                            <div v-if="msg.status === 'pending'" class="flex gap-2 w-full">
+                                                <button @click.stop="handleFoodPayment(msg, 'reject')" class="flex-1 py-1.5 bg-gray-100 text-gray-600 font-bold text-xs rounded-lg active:scale-95 transition">拒绝</button>
+                                                <button @click.stop="handleFoodPayment(msg, 'accept')" class="flex-1 py-1.5 bg-black text-white font-bold text-xs rounded-lg active:scale-95 transition">付款</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 已点外卖卡片 (黑白灰UI) -->
+                                    <div v-else-if="msg.type === 'food_delivery'" class="bg-white border border-gray-200 rounded-xl w-[230px] overflow-hidden shadow-sm flex flex-col cursor-default">
+                                        <div class="p-3 border-b border-gray-100 flex items-center gap-3 bg-gray-50">
+                                            <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-700 flex items-center justify-center shrink-0"><i class="fas fa-motorcycle text-sm"></i></div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm font-bold text-gray-900 truncate">为你点了一份外卖</div>
+                                                <div class="text-[10px] text-gray-500 mt-0.5">{{ formatChatTime(msg.time) }} 下单</div>
+                                            </div>
+                                        </div>
+                                        <div class="p-4 space-y-2 text-xs">
+                                            <div class="flex justify-between items-start gap-2"><span class="text-gray-500 shrink-0">物品</span><span class="font-bold text-gray-800 text-right">{{ msg.item }}</span></div>
+                                            <div class="flex justify-between items-center"><span class="text-gray-500 shrink-0">金额</span><span class="font-bold text-gray-800 font-mono">¥{{ msg.amount }}</span></div>
+                                            <div class="flex justify-between items-center"><span class="text-gray-500 shrink-0">预计送达</span><span class="font-bold text-gray-800">{{ msg.eta }}</span></div>
+                                            <div v-if="msg.remark" class="mt-2 pt-2 border-t border-gray-100 text-gray-500 text-[10px] leading-relaxed break-all">备注: {{ msg.remark }}</div>
+                                        </div>
+                                    </div>
+                                    
                                     <!-- 朋友圈转发卡片 -->
                                     <div v-else-if="msg.type === 'moment'" class="moment-card-wrapper">
                                         <div class="moment-card-header"><img :src="msg.momentData.avatar" class="w-4 h-4 rounded-sm"><span>{{ msg.momentData.name }}</span></div>
@@ -3214,7 +3269,7 @@ createApp({
             masks:[], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: '' },
             masks: [], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', bio: '', nudge: '', signature: '', avatar: '' },
             worldData: [], expandedFolders: [], worldModal: { show: false, type: 'folder', name: '', content: '', parentId: '' }, viewFileModal: { show: false, data: {} },
-            worldBinderModal: { show: false },
+            worldBinderModal: { show: false, expanded:[] },
             modelSelectModal: { show: false }, 
             chatContextMenu: { show: false, x: 0, y: 0, msg: null, index: -1, isSelf: false },
             folderSelectModal: { show: false }, 
@@ -4532,12 +4587,17 @@ createApp({
             const mask = this.getMaskById(session.maskId);
             
             let worldContext = "";
-            let folderIds = session.boundWorldbookFolderIds || [];
+            let folderIds = session.boundWorldbookFolderIds ||[];
+            let fileIds = session.boundWorldbookFileIds ||[];
             if (session.boundWorldbookFolderId) folderIds.push(session.boundWorldbookFolderId);
             folderIds = [...new Set(folderIds)];
+            fileIds =[...new Set(fileIds)];
 
-            if (folderIds.length > 0) {
-                const files = this.worldData.filter(i => i.type === 'file' && folderIds.includes(i.parentId) && i.isActive !== false);
+            if (folderIds.length > 0 || fileIds.length > 0) {
+                const files = this.worldData.filter(i => 
+                    i.type === 'file' && i.isActive !== false && 
+                    (folderIds.includes(i.parentId) || fileIds.includes(i.id))
+                );
                 if (files.length > 0) {
                     worldContext = "\n[World Info]:\n" + files.map(f => `(${f.name}): ${f.content}`).join("\n");
                 }
@@ -4655,6 +4715,8 @@ Structure:
   "change_avatar": true OR false,
   "sticker_id": "OPTIONAL: 填入你想发的表情包的纯数字 ID",
   "invite_music": true (OPTIONAL: 当你想主动分享音乐时输出 true，此时绝对不要在 reply 里发文字提示，系统会自动发卡片)
+  "food_payment": { "item": "奶茶", "amount": "25.00" }, // OPTIONAL: 当你要点外卖并向我撒娇让我代付时输出
+  "food_delivery": { "item": "炸鸡", "amount": "45.00", "remark": "按时吃饭", "eta": "30分钟" } // OPTIONAL: 当你主动给我点外卖时输出
 }
 
 注意！！！"reply" 必须是一个字符串数组（Array）！如果你想连续发送多条消息，请务必把每一句话作为数组里的一个独立元素，例如 ["在吗？", "我想你了", "晚上一起吃饭吗？"]，绝对不要把所有话挤在一条消息里！`;
@@ -4842,6 +4904,31 @@ Structure:
                     const note = parsed.transfer ? parsed.transfer.note : "转账给你";
                     const tfMsg = { type: 'transfer', amount: amount, note: note, isSelf: false, time: Date.now(), avatar: session.avatar };
                     session.messages.push(tfMsg); session.lastMessage = '[微信转账]';
+                }
+                if (parsed.food_payment) {
+                    session.messages.push({ 
+                        type: 'food_payment', 
+                        item: parsed.food_payment.item || '外卖', 
+                        amount: parsed.food_payment.amount || '0.00', 
+                        status: 'pending', 
+                        isSelf: false, 
+                        time: Date.now(), 
+                        avatar: session.avatar 
+                    });
+                    session.lastMessage = '[外卖代付]';
+                }
+                if (parsed.food_delivery) {
+                    session.messages.push({ 
+                        type: 'food_delivery', 
+                        item: parsed.food_delivery.item || '外卖', 
+                        amount: parsed.food_delivery.amount || '0.00', 
+                        remark: parsed.food_delivery.remark || '', 
+                        eta: parsed.food_delivery.eta || '尽快', 
+                        isSelf: false, 
+                        time: Date.now(), 
+                        avatar: session.avatar 
+                    });
+                    session.lastMessage = '[外卖订单]';
                 }
                 
                 
@@ -5141,8 +5228,13 @@ Structure:
         bindWorldFolder(folderId) {
             const session = this.wechatState.activeSession;
             if (!session) return;
-            if (!session.boundWorldbookFolderIds) session.boundWorldbookFolderIds = [];
-            if (folderId === null) { session.boundWorldbookFolderIds = []; session.boundWorldbookFolderId = null; } 
+            if (!session.boundWorldbookFolderIds) session.boundWorldbookFolderIds =[];
+            if (!session.boundWorldbookFileIds) session.boundWorldbookFileIds =[];
+            if (folderId === null) { 
+                session.boundWorldbookFolderIds = []; 
+                session.boundWorldbookFileIds =[]; 
+                session.boundWorldbookFolderId = null; 
+            } 
             else {
                 const idx = session.boundWorldbookFolderIds.indexOf(folderId);
                 if (idx > -1) session.boundWorldbookFolderIds.splice(idx, 1);
@@ -5157,12 +5249,33 @@ Structure:
             if (session.boundWorldbookFolderId === fid) return true; 
             return session.boundWorldbookFolderIds && session.boundWorldbookFolderIds.includes(fid);
         },
+        toggleWorldFileBinding(fileId) {
+            const session = this.wechatState.activeSession;
+            if (!session) return;
+            if (!session.boundWorldbookFileIds) session.boundWorldbookFileIds =[];
+            const idx = session.boundWorldbookFileIds.indexOf(fileId);
+            if (idx > -1) session.boundWorldbookFileIds.splice(idx, 1);
+            else session.boundWorldbookFileIds.push(fileId);
+            this.saveData();
+        },
+        isFileBound(fileId) {
+            const session = this.wechatState.activeSession;
+            if (!session) return false;
+            return session.boundWorldbookFileIds && session.boundWorldbookFileIds.includes(fileId);
+        },
+        toggleBinderFolder(fid) {
+            const idx = this.worldBinderModal.expanded.indexOf(fid);
+            if (idx > -1) this.worldBinderModal.expanded.splice(idx, 1);
+            else this.worldBinderModal.expanded.push(fid);
+        },
         getWorldbookStatus() {
             const session = this.wechatState.activeSession;
             if (!session) return '未绑定';
-            let count = (session.boundWorldbookFolderIds?.length || 0) + (session.boundWorldbookFolderId ? 1 : 0);
-            if (session.boundWorldbookFolderId && session.boundWorldbookFolderIds?.includes(session.boundWorldbookFolderId)) count--; 
-            return count > 0 ? `已绑定 ${count} 个` : '未绑定';
+            let countF = (session.boundWorldbookFolderIds?.length || 0) + (session.boundWorldbookFolderId ? 1 : 0);
+            if (session.boundWorldbookFolderId && session.boundWorldbookFolderIds?.includes(session.boundWorldbookFolderId)) countF--; 
+            let countFi = session.boundWorldbookFileIds?.length || 0;
+            if (countF === 0 && countFi === 0) return '未绑定';
+            return `已绑 ${countF}目录 ${countFi}文件`;
         },
         selectModel(model) { this.apiConfig.selectedModel = model; this.saveData(); this.modelSelectModal.show = false; },
         getMaskById(id) { return this.masks.find(m => m.id === id) || { avatar: '' }; },
@@ -6893,6 +7006,31 @@ ${settings.bannedWords && settings.bannedWords.trim() ? `5. 【绝对禁忌词�
              this.transferModal.show = false;
              this.scrollToBottom();
              this.saveData();
+        },
+        
+        handleFoodPayment(msg, action) {
+            if (msg.status !== 'pending') return;
+            if (action === 'accept') {
+                const amt = parseFloat(msg.amount);
+                if (isNaN(amt) || this.wallet.balance < amt) return this.showToast('余额不足，无法代付');
+                
+                this.addToWallet('expense', amt, this.wechatState.activeSession.name, '外卖代付');
+                msg.status = 'accepted';
+                this.showToast('代付成功 (-' + amt + ')');
+                
+                // 自动发送一条消息并触发AI回复
+                this.wechatState.activeSession.messages.push({
+                    content: '外卖我帮你付好啦~',
+                    isSelf: true,
+                    time: Date.now(),
+                    avatar: this.getMaskById(this.wechatState.activeSession.maskId).avatar
+                });
+                this.triggerReceive(); 
+            } else {
+                msg.status = 'rejected';
+                this.showToast('已无情拒绝');
+            }
+            this.saveData();
         },
         
         addToWallet(type, amount, source, desc) {
