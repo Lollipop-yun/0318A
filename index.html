@@ -6406,6 +6406,9 @@ Structure:
                 } catch(e) { console.error('数据加载失败', e); } 
             }
             
+            // 【强制修复 BUG】：强制覆盖旧存档里的 App 列表，保证新增的 App 能够显示在主题商店中！
+            this.appList = Object.keys(DEFAULT_APPS);
+
             // 恢复系统激活状态
             if (localStorage.getItem('onyunx_is_activated') === 'true') { this.isActivated = true; }
             
