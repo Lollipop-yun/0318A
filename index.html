@@ -1015,341 +1015,7 @@
     </transition>
 
     <!-- 弹窗组件 -->
-    <transition name="scale"><div v-if="modelSelectModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[60vh]"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><h3 class="font-bold text-lg text-gray-900">选择模型</h3><button @click="modelSelectModal.show = false" class="text-gray-400 font-medium text-sm">关闭</button></div><div class="flex-1 overflow-y-auto p-2 space-y-1"><div v-if="availableModels.length===0" class="p-4 text-center text-xs text-gray-400">列表为空</div><div v-for="model in availableModels" :key="model" @click="selectModel(model)" class="p-3.5 rounded-xl flex items-center justify-between active:bg-gray-50 transition" :class="apiConfig.selectedModel === model ? 'bg-blue-50' : ''"><span class="font-bold text-sm text-gray-800">{{ model }}</span><i v-if="apiConfig.selectedModel === model" class="fas fa-check text-blue-500"></i></div></div></div></div></transition>
-
-    <!-- 世界书绑定弹窗 -->
-    <transition name="scale">
-        <div v-if="worldBinderModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[60vh]">
-                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><h3 class="font-bold text-lg text-gray-900">绑定世界书</h3><button @click="worldBinderModal.show = false" class="text-blue-500 font-bold text-sm">完成</button></div>
-                <div class="flex-1 overflow-y-auto p-2">
-                    <div @click="bindWorldFolder(null)" class="p-3.5 rounded-xl border border-dashed border-gray-200 text-center text-gray-400 text-xs active:bg-gray-50 mb-3">清空所有绑定 (恢复默认)</div>
-                    <div v-for="folder in folders" :key="folder.id" class="border border-gray-100 rounded-xl overflow-hidden mb-2 shadow-sm">
-                        <!-- 文件夹本体 -->
-                        <div class="p-3.5 flex items-center justify-between bg-white active:bg-gray-50 transition cursor-pointer" @click="toggleWorldBinderFolderExpand(folder.id)">
-                            <div class="flex items-center gap-3">
-                                <i class="fas fa-folder text-yellow-400 text-lg"></i>
-                                <span class="font-bold text-sm text-gray-800">{{ folder.name }}</span>
-                            </div>
-                            <div class="flex items-center gap-4">
-                                <!-- 勾选整个文件夹 -->
-                                <div @click.stop="toggleWorldBinding(folder.id)" class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center transition" :class="isFolderBound(folder.id) ? 'bg-black border-black' : 'bg-white'">
-                                    <i v-if="isFolderBound(folder.id)" class="fas fa-check text-white text-[10px]"></i>
-                                </div>
-                                <i class="fas fa-chevron-right text-gray-300 text-xs transition-transform" :class="{'rotate-90': worldBinderModal.expanded.includes(folder.id)}"></i>
-                            </div>
-                        </div>
-                        <!-- 文件夹内部文件列表 -->
-                        <div v-if="worldBinderModal.expanded.includes(folder.id)" class="bg-gray-50/50 border-t border-gray-100">
-                            <div v-if="getFiles(folder.id).length===0" class="p-3 text-center text-xs text-gray-400">无文件</div>
-                            <div v-for="file in getFiles(folder.id)" :key="file.id" @click.stop="toggleWorldBindingFile(file.id)" class="p-3.5 pl-10 flex items-center justify-between active:bg-gray-100 transition cursor-pointer border-b border-gray-50 last:border-0">
-                                <div class="flex items-center gap-2.5">
-                                    <i class="fas fa-file-alt text-blue-400 text-sm"></i>
-                                    <span class="text-sm text-gray-700 font-medium">{{ file.name }}</span>
-                                </div>
-                                <!-- 勾选单个文件 (如果父级文件夹被勾选，则子文件自动被强制勾选并变灰) -->
-                                <div class="w-[18px] h-[18px] rounded-full border border-gray-300 flex items-center justify-center transition" :class="isFolderBound(folder.id) ? 'bg-gray-300 border-gray-300' : (isFileBound(file.id) ? 'bg-black border-black' : 'bg-white')">
-                                    <i v-if="isFileBound(file.id) || isFolderBound(folder.id)" class="fas fa-check text-white text-[9px]"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-if="folders.length===0" class="text-center text-xs text-gray-400 py-8">暂无文件夹</div>
-                </div>
-            </div>
-        </div>
-    </transition>
-    
-    <!-- 文件夹选择弹窗 -->
-    <transition name="app-slide">
-        <div v-if="folderSelectModal.show" class="fixed inset-0 z-[66000]">
-            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="folderSelectModal.show = false"></div>
-            <div class="ios-list-modal">
-                <div class="ios-list-header">选择文件夹 <button class="absolute right-4 text-blue-500 font-normal text-sm" @click="folderSelectModal.show = false">取消</button></div>
-                <div class="ios-list-content">
-                    <div class="ios-list-item" @click="selectWorldFolder(null)"><span class="text-gray-800 font-medium">根目录 (不归类)</span><i v-if="!worldModal.parentId" class="fas fa-check text-blue-500"></i></div>
-                    <div v-for="folder in folders" :key="folder.id" class="ios-list-item" @click="selectWorldFolder(folder.id)">
-                        <div class="flex items-center gap-2"><i class="fas fa-folder text-yellow-400"></i><span class="text-gray-800 font-medium">{{ folder.name }}</span></div>
-                        <i v-if="worldModal.parentId === folder.id" class="fas fa-check text-blue-500"></i>
-                    </div>
-                    <div v-if="folders.length===0" class="p-4 text-center text-gray-400 text-xs">暂无文件夹</div>
-                </div>
-            </div>
-        </div>
-    </transition>
-
-    <!-- 分组选择弹窗 -->
-    <transition name="app-slide">
-        <div v-if="groupSelectModal.show" class="fixed inset-0 z-[70000]">
-            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="groupSelectModal.show = false"></div>
-            <div class="ios-list-modal">
-                <div class="ios-list-header">选择分组 <button class="absolute right-4 text-blue-500 font-normal text-sm" @click="groupSelectModal.show = false">取消</button></div>
-                <div class="ios-list-content">
-                    <div class="ios-list-item" @click="assignToGroup(null)"><span class="text-gray-800 font-medium">不分组 (默认)</span><i v-if="!wechatState.activeSession?.groupId" class="fas fa-check text-blue-500"></i></div>
-                    <div v-for="group in wechatState.groups" :key="group.id" class="ios-list-item" @click="assignToGroup(group.id)"><div class="flex items-center gap-2"><i class="fas fa-folder text-yellow-400"></i><span class="text-gray-800 font-medium">{{ group.name }}</span></div><i v-if="wechatState.activeSession?.groupId === group.id" class="fas fa-check text-blue-500"></i></div>
-                </div>
-            </div>
-        </div>
-    </transition>
-
-    <!-- 转发联系人选择弹窗 -->
-    <transition name="app-slide">
-        <div v-if="forwardModal.show" class="fixed inset-0 z-[70000]">
-            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="forwardModal.show = false"></div>
-            <div class="ios-list-modal h-[80vh]">
-                <div class="ios-list-header">
-                    {{ forwardModal.mode === 'qinmi' ? '选择好友开通亲密付' : (forwardModal.mode === 'moment' ? '发送给...' : '转发给...') }}
-                    <button class="absolute right-4 text-gray-500 font-normal text-sm" @click="forwardModal.show = false">取消</button>
-                </div>
-                <div class="ios-list-content">
-                    <div v-if="wechatState.friendList.length === 0" class="p-8 text-center text-gray-400">暂无联系人</div>
-                    <div v-for="friend in wechatState.friendList" :key="friend.id" class="ios-list-item cursor-pointer" @click="handleFriendSelect(friend)">
-                        <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden"><img :src="friend.avatar" class="w-full h-full object-cover"></div><span class="text-gray-900 font-bold">{{ friend.remark || friend.name }}</span></div>
-                        <button class="bg-black text-white px-3 py-1 rounded text-xs font-bold">{{ forwardModal.mode === 'qinmi' ? '选择' : '发送' }}</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </transition>
-
-    <!-- 提醒谁看 弹窗 -->
-    <transition name="app-slide">
-        <div v-if="mentionModal.show" class="fixed inset-0 z-[71000] bg-gray-50 flex flex-col">
-            <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-100 sticky top-0 z-10">
-                <button @click="mentionModal.show = false" class="text-gray-500 font-medium text-sm">取消</button>
-                <h1 class="text-[17px] font-bold">提醒谁看</h1>
-                <button @click="saveMentions" class="bg-[#07c160] text-white px-3 py-1.5 rounded text-sm font-bold">完成</button>
-            </header>
-            <div class="flex-1 overflow-y-auto p-4 bg-white">
-                 <div v-if="wechatState.friendList.length === 0" class="p-8 text-center text-gray-400 text-sm">暂无联系人</div>
-                 <div v-for="friend in wechatState.friendList" :key="friend.id" @click="toggleMention(friend.id)" class="flex items-center gap-3 p-3 border-b border-gray-50 last:border-0 cursor-pointer active:bg-gray-50">
-                     <div class="w-5 h-5 rounded-full border flex items-center justify-center transition" :class="mentionModal.selectedIds.includes(friend.id) ? 'bg-[#07c160] border-[#07c160]' : 'border-gray-300'"><i v-if="mentionModal.selectedIds.includes(friend.id)" class="fas fa-check text-white text-xs"></i></div>
-                     <div class="w-10 h-10 rounded bg-gray-100 overflow-hidden"><img :src="friend.avatar" class="w-full h-full object-cover"></div>
-                     <span class="font-medium text-gray-900">{{ friend.remark || friend.name }}</span>
-                 </div>
-            </div>
-        </div>
-    </transition>
-
-    <!-- 谁可以看 选项弹窗 -->
-    <transition name="app-slide">
-        <div v-if="visibilityModal.show" class="fixed inset-0 z-[71000]">
-            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="visibilityModal.show = false"></div>
-            <div class="ios-list-modal">
-                <div class="ios-list-header">谁可以看 <button class="absolute right-4 text-blue-500 font-normal text-sm" @click="visibilityModal.show = false">取消</button></div>
-                <div class="ios-list-content p-0 bg-white">
-                    <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="selectVisibility('public')">
-                        <div><div class="font-bold text-gray-900">公开</div><div class="text-xs text-gray-500 mt-1">所有朋友可见</div></div>
-                        <i v-if="newMoment.visibility === 'public'" class="fas fa-check text-[#07c160]"></i>
-                    </div>
-                    <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="selectVisibility('private')">
-                        <div><div class="font-bold text-gray-900">私密</div><div class="text-xs text-gray-500 mt-1">仅自己可见</div></div>
-                        <i v-if="newMoment.visibility === 'private'" class="fas fa-check text-[#07c160]"></i>
-                    </div>
-                    <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="selectVisibility('share_to')">
-                        <div><div class="font-bold text-gray-900">部分可见</div><div class="text-xs text-gray-500 mt-1">选中的朋友可见</div></div>
-                        <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
-                    </div>
-                    <div class="p-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="selectVisibility('dont_share_to')">
-                        <div><div class="font-bold text-gray-900">不给谁看</div><div class="text-xs text-gray-500 mt-1">选中的朋友不可见</div></div>
-                        <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </transition>
-
-    <!-- 部分可见/不给谁看 选择目标弹窗 -->
-    <transition name="app-slide">
-        <div v-if="visibilityTargetModal.show" class="fixed inset-0 z-[72000] bg-gray-50 flex flex-col">
-            <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-100 sticky top-0 z-10">
-                <button @click="visibilityTargetModal.show = false" class="text-gray-500 font-medium text-sm">取消</button>
-                <h1 class="text-[17px] font-bold">{{ visibilityTargetModal.mode === 'share_to' ? '部分可见' : '不给谁看' }}</h1>
-                <button @click="saveVisibilityTargets" class="bg-[#07c160] text-white px-3 py-1.5 rounded text-sm font-bold">完成</button>
-            </header>
-            <div class="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-4">
-                <!-- 从分组选择 -->
-                <div class="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-                    <div class="p-3 bg-gray-50 border-b border-gray-100 text-xs font-bold text-gray-500">选择分组</div>
-                    <div v-if="!wechatState.groups || wechatState.groups.length === 0" class="p-4 text-center text-xs text-gray-400">暂无分组</div>
-                    <div v-for="group in wechatState.groups" :key="group.id" @click="toggleVisibilityGroup(group.id)" class="flex items-center gap-3 p-3 border-b border-gray-50 last:border-0 cursor-pointer active:bg-gray-50">
-                        <div class="w-5 h-5 rounded-full border flex items-center justify-center transition" :class="visibilityTargetModal.selectedGroupIds.includes(group.id) ? 'bg-[#07c160] border-[#07c160]' : 'border-gray-300'"><i v-if="visibilityTargetModal.selectedGroupIds.includes(group.id)" class="fas fa-check text-white text-xs"></i></div>
-                        <i class="fas fa-users text-blue-500 w-8 text-center text-lg"></i>
-                        <span class="font-medium text-gray-900">{{ group.name }}</span>
-                    </div>
-                </div>
-                <!-- 从好友选择 -->
-                <div class="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-                    <div class="p-3 bg-gray-50 border-b border-gray-100 text-xs font-bold text-gray-500">选择联系人</div>
-                    <div v-if="wechatState.friendList.length === 0" class="p-4 text-center text-xs text-gray-400">暂无联系人</div>
-                    <div v-for="friend in wechatState.friendList" :key="friend.id" @click="toggleVisibilityFriend(friend.id)" class="flex items-center gap-3 p-3 border-b border-gray-50 last:border-0 cursor-pointer active:bg-gray-50">
-                        <div class="w-5 h-5 rounded-full border flex items-center justify-center transition" :class="visibilityTargetModal.selectedFriendIds.includes(friend.id) ? 'bg-[#07c160] border-[#07c160]' : 'border-gray-300'"><i v-if="visibilityTargetModal.selectedFriendIds.includes(friend.id)" class="fas fa-check text-white text-xs"></i></div>
-                        <div class="w-8 h-8 rounded bg-gray-100 overflow-hidden"><img :src="friend.avatar" class="w-full h-full object-cover"></div>
-                        <span class="font-medium text-gray-900">{{ friend.remark || friend.name }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </transition>
-
-    <!-- 生成朋友圈弹窗 (多选好友) -->
-    <transition name="app-slide">
-        <div v-if="momentGenerateModal.show" class="fixed inset-0 z-[71000] bg-gray-50 flex flex-col">
-            <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-100 sticky top-0 z-10">
-                <button @click="momentGenerateModal.show = false" class="text-gray-500 font-medium text-sm">取消</button>
-                <h1 class="text-[17px] font-bold">选择生成 (最多5个)</h1>
-                <button @click="confirmGenerateMoments" class="bg-black text-white px-3 py-1.5 rounded text-sm font-bold">生成</button>
-            </header>
-            <div class="flex-1 overflow-y-auto p-4 bg-white">
-                 <div v-if="wechatState.friendList.length === 0" class="p-8 text-center text-gray-400 text-sm">暂无联系人</div>
-                 <div v-for="friend in wechatState.friendList" :key="friend.id" @click="toggleGenerateMomentFriend(friend.id)" class="flex items-center gap-3 p-3 border-b border-gray-50 last:border-0 cursor-pointer active:bg-gray-50">
-                     <div class="w-5 h-5 rounded-full border flex items-center justify-center transition" :class="momentGenerateModal.selectedIds.includes(friend.id) ? 'bg-black border-black' : 'border-gray-300'"><i v-if="momentGenerateModal.selectedIds.includes(friend.id)" class="fas fa-check text-white text-xs"></i></div>
-                     <div class="w-10 h-10 rounded bg-gray-100 overflow-hidden"><img :src="friend.avatar" class="w-full h-full object-cover"></div>
-                     <span class="font-medium text-gray-900">{{ friend.remark || friend.name }}</span>
-                 </div>
-            </div>
-        </div>
-    </transition>
-
-    <!-- AI 心声弹窗 -->
-    <transition name="scale">
-        <div v-if="statusModal.show" class="fixed inset-0 z-[60000] flex items-center justify-center bg-black/40 backdrop-blur-sm" @click="statusModal.show = false">
-            <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl p-6 relative" @click.stop>
-                <div class="absolute top-4 right-4 text-gray-400 cursor-pointer" @click="openStatusHistory"><i class="far fa-clock text-xl"></i></div>
-                <div class="text-center mb-6">
-                    <div class="w-20 h-20 rounded-full bg-gray-100 mx-auto mb-3 overflow-hidden border-2 border-white shadow-lg"><img :src="getChatAvatar({isSelf: false, targetId: wechatState.activeSession.targetId})" class="w-full h-full object-cover"></div>
-                    <h3 class="text-xl font-bold text-gray-900">{{ wechatState.activeSession?.name }}</h3>
-                    <p class="text-xs text-gray-400 mt-1">Current State</p>
-                </div>
-                <div class="space-y-4 text-sm">
-                    <div class="flex gap-3"><div class="w-8 shrink-0 text-gray-400 font-bold text-right">动作</div><div class="text-gray-800">{{ currentStatus.action || '无' }}</div></div>
-                    <div class="flex gap-3"><div class="w-8 shrink-0 text-gray-400 font-bold text-right">心声</div><div class="text-gray-800 italic">"{{ currentStatus.thought || '...' }}"</div></div>
-                    <div class="flex gap-3"><div class="w-8 shrink-0 text-gray-400 font-bold text-right">穿着</div><div class="text-gray-800">{{ currentStatus.outfit || '未知' }}</div></div>
-                    <div class="flex gap-3"><div class="w-8 shrink-0 text-gray-400 font-bold text-right">随笔</div><div class="text-gray-600 bg-gray-50 p-2 rounded-lg text-xs leading-relaxed">{{ currentStatus.note || '无随笔' }}</div></div>
-                </div>
-            </div>
-        </div>
-    </transition>
-
-    <!-- 心声历史记录 -->
-    <transition name="app-slide">
-        <div v-if="statusHistoryModal.show" class="fixed inset-0 z-[61000] bg-gray-50 flex flex-col">
-            <div class="h-[60px] px-4 flex items-center justify-between bg-white border-b border-gray-100 pt-safe">
-                <button @click="statusHistoryModal.show = false" class="w-8 h-8 flex items-center justify-center text-black"><i class="fas fa-chevron-left"></i></button>
-                <h1 class="text-md font-bold">心声历史</h1>
-                <!-- 多选按钮 -->
-                <button @click="toggleStatusMultiSelect" class="text-sm font-bold text-black" style="width: auto; min-width: 32px;">
-                    {{ isStatusMultiSelectMode ? '完成' : '多选' }}
-                </button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-4 space-y-4 pb-20">
-                <div v-if="!currentStatusHistory || currentStatusHistory.length===0" class="text-center text-gray-400 mt-20 text-xs">暂无历史记录</div>
-                <div v-for="(rec, idx) in currentStatusHistory" :key="idx" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-3" @click="isStatusMultiSelectMode ? toggleSelectStatus(idx) : null">
-                    <!-- 多选框 -->
-                    <div v-if="isStatusMultiSelectMode" class="self-center">
-                        <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center transition" :class="selectedStatusIndices.includes(idx) ? 'bg-black border-black' : 'bg-white'">
-                            <i v-if="selectedStatusIndices.includes(idx)" class="fas fa-check text-white text-[10px]"></i>
-                        </div>
-                    </div>
-                    <div class="flex-1">
-                        <div class="text-xs text-gray-400 mb-2 border-b border-gray-50 pb-2">{{ formatChatTime(rec.time) }}</div>
-                        <div class="space-y-2 text-xs">
-                            <p><span class="font-bold text-gray-500">心声:</span> {{ rec.thought }}</p>
-                            <p><span class="font-bold text-gray-500">随笔:</span> {{ rec.note }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- 心声多选操作栏 -->
-            <transition name="app-slide">
-                <div v-if="isStatusMultiSelectMode" class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 h-[60px] pb-safe flex items-center justify-around z-10 shadow-lg">
-                    <button @click="deleteSelectedStatus" class="flex flex-col items-center text-gray-500"><i class="far fa-trash-alt text-lg"></i><span class="text-[10px]">删除</span></button>
-                    <button @click="favoriteSelectedStatus" class="flex flex-col items-center text-gray-500"><i class="fas fa-cube text-lg"></i><span class="text-[10px]">收藏</span></button>
-                </div>
-            </transition>
-        </div>
-    </transition>
-    
-    <!-- 收藏夹弹窗 -->
-    <transition name="app-slide">
-        <div v-if="favoritesModal.show" class="fixed inset-0 z-[75000] bg-gray-50 flex flex-col">
-            <header class="bg-white h-[60px] px-4 flex items-center justify-between border-b border-gray-100 pt-safe sticky top-0">
-                <button @click="favoritesModal.show = false" class="w-8 h-8 flex items-center justify-center text-black"><i class="fas fa-chevron-left"></i></button>
-                <h1 class="text-md font-bold">我的收藏</h1>
-                <div class="w-8"></div>
-            </header>
-            <div class="flex-1 overflow-y-auto p-4 space-y-3">
-                <div v-if="favorites.length === 0" class="text-center text-gray-400 mt-20 text-xs">暂无收藏内容</div>
-                <div v-for="(item, idx) in favorites" :key="idx" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 relative group">
-                     <div class="flex justify-between items-start mb-2">
-                        <div class="flex items-center gap-2">
-                            <span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 font-bold">{{ item.type === 'status' ? '心声' : '聊天' }}</span>
-                            <span class="text-xs font-bold text-gray-700">{{ item.source }}</span>
-                        </div>
-                        <span class="text-[10px] text-gray-300">{{ formatChatTime(item.time) }}</span>
-                     </div>
-                     <div class="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">{{ item.content }}</div>
-                     <button @click="deleteFavorite(idx)" class="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-gray-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button>
-                </div>
-            </div>
-        </div>
-    </transition>
-
-    <!-- 表情包管理全屏弹窗 -->
-    <transition name="app-slide">
-        <div v-if="showStickerManager" class="fixed inset-0 z-[50000] bg-gray-50 flex flex-col">
-            <header class="bg-white h-[90px] pt-10 px-4 flex items-center justify-between border-b border-gray-100 sticky top-0 z-10">
-                <button @click="showStickerManager = false" class="w-8 h-8 flex items-center justify-center text-black"><i class="fas fa-chevron-left"></i></button>
-                <h1 class="text-[17px] font-bold">表情管理</h1>
-                <div class="flex items-center gap-3">
-                    <button @click="triggerStickerUpload" class="text-black"><i class="fas fa-image text-lg"></i></button>
-                    <button @click="openUrlImportModal" class="text-black"><i class="fas fa-link text-lg"></i></button>
-                    <button @click="toggleStickerMultiSelect" :class="isStickerMultiSelect ? 'text-red-500' : 'text-black'"><i class="fas fa-check-square text-lg"></i></button>
-                </div>
-            </header>
-            
-            <!-- 分组 Tab -->
-            <div class="bg-white px-2 py-2 flex gap-2 overflow-x-auto border-b border-gray-100 scrollbar-hide shrink-0">
-                <div v-for="group in stickerGroups" :key="group.id" 
-                     class="px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-2"
-                     :class="activeStickerGroupId === group.id ? 'bg-black text-white' : 'bg-gray-100 text-gray-500'"
-                     @click="handleGroupClick(group)">
-                    {{ group.name }}
-                </div>
-                <div @click="addStickerGroup" class="w-8 h-7 flex items-center justify-center rounded-full bg-gray-100 text-gray-400 cursor-pointer shrink-0"><i class="fas fa-plus text-xs"></i></div>
-            </div>
-
-            <!-- 表情列表 -->
-            <div class="flex-1 overflow-y-auto p-4">
-                <div class="grid grid-cols-4 gap-4">
-                    <div v-for="sticker in filteredStickers" :key="sticker.id" 
-                         class="aspect-square rounded-lg bg-white p-2 border border-gray-100 relative shadow-sm flex items-center justify-center"
-                         @click="handleStickerClick(sticker)">
-                        <img :src="sticker.url" class="w-full h-full object-contain">
-                        <!-- 多选勾选框 -->
-                        <div v-if="isStickerMultiSelect" class="absolute top-1 right-1 w-5 h-5 rounded-full border border-gray-300 bg-white flex items-center justify-center" :class="{'bg-black border-black': selectedStickerIds.includes(sticker.id)}">
-                            <i v-if="selectedStickerIds.includes(sticker.id)" class="fas fa-check text-white text-[10px]"></i>
-                        </div>
-                    </div>
-                </div>
-                <div v-if="filteredStickers.length === 0" class="text-center text-gray-400 mt-20 text-xs">暂无表情</div>
-            </div>
-
-            <!-- 删除底部栏 -->
-            <div v-if="isStickerMultiSelect" class="bg-white border-t border-gray-100 p-4 pb-safe shadow-lg">
-                <button @click="deleteSelectedStickers" class="w-full bg-red-500 text-white py-3 rounded-xl font-bold text-sm">删除所选 ({{selectedStickerIds.length}})</button>
-            </div>
-
-            <input type="file" ref="stickerUploadInput" accept="image/*" class="hidden" multiple @change="handleStickerUpload">
-        </div>
-    </transition>
-
-    <transition name="scale"><div v-if="chatWizard.show" class="fixed inset-0 z-[55000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[90%] h-[70vh] rounded-2xl overflow-hidden shadow-2xl flex flex-col animate-scale-in"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><button @click="closeChatWizard" class="text-gray-500 font-medium text-sm">取消</button><h3 class="font-bold text-lg text-gray-900">{{ chatWizard.step === 1 ? '选择我的面具' : (chatWizard.type === 'single' ? '选择好友' : '选择群成员') }}</h3><button v-if="chatWizard.step === 2 && chatWizard.type === 'group'" @click="finishCreateChat" class="text-black font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg">完成</button></div><div class="flex-1 overflow-y-auto p-4 space-y-3"><div v-if="chatWizard.step === 1"><div v-if="masks.length === 0" class="text-center text-gray-400 mt-20 text-xs">没有可用面具，请去"我-面具"添加</div><div v-for="mask in masks" :key="mask.id" @click="selectWizardMask(mask)" class="bg-white border border-gray-100 p-3 rounded-xl flex items-center gap-3 active:bg-gray-50 cursor-pointer"><div class="w-10 h-10 rounded-full bg-gray-100 overflow-hidden"><img v-if="mask.avatar" :src="mask.avatar" class="w-full h-full object-cover"></div><div class="flex-1 min-w-0"><h4 class="font-bold text-sm truncate">{{ mask.name }}</h4><p class="text-xs text-gray-400 truncate">{{ mask.bio || '无介绍' }}</p></div><i class="fas fa-chevron-right text-gray-300 text-xs shrink-0"></i></div></div><div v-if="chatWizard.step === 2"><div v-if="wechatState.friendList.length === 0" class="text-center text-gray-400 mt-20 text-xs">通讯录暂无好友</div><div v-for="friend in wechatState.friendList" :key="friend.id" @click="selectWizardContact(friend)" class="bg-white border p-3 rounded-xl flex items-center gap-3 active:bg-gray-50 cursor-pointer transition" :class="chatWizard.selectedContacts.includes(friend.id) ? 'border-black bg-gray-50' : 'border-gray-100'"><div v-if="chatWizard.type === 'group'" class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center" :class="{'bg-black border-black': chatWizard.selectedContacts.includes(friend.id)}"><i v-if="chatWizard.selectedContacts.includes(friend.id)" class="fas fa-check text-white text-[10px]"></i></div><div class="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden"><img v-if="friend.avatar" :src="friend.avatar" class="w-full h-full object-cover"></div><span class="font-bold text-sm">{{ friend.remark || friend.name }}</span></div></div></div></div></div></transition>
-
-    <!-- 世界书添加/编辑文件 Modal -->
-    <transition name="scale"><div v-if="worldModal.show" class="fixed inset-0 z-[55000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl p-6 space-y-4"><h3 class="text-lg font-bold text-center text-gray-900">{{ worldModal.id ? '编辑文件' : (worldModal.type === 'folder' ? '新建文件夹' : '新建文件') }}</h3><input v-model="worldModal.name" placeholder="请输入名称" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none"><div v-if="worldModal.type === 'file'" class="space-y-4"><div class="space-y-1"><label class="text-xs text-gray-500 ml-1">归类文件夹</label><div @click="folderSelectModal.show = true" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 flex justify-between items-center cursor-pointer text-gray-700"><span :class="worldModal.parentId ? 'text-black' : 'text-gray-400'">{{ getFolderName(worldModal.parentId) }}</span><i class="fas fa-chevron-right text-xs text-gray-300"></i></div></div><textarea v-model="worldModal.content" placeholder="输入文件内容..." class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none h-32 resize-none"></textarea></div><div class="flex gap-3 pt-2"><button @click="worldModal.show = false" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold text-sm">取消</button><button @click="saveWorldItem" class="flex-1 bg-black text-white py-3 rounded-xl font-bold text-sm">保存</button></div></div></div></transition>
-    <transition name="scale"><div v-if="addContactModal.show" class="fixed inset-0 z-[55000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[90%] max-h-[85vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col animate-scale-in"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10"><button @click="addContactModal.show = false" class="text-gray-500 font-medium text-sm">取消</button><h3 class="font-bold text-lg text-gray-900">{{ newContact.id ? '编辑朋友' : '添加朋友' }}</h3><button @click="saveNewContact" class="text-black font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg">完成</button></div><div class="flex-1 overflow-y-auto p-6 space-y-5"><div class="flex flex-col items-center gap-2"><div class="w-24 h-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative cursor-pointer active:opacity-70 transition" @click="triggerAddContactAvatar"><img v-if="newContact.avatar" :src="newContact.avatar" class="w-full h-full object-cover"><div v-else class="flex flex-col items-center text-gray-400"><i class="fas fa-camera text-2xl mb-1"></i><span class="text-[10px]">上传头像</span></div></div></div><div class="space-y-4"><div><label class="text-xs text-gray-500 ml-1 mb-1 block">姓名</label><input v-model="newContact.name" placeholder="输入姓名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">备注</label><input v-model="newContact.remark" placeholder="输入备注名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><div class="flex justify-between items-center ml-1 mb-1"><label class="text-xs text-gray-500 block">网名 (ID)</label><button @click="autoFillProfile('username')" class="text-[10px] text-purple-500 font-bold active:scale-95"><i class="fas fa-magic"></i> AI填充</button></div><input v-model="newContact.username" placeholder="输入网名/微信号" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">性别</label><div class="flex gap-3"><div @click="newContact.gender = '男'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="newContact.gender==='男'?'bg-blue-50 border-blue-200 text-blue-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-mars"></i> 男</div><div @click="newContact.gender = '女'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="newContact.gender==='女'?'bg-pink-50 border-pink-200 text-pink-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-venus"></i> 女</div></div></div><div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">身高(cm)</label><input v-model="newContact.height" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">体重(kg)</label><input v-model="newContact.weight" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div>
-<div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">年龄</label><input v-model="newContact.age" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">生日</label><input v-model="newContact.birthday" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">拍一拍</label><input v-model="newContact.nudge" placeholder="拍一拍后缀" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><div class="flex justify-between items-center ml-1 mb-1"><label class="text-xs text-gray-500 block">个性签名</label><button @click="autoFillProfile('signature')" class="text-[10px] text-purple-500 font-bold active:scale-95"><i class="fas fa-magic"></i> AI填充</button></div><input v-model="newContact.signature" placeholder="输入个性签名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">背景资料</label><textarea v-model="newContact.bio" placeholder="输入人设、背景故事..." class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none h-24 resize-none"></textarea></div></div></div><input type="file" ref="addContactAvatarInput" accept="image/*" class="hidden" @change="handleAddContactAvatar"></div></div></transition>
+    <transition name="scale"><div v-if="modelSelectModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[60vh]"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><h3 class="font-bold text-lg text-gray-900">选择模型</h3><button @click="modelSelectModal.show = false" class="text-gray-400 font-medium text-sm">关闭</button></div><div class="flex-1 overflow-y-auto p-2 space-y-1"><div v-if="availableModels.length===0" class="p-4 text-center text-xs text-gray-400">列表为空</div><div v-for="model in availableModels" :key="model" @click="selectModel(model)" class="p-3.5 rounded-xl flex items-center justify-between active:bg-gray-50 transition" :class="apiConfig.selectedModel === model ? 'bg-blue-50' : ''"><span class="font-bold text-sm text-gray-800">{{ model }}</span><i v-if="apiConfig.selectedModel === model" class="fas fa-check text-blue-500"></i></div></div></div></div></transition>            
 
     <!-- 位置填写弹窗 -->
     <transition name="scale">
@@ -1715,49 +1381,57 @@
             <div v-if="chatContextMenu.isSelf" class="context-item" @click="handleChatMenuAction('recall')"><i class="fas fa-undo text-lg"></i><span>撤回</span></div>
             <div v-if="!chatContextMenu.isSelf" class="context-item" @click="handleChatMenuAction('regenerate')"><i class="fas fa-sync-alt text-lg"></i><span>重回</span></div>
         </div>
-    </transition>
+    </transition>    
 
-    <!-- 弹窗组件 -->
-    <transition name="scale"><div v-if="modelSelectModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[60vh]"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><h3 class="font-bold text-lg text-gray-900">选择模型</h3><button @click="modelSelectModal.show = false" class="text-gray-400 font-medium text-sm">关闭</button></div><div class="flex-1 overflow-y-auto p-2 space-y-1"><div v-if="availableModels.length===0" class="p-4 text-center text-xs text-gray-400">列表为空</div><div v-for="model in availableModels" :key="model" @click="selectModel(model)" class="p-3.5 rounded-xl flex items-center justify-between active:bg-gray-50 transition" :class="apiConfig.selectedModel === model ? 'bg-blue-50' : ''"><span class="font-bold text-sm text-gray-800">{{ model }}</span><i v-if="apiConfig.selectedModel === model" class="fas fa-check text-blue-500"></i></div></div></div></div></transition>
-
-    <!-- 世界书绑定弹窗 -->
+    <!-- 世界书绑定弹窗 (支持文件夹全选/展开单选) -->
     <transition name="scale">
         <div v-if="worldBinderModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
             <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[60vh]">
-                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><h3 class="font-bold text-lg text-gray-900">绑定世界书</h3><button @click="worldBinderModal.show = false" class="text-blue-500 font-bold text-sm">完成</button></div>
-                <div class="flex-1 overflow-y-auto p-2">
-                    <div @click="bindWorldFolder(null)" class="p-3.5 rounded-xl border border-dashed border-gray-200 text-center text-gray-400 text-xs active:bg-gray-50 mb-3">清空所有绑定 (恢复默认)</div>
-                    <div v-for="folder in folders" :key="folder.id" class="border border-gray-100 rounded-xl overflow-hidden mb-2 shadow-sm">
-                        <!-- 文件夹本体 -->
-                        <div class="p-3.5 flex items-center justify-between bg-white active:bg-gray-50 transition cursor-pointer" @click="toggleWorldBinderFolderExpand(folder.id)">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><h3 class="font-bold text-lg text-gray-900">世界书记忆绑定</h3><button @click="worldBinderModal.show = false" class="text-black font-bold text-sm bg-gray-100 px-3 py-1.5 rounded-lg active:scale-95">完成</button></div>
+                <div class="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50">
+                    
+                    <div @click="bindWorldFolder(null)" class="p-3.5 rounded-xl border border-gray-200 bg-white text-center text-gray-400 font-bold text-xs active:bg-gray-100 mb-3 shadow-sm transition">一键清空所有绑定</div>
+                    
+                    <!-- 文件夹列表 -->
+                    <div v-for="folder in folders" :key="folder.id" class="flex flex-col border border-gray-100 rounded-xl overflow-hidden shadow-sm bg-white">
+                        <div class="p-3.5 flex items-center justify-between cursor-pointer active:bg-gray-50 transition" @click="toggleWorldBinderFolder(folder.id)">
                             <div class="flex items-center gap-3">
-                                <i class="fas fa-folder text-yellow-400 text-lg"></i>
+                                <i class="fas fa-chevron-right text-gray-300 text-[10px] transition-transform" :class="{'rotate-90': worldBinderExpanded.includes(folder.id)}"></i>
+                                <i class="fas fa-folder text-yellow-400"></i>
                                 <span class="font-bold text-sm text-gray-800">{{ folder.name }}</span>
                             </div>
-                            <div class="flex items-center gap-4">
-                                <!-- 勾选整个文件夹 -->
-                                <div @click.stop="toggleWorldBinding(folder.id)" class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center transition" :class="isFolderBound(folder.id) ? 'bg-black border-black' : 'bg-white'">
+                            <div class="flex items-center gap-2" @click.stop>
+                                <span class="text-[10px] text-gray-400 font-bold">全选</span>
+                                <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer transition" :class="isFolderBound(folder.id) ? 'bg-black border-black' : 'bg-gray-50 hover:bg-gray-200'" @click.stop="toggleWorldBinding(folder.id)">
                                     <i v-if="isFolderBound(folder.id)" class="fas fa-check text-white text-[10px]"></i>
                                 </div>
-                                <i class="fas fa-chevron-right text-gray-300 text-xs transition-transform" :class="{'rotate-90': worldBinderModal.expanded.includes(folder.id)}"></i>
                             </div>
                         </div>
-                        <!-- 文件夹内部文件列表 -->
-                        <div v-if="worldBinderModal.expanded.includes(folder.id)" class="bg-gray-50/50 border-t border-gray-100">
-                            <div v-if="getFiles(folder.id).length===0" class="p-3 text-center text-xs text-gray-400">无文件</div>
-                            <div v-for="file in getFiles(folder.id)" :key="file.id" @click.stop="toggleWorldBindingFile(file.id)" class="p-3.5 pl-10 flex items-center justify-between active:bg-gray-100 transition cursor-pointer border-b border-gray-50 last:border-0">
-                                <div class="flex items-center gap-2.5">
-                                    <i class="fas fa-file-alt text-blue-400 text-sm"></i>
-                                    <span class="text-sm text-gray-700 font-medium">{{ file.name }}</span>
-                                </div>
-                                <!-- 勾选单个文件 (如果父级文件夹被勾选，则子文件自动被强制勾选并变灰) -->
-                                <div class="w-[18px] h-[18px] rounded-full border border-gray-300 flex items-center justify-center transition" :class="isFolderBound(folder.id) ? 'bg-gray-300 border-gray-300' : (isFileBound(file.id) ? 'bg-black border-black' : 'bg-white')">
-                                    <i v-if="isFileBound(file.id) || isFolderBound(folder.id)" class="fas fa-check text-white text-[9px]"></i>
+                        
+                        <!-- 展开的文件列表 -->
+                        <transition name="expand">
+                            <div v-if="worldBinderExpanded.includes(folder.id)" class="bg-[#fcfcfc] border-t border-gray-100 flex flex-col">
+                                <div v-if="getFiles(folder.id).length===0" class="p-3 text-center text-xs text-gray-400 italic">空文件夹</div>
+                                <div v-for="file in getFiles(folder.id)" :key="file.id" class="p-3 pl-10 border-b border-gray-50 last:border-0 flex items-center justify-between cursor-pointer hover:bg-gray-100 transition" @click="toggleWorldFileBinding(file.id)">
+                                    <div class="flex items-center gap-3"><i class="fas fa-file-alt text-gray-300 text-sm"></i><span class="text-[13px] font-medium text-gray-600 truncate">{{ file.name }}</span></div>
+                                    <!-- Checkbox (受文件夹全选限制) -->
+                                    <div class="w-4 h-4 rounded-sm border flex items-center justify-center transition" :class="isFileBound(file.id) || isFolderBound(folder.id) ? 'bg-black border-black' : 'border-gray-300 bg-white'">
+                                        <i v-if="isFileBound(file.id) || isFolderBound(folder.id)" class="fas fa-check text-white text-[9px]"></i>
+                                    </div>
                                 </div>
                             </div>
+                        </transition>
+                    </div>
+                    
+                    <!-- 根目录的散落文件 -->
+                    <div v-for="file in rootFiles" :key="file.id" class="p-3.5 bg-white border border-gray-100 shadow-sm rounded-xl flex items-center justify-between cursor-pointer active:bg-gray-50 transition" @click="toggleWorldFileBinding(file.id)">
+                        <div class="flex items-center gap-3 ml-4"><i class="fas fa-file-alt text-gray-400"></i><span class="font-bold text-sm text-gray-700">{{ file.name }}</span></div>
+                        <div class="w-4 h-4 rounded-sm border border-gray-300 flex items-center justify-center transition" :class="isFileBound(file.id) ? 'bg-black border-black' : 'bg-white'">
+                            <i v-if="isFileBound(file.id)" class="fas fa-check text-white text-[9px]"></i>
                         </div>
                     </div>
-                    <div v-if="folders.length===0" class="text-center text-xs text-gray-400 py-8">暂无文件夹</div>
+
+                    <div v-if="folders.length===0 && rootFiles.length===0" class="text-center text-xs text-gray-400 py-8">暂无世界书内容</div>
                 </div>
             </div>
         </div>
@@ -2841,44 +2515,39 @@
                                         <div class="qinmi-footer"><span>微信亲密付</span><i class="fas fa-chevron-right text-xs"></i></div>
                                     </div>
                                     
-                                    <!-- 外卖代付卡片 (请求用户付钱) -->
-                                    <div v-else-if="msg.type === 'takeaway_pay'" class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm w-[230px] my-1">
-                                        <div class="bg-orange-50 p-3 flex items-center gap-2 border-b border-orange-100">
-                                            <div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white shadow-sm"><i class="fas fa-hamburger"></i></div>
-                                            <div class="flex flex-col"><span class="font-bold text-orange-600 text-[13px]">外卖代付请求</span><span class="text-[9px] text-orange-400 mt-0.5">来自 {{ wechatState.activeSession.name }}</span></div>
-                                        </div>
-                                        <div class="p-4">
-                                            <div class="text-sm font-bold text-gray-800 mb-1 truncate">{{ msg.foodName }}</div>
-                                            <div class="text-2xl font-bold text-gray-900 mb-4 font-mono">¥{{ formatMoney(msg.amount) }}</div>
-                                            
-                                            <div v-if="!msg.status || msg.status === 'pending'" class="flex gap-2">
-                                                <button @click.stop="rejectTakeaway(msg)" class="flex-1 bg-gray-100 text-gray-500 text-xs font-bold py-2.5 rounded-xl active:scale-95 transition">拒绝</button>
-                                                <button @click.stop="acceptTakeaway(msg)" class="flex-1 bg-orange-500 text-white text-xs font-bold py-2.5 rounded-xl active:scale-95 transition shadow-sm border border-orange-600">付款</button>
-                                            </div>
-                                            <div v-else-if="msg.status === 'accepted'" class="text-center text-xs font-bold text-green-500 bg-green-50 py-2.5 rounded-xl"><i class="fas fa-check-circle mr-1"></i>已成功代付</div>
-                                            <div v-else class="text-center text-xs font-bold text-gray-400 bg-gray-100 py-2.5 rounded-xl">已拒绝</div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- 外卖配送卡片 (AI给用户点) -->
-                                    <div v-else-if="msg.type === 'takeaway_receive'" class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm w-[240px] my-1">
-                                        <div class="bg-blue-50 p-3 flex items-center gap-2 border-b border-blue-100">
-                                            <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white shadow-sm"><i class="fas fa-motorcycle"></i></div>
-                                            <div class="flex flex-col"><span class="font-bold text-blue-600 text-[13px]">外卖正在派送中</span><span class="text-[9px] text-blue-400 mt-0.5">骑手已接单</span></div>
-                                        </div>
-                                        <div class="p-4 text-xs space-y-2.5 text-gray-600">
-                                            <div class="text-[13px] font-bold text-gray-800 mb-3 truncate">{{ msg.foodName }}</div>
-                                            <div class="flex justify-between items-center"><span class="text-gray-400">实付金额</span><span class="font-bold text-gray-800 text-[13px] font-mono">¥{{ formatMoney(msg.amount) }}</span></div>
-                                            <div class="flex justify-between items-center"><span class="text-gray-400">下单时间</span><span>{{ formatChatTime(msg.time) }}</span></div>
-                                            <div class="flex justify-between items-center"><span class="text-gray-400">预计送达</span><span class="text-blue-500 font-bold">{{ msg.eta }}</span></div>
-                                            <div v-if="msg.note" class="mt-3 pt-3 border-t border-gray-50 text-gray-500 italic break-all leading-relaxed bg-gray-50 p-2 rounded-lg">"{{ msg.note }}"</div>
-                                        </div>
-                                    </div>
-                                    
                                     <!-- 定位卡片 -->
                                     <div v-else-if="msg.type === 'location'">
                                         <div class="location-header"><div class="location-title">{{ msg.name }}</div><div class="location-desc">{{ msg.address }}</div></div>
                                         <div class="location-map"><i class="fas fa-map-marker-alt location-pin"></i></div>
+                                    </div>
+                                    <!-- 外卖专属卡片 (黑白灰高级UI) -->
+                                    <div v-else-if="msg.type === 'takeaway'" class="w-[240px] bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col font-sans">
+                                        <!-- 顶部 Header -->
+                                        <div class="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+                                            <span class="font-bold text-gray-800 text-[13px] tracking-wide">{{ msg.subType === 'pay_for_me' ? '外卖代付请求' : '外卖订单配送中' }}</span>
+                                            <i class="fas fa-motorcycle text-gray-400"></i>
+                                        </div>
+                                        <!-- 订单信息区域 -->
+                                        <div class="p-4 flex flex-col gap-2 text-sm text-gray-600 bg-white">
+                                            <div class="flex justify-between"><span class="text-gray-400 text-xs">商品</span><span class="font-medium text-gray-800 truncate max-w-[130px]">{{ msg.foodName }}</span></div>
+                                            <div class="flex justify-between"><span class="text-gray-400 text-xs">金额</span><span class="font-bold text-black font-mono">¥{{ msg.amount }}</span></div>
+                                            
+                                            <!-- 别人为我点的专属信息 -->
+                                            <template v-if="msg.subType === 'ordered_for_you'">
+                                                <div class="flex justify-between"><span class="text-gray-400 text-xs">下单时间</span><span class="text-gray-800 font-mono text-xs">{{ formatChatTime(msg.time) }}</span></div>
+                                                <div class="flex justify-between"><span class="text-gray-400 text-xs">预计送达</span><span class="text-gray-900 font-bold">{{ msg.eta }}</span></div>
+                                                <div v-if="msg.remark" class="flex justify-between mt-1 pt-2 border-t border-gray-50"><span class="text-gray-400 text-xs shrink-0">备注</span><span class="truncate ml-2 text-gray-800 text-xs italic">{{ msg.remark }}</span></div>
+                                            </template>
+                                        </div>
+                                        <!-- 底部操作按钮 (仅限求我代付时显示) -->
+                                        <div v-if="msg.subType === 'pay_for_me'" class="flex border-t border-gray-100">
+                                            <template v-if="msg.status === 'pending'">
+                                                <button @click.stop="rejectTakeaway(msg)" class="flex-1 py-3 text-gray-400 font-bold text-[13px] border-r border-gray-100 hover:bg-gray-50 active:bg-gray-100 transition">拒绝</button>
+                                                <button @click.stop="acceptTakeaway(msg)" class="flex-1 py-3 text-black font-bold text-[13px] hover:bg-gray-50 active:bg-gray-100 transition">付款</button>
+                                            </template>
+                                            <div v-else-if="msg.status === 'paid'" class="flex-1 py-3 text-center text-gray-800 text-[12px] bg-gray-50 font-bold tracking-widest"><i class="fas fa-check-circle mr-1"></i>已付款</div>
+                                            <div v-else-if="msg.status === 'rejected'" class="flex-1 py-3 text-center text-gray-400 text-[12px] bg-gray-50 font-bold tracking-widest">已拒绝</div>
+                                        </div>
                                     </div>
                                     
                                     <!-- 转发卡片 -->
@@ -3973,7 +3642,7 @@ createApp({
             masks:[], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: '' },
             masks: [], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', bio: '', nudge: '', signature: '', avatar: '' },
             worldData: [], expandedFolders: [], worldModal: { show: false, type: 'folder', name: '', content: '', parentId: '' }, viewFileModal: { show: false, data: {} },
-            worldBinderModal: { show: false, expanded:[] },
+            worldBinderModal: { show: false }, worldBinderExpanded:[],
             modelSelectModal: { show: false }, 
             chatContextMenu: { show: false, x: 0, y: 0, msg: null, index: -1, isSelf: false },
             folderSelectModal: { show: false }, 
@@ -5294,11 +4963,15 @@ createApp({
             let folderIds = session.boundWorldbookFolderIds ||[];
             if (session.boundWorldbookFolderId) folderIds.push(session.boundWorldbookFolderId);
             folderIds = [...new Set(folderIds)];
+            
             let fileIds = session.boundWorldbookFileIds ||[];
 
             if (folderIds.length > 0 || fileIds.length > 0) {
-                // 筛选出被勾选文件夹下的文件，或者单独被勾选的文件
-                const files = this.worldData.filter(i => i.type === 'file' && i.isActive !== false && (folderIds.includes(i.parentId) || fileIds.includes(i.id)));
+                // 筛选规则：如果该文件自己的 ID 在 fileIds 里，或者它老爸的 ID 在 folderIds 里全选了，就加载给 AI
+                const files = this.worldData.filter(i => 
+                    i.type === 'file' && i.isActive !== false && 
+                    (folderIds.includes(i.parentId) || fileIds.includes(i.id))
+                );
                 if (files.length > 0) {
                     worldContext = "\n[World Info]:\n" + files.map(f => `(${f.name}): ${f.content}`).join("\n");
                 }
@@ -5408,7 +5081,6 @@ Structure:
   "fake_image": "OPTIONAL: description of a photo you want to send",
   "red_packet": { "amount": "8.88", "note": "Happy Day" },
   "transfer": { "amount": "52.00", "note": "For you" },
-  "takeaway": { "type": "pay", "foodName": "奶茶", "amount": 25.5, "note": "多放冰" }, // OPTIONAL: 当你要求用户帮你点外卖时设为"pay"(代付)。当你给用户点外卖派送时设为"receive"
   "location": { "name": "Place Name", "address": "Detailed Address" },
   "qinmi_reply": "accept" OR "reject",
   "music_control": "next" OR "prev" OR "stop",
@@ -5416,8 +5088,11 @@ Structure:
   "html_widget": "OPTIONAL: Valid HTML string using Tailwind CSS...",
   "change_avatar": true OR false,
   "sticker_id": "OPTIONAL: 填入你想发的表情包的纯数字 ID",
-  "invite_music": true (OPTIONAL: 当你想主动分享音乐时输出 true，此时绝对不要在 reply 里发文字提示，系统会自动发卡片)
+  "invite_music": true (OPTIONAL: 当你想主动分享音乐时输出 true，此时绝对不要在 reply 里发文字提示，系统会自动发卡片),
+  "takeaway_request": { "foodName": "外卖名字", "amount": "金额" }, // OPTIONAL: 当你提到饿了，想让对方付钱给你点外卖时输出
+  "takeaway_order": { "foodName": "外卖名字", "amount": "金额", "remark": "备注要求" } // OPTIONAL: 当你主动付钱给对方点外卖时输出
 }
+`;
 
 注意！！！"reply" 必须是一个字符串数组（Array）！如果你想连续发送多条消息，请务必把每一句话作为数组里的一个独立元素，例如 ["在吗？", "我想你了", "晚上一起吃饭吗？"]，绝对不要把所有话挤在一条消息里！`;
             
@@ -5573,6 +5248,15 @@ Structure:
                     };
                     session.messages.push(locMsg); session.lastMessage = '[位置]';
                 }
+                // --- 解析外卖系统 ---
+                if (parsed.takeaway_request) {
+                    const twMsg = { type: 'takeaway', subType: 'pay_for_me', foodName: parsed.takeaway_request.foodName || '一份外卖', amount: parseFloat(parsed.takeaway_request.amount || '0').toFixed(2), status: 'pending', isSelf: false, time: Date.now(), avatar: session.avatar };
+                    session.messages.push(twMsg); session.lastMessage = '[外卖代付请求]';
+                }
+                if (parsed.takeaway_order) {
+                    const twMsg = { type: 'takeaway', subType: 'ordered_for_you', foodName: parsed.takeaway_order.foodName || '一份外卖', amount: parseFloat(parsed.takeaway_order.amount || '0').toFixed(2), remark: parsed.takeaway_order.remark || '无', eta: (Math.floor(Math.random() * 20) + 30) + '分钟', isSelf: false, time: Date.now(), avatar: session.avatar };
+                    session.messages.push(twMsg); session.lastMessage = '[外卖订单]';
+                }
                 
                 // 解析 AI 触发的拍一拍逻辑
                 if (parsed.nudge) {
@@ -5605,20 +5289,9 @@ Structure:
                     const tfMsg = { type: 'transfer', amount: amount, note: note, isSelf: false, time: Date.now(), avatar: session.avatar };
                     session.messages.push(tfMsg); session.lastMessage = '[微信转账]';
                 }
-                // --- 解析 AI 外卖指令 ---
-                if (parsed.takeaway) {
-                    const tk = parsed.takeaway;
-                    if (tk.type === 'pay') {
-                        const tkMsg = { type: 'takeaway_pay', foodName: tk.foodName || '外卖订单', amount: parseFloat(tk.amount) || 20.0, status: 'pending', isSelf: false, time: Date.now(), avatar: session.avatar };
-                        session.messages.push(tkMsg); session.lastMessage = '[外卖代付请求]';
-                    } else if (tk.type === 'receive') {
-                        const now = new Date();
-                        now.setMinutes(now.getMinutes() + 30 + Math.floor(Math.random() * 20)); // 随机 30~50 分钟后送达
-                        const eta = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                        const tkMsg = { type: 'takeaway_receive', foodName: tk.foodName || '外卖订单', amount: parseFloat(tk.amount) || 20.0, note: tk.note || '', eta: eta, isSelf: false, time: Date.now(), avatar: session.avatar };
-                        session.messages.push(tkMsg); session.lastMessage = '[外卖派送订单]';
-                    }
-                }                                
+                
+                
+
                 this.isTyping = false; 
                 this.handleAiIntimatePayConsumption(session);
 
@@ -5911,22 +5584,11 @@ Structure:
             this.statusHistoryModal.show = true; 
         },
         togglePin() { if (this.wechatState.activeSession) { this.wechatState.activeSession.isPinned = !this.wechatState.activeSession.isPinned; this.saveData(); } },
-        bindWorldFolder(folderId) {
-            const session = this.wechatState.activeSession;
-            if (!session) return;
-            if (!session.boundWorldbookFolderIds) session.boundWorldbookFolderIds = [];
-            if (folderId === null) { session.boundWorldbookFolderIds = []; session.boundWorldbookFolderId = null; } 
-            else {
-                const idx = session.boundWorldbookFolderIds.indexOf(folderId);
-                if (idx > -1) session.boundWorldbookFolderIds.splice(idx, 1);
-                else session.boundWorldbookFolderIds.push(folderId);
-            }
-            this.saveData();
-        },
-        toggleWorldBinding(fid) { this.toggleWorldBinderFolderExpand(fid) {
-            const idx = this.worldBinderModal.expanded.indexOf(fid);
-            if (idx > -1) this.worldBinderModal.expanded.splice(idx, 1);
-            else this.worldBinderModal.expanded.push(fid);
+        // --- 细颗粒度世界书绑定逻辑 ---
+        toggleWorldBinderFolder(id) {
+            const idx = this.worldBinderExpanded.indexOf(id);
+            if (idx > -1) this.worldBinderExpanded.splice(idx, 1);
+            else this.worldBinderExpanded.push(id);
         },
         bindWorldFolder(folderId) {
             const session = this.wechatState.activeSession;
@@ -5934,6 +5596,7 @@ Structure:
             if (!session.boundWorldbookFolderIds) session.boundWorldbookFolderIds =[];
             if (!session.boundWorldbookFileIds) session.boundWorldbookFileIds =[];
             
+            // 一键清空所有
             if (folderId === null) { 
                 session.boundWorldbookFolderIds =[]; 
                 session.boundWorldbookFileIds =[]; 
@@ -5945,11 +5608,12 @@ Structure:
             }
             this.saveData();
         },
-        toggleWorldBinding(fid) { this.bindWorldFolder(fid); }, 
-        toggleWorldBindingFile(fileId) {
+        toggleWorldBinding(fid) { this.bindWorldFolder(fid); },
+        toggleWorldFileBinding(fileId) {
             const session = this.wechatState.activeSession;
             if (!session) return;
             if (!session.boundWorldbookFileIds) session.boundWorldbookFileIds =[];
+            
             const idx = session.boundWorldbookFileIds.indexOf(fileId);
             if (idx > -1) session.boundWorldbookFileIds.splice(idx, 1);
             else session.boundWorldbookFileIds.push(fileId);
@@ -5969,13 +5633,16 @@ Structure:
         getWorldbookStatus() {
             const session = this.wechatState.activeSession;
             if (!session) return '未绑定';
-            let folderCount = (session.boundWorldbookFolderIds?.length || 0);
-            let fileCount = (session.boundWorldbookFileIds?.length || 0);
-            if (folderCount === 0 && fileCount === 0) return '未绑定';
-            let text =[];
-            if (folderCount > 0) text.push(`${folderCount} 个文件夹`);
-            if (fileCount > 0) text.push(`${fileCount} 个文件`);
-            return '已绑定: ' + text.join(' + ');
+            
+            let countF = (session.boundWorldbookFolderIds?.length || 0);
+            if (session.boundWorldbookFolderId && session.boundWorldbookFolderIds?.includes(session.boundWorldbookFolderId)) countF--;
+            let countFile = (session.boundWorldbookFileIds?.length || 0);
+            
+            let res =[];
+            if(countF > 0 || session.boundWorldbookFolderId) res.push(`${countF + (session.boundWorldbookFolderId ? 1 : 0)}本`);
+            if(countFile > 0) res.push(`${countFile}页`);
+            
+            return res.length > 0 ? `已附魔: ` + res.join(' ') : '未绑定';
         },
         selectModel(model) { this.apiConfig.selectedModel = model; this.saveData(); this.modelSelectModal.show = false; },
         getMaskById(id) { return this.masks.find(m => m.id === id) || { avatar: '' }; },
@@ -7707,47 +7374,33 @@ ${settings.bannedWords && settings.bannedWords.trim() ? `5. 【绝对禁忌词�
              this.scrollToBottom();
              this.saveData();
         },
+        // --- 外卖代付交互逻辑 ---
         acceptTakeaway(msg) {
-            if (this.wallet.balance < msg.amount) return this.showToast('余额不足，无法代付，请先充值');
-            this.addToWallet('expense', msg.amount, this.wechatState.activeSession.name, `外卖代付: ${msg.foodName}`);
-            msg.status = 'accepted';
-            this.saveData();
-            this.showToast('代付成功！');
+            const amt = parseFloat(msg.amount);
+            if (this.wallet.balance < amt) return this.showToast('钱包余额不足，无法代付');
             
-            // 自动模拟 AI 收到外卖后的感激回复 (两秒后)
-            setTimeout(() => {
-                if (this.wechatState.activeSession) {
-                    this.wechatState.activeSession.messages.push({
-                        content: `外卖我点好啦，多谢代付~`,
-                        isSelf: false,
-                        time: Date.now(),
-                        avatar: this.wechatState.activeSession.avatar
-                    });
-                    this.wechatState.activeSession.lastMessage = '外卖我点好啦，多谢代付~';
-                    this.scrollToBottom();
-                    this.saveData();
-                }
-            }, 2500);
+            // 扣款
+            this.addToWallet('expense', amt, this.wechatState.activeSession.name, `外卖代付: ${msg.foodName}`);
+            msg.status = 'paid';
+            
+            // 发送系统旁白
+            const sysMsg = { type: 'system', content: `你已成功为TA代付了外卖（¥${msg.amount}）`, time: Date.now() };
+            this.wechatState.activeSession.messages.push(sysMsg);
+            this.saveData();
+            this.showToast('代付成功');
+            
+            // 自动触发AI的一句道谢（模拟真人收到外卖的喜悦）
+            setTimeout(() => { this.triggerReceive(); }, 1500);
         },
         rejectTakeaway(msg) {
             msg.status = 'rejected';
+            const sysMsg = { type: 'system', content: `你残忍地拒绝了外卖代付请求`, time: Date.now() };
+            this.wechatState.activeSession.messages.push(sysMsg);
             this.saveData();
-            this.showToast('已无情拒绝代付');
+            this.showToast('已拒绝');
             
-            // 自动模拟 AI 收到拒绝后的回复 (两秒后)
-            setTimeout(() => {
-                if (this.wechatState.activeSession) {
-                    this.wechatState.activeSession.messages.push({
-                        content: `好吧，那我不吃了。`,
-                        isSelf: false,
-                        time: Date.now(),
-                        avatar: this.wechatState.activeSession.avatar
-                    });
-                    this.wechatState.activeSession.lastMessage = '好吧，那我不吃了。';
-                    this.scrollToBottom();
-                    this.saveData();
-                }
-            }, 2500);
+            // 自动触发AI的一句抱怨
+            setTimeout(() => { this.triggerReceive(); }, 1500);
         },
         
         addToWallet(type, amount, source, desc) {
