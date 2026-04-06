@@ -154,7 +154,22 @@
             background: rgba(255,255,255,0.8); backdrop-filter: blur(5px);
             animation: fadeIn 0.3s ease;
         }
-
+        
+        /* 外卖卡片专属样式 (黑白灰极简风) */
+        .chat-bubble-takeout { background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 16px; width: 240px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 2px 12px rgba(0,0,0,0.03); color: #333; }
+        .takeout-header { padding: 12px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px dashed #f0f0f0; background: #fafafa; }
+        .takeout-icon { width: 36px; height: 36px; background: #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; flex-shrink: 0;}
+        .takeout-title { font-size: 14px; font-weight: bold; color: #111; margin-bottom: 2px; }
+        .takeout-amount { font-size: 24px; font-weight: bold; color: #000; margin: 12px 16px 4px; font-family: monospace; letter-spacing: -1px; }
+        .takeout-info { padding: 0 16px 14px; font-size: 12px; color: #666; line-height: 1.8; }
+        .takeout-actions { display: flex; border-top: 1px solid #f0f0f0; }
+        .takeout-btn { flex: 1; padding: 12px; text-align: center; font-size: 13px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        .takeout-btn.accept { color: #fff; background: #111; }
+        .takeout-btn.accept:active { background: #000; }
+        .takeout-btn.reject { color: #666; background: #fff; }
+        .takeout-btn.reject:active { background: #f5f5f5; }
+        .takeout-status { padding: 12px; text-align: center; font-size: 12px; font-weight: bold; color: #888; background: #f9f9f9; border-top: 1px solid #f0f0f0; }
+        
         /* ---------------- 特殊卡片样式 (强制样式保护) ---------------- */
         .chat-bubble-moment { 
             background-color: #ffffff !important; 
@@ -1017,17 +1032,42 @@
     <!-- 弹窗组件 -->
     <transition name="scale"><div v-if="modelSelectModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[60vh]"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><h3 class="font-bold text-lg text-gray-900">选择模型</h3><button @click="modelSelectModal.show = false" class="text-gray-400 font-medium text-sm">关闭</button></div><div class="flex-1 overflow-y-auto p-2 space-y-1"><div v-if="availableModels.length===0" class="p-4 text-center text-xs text-gray-400">列表为空</div><div v-for="model in availableModels" :key="model" @click="selectModel(model)" class="p-3.5 rounded-xl flex items-center justify-between active:bg-gray-50 transition" :class="apiConfig.selectedModel === model ? 'bg-blue-50' : ''"><span class="font-bold text-sm text-gray-800">{{ model }}</span><i v-if="apiConfig.selectedModel === model" class="fas fa-check text-blue-500"></i></div></div></div></div></transition>
 
-    <!-- 世界书绑定弹窗 -->
+    <!-- 世界书绑定弹窗 (支持单文件级精准勾选) -->
     <transition name="scale">
         <div v-if="worldBinderModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[60vh]">
-                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><h3 class="font-bold text-lg text-gray-900">绑定世界书 (多选)</h3><button @click="worldBinderModal.show = false" class="text-blue-500 font-bold text-sm">完成</button></div>
-                <div class="flex-1 overflow-y-auto p-2 space-y-1">
-                    <div @click="bindWorldFolder(null)" class="p-3.5 rounded-xl border border-dashed border-gray-200 text-center text-gray-400 text-xs active:bg-gray-50 mb-2">不绑定 (默认)</div>
-                    <div v-for="folder in folders" :key="folder.id" @click="toggleWorldBinding(folder.id)" class="p-3.5 rounded-xl flex items-center justify-between active:bg-gray-50 transition border border-gray-50">
-                        <div class="flex items-center gap-3"><i class="fas fa-folder text-yellow-400"></i><span class="font-bold text-sm text-gray-800">{{ folder.name }}</span></div>
-                        <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center transition" :class="isFolderBound(folder.id) ? 'bg-black border-black' : ''">
-                            <i v-if="isFolderBound(folder.id)" class="fas fa-check text-white text-xs"></i>
+            <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[70vh]">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10"><h3 class="font-bold text-lg text-gray-900">选择世界书记忆</h3><button @click="worldBinderModal.show = false" class="text-black font-bold text-sm bg-gray-100 px-3 py-1.5 rounded-lg">完成</button></div>
+                <div class="flex-1 overflow-y-auto p-3 space-y-2">
+                    <div @click="clearAllWorldBindings" class="p-3.5 rounded-xl border border-dashed border-gray-200 text-center text-gray-400 text-xs active:bg-gray-50 cursor-pointer">清除所有绑定</div>
+                    
+                    <div v-for="folder in folders" :key="folder.id" class="border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                        <!-- 文件夹行 (点击展开/折叠) -->
+                        <div class="p-3.5 flex items-center justify-between bg-gray-50 cursor-pointer active:bg-gray-100 transition" @click="toggleBinderFolder(folder.id)">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-folder text-gray-400"></i>
+                                <span class="font-bold text-sm text-gray-800">{{ folder.name }}</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <!-- 文件夹全选/半选勾选框 -->
+                                <div class="w-5 h-5 rounded-md border border-gray-300 flex items-center justify-center transition" :class="isFolderFullyBound(folder.id) ? 'bg-black border-black' : (isFolderPartiallyBound(folder.id) ? 'bg-gray-300 border-gray-300' : 'bg-white')" @click.stop="toggleWorldFolderBinding(folder.id)">
+                                    <i v-if="isFolderFullyBound(folder.id) || isFolderPartiallyBound(folder.id)" class="fas" :class="isFolderFullyBound(folder.id) ? 'fa-check text-white text-[10px]' : 'fa-minus text-white text-[10px]'"></i>
+                                </div>
+                                <i class="fas fa-chevron-down text-gray-300 text-xs transition-transform" :class="{'rotate-180': worldBinderModal.expandedFolders.includes(folder.id)}"></i>
+                            </div>
+                        </div>
+                        <!-- 文件列表 (展开后显示) -->
+                        <div v-show="worldBinderModal.expandedFolders.includes(folder.id)" class="bg-white border-t border-gray-100">
+                            <div v-if="getFiles(folder.id).length === 0" class="p-3 text-center text-xs text-gray-400">空文件夹</div>
+                            <div v-for="file in getFiles(folder.id)" :key="file.id" @click="toggleWorldFileBinding(file.id)" class="p-3 pl-10 border-b border-gray-50 last:border-0 flex items-center justify-between active:bg-gray-50 cursor-pointer">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="far fa-file-alt text-gray-300 text-sm"></i>
+                                    <span class="text-[13px] font-bold text-gray-600 truncate max-w-[150px]">{{ file.name }}</span>
+                                </div>
+                                <!-- 单文件勾选框 -->
+                                <div class="w-4 h-4 rounded-sm border flex items-center justify-center transition" :class="isWorldFileBound(file.id) ? 'bg-black border-black' : 'border-gray-300 bg-white'">
+                                    <i v-if="isWorldFileBound(file.id)" class="fas fa-check text-white text-[9px]"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div v-if="folders.length===0" class="text-center text-xs text-gray-400 py-8">暂无文件夹</div>
@@ -2107,6 +2147,37 @@
                                             <div class="finance-text"><div class="finance-title">¥{{ msg.amount }}</div><div class="finance-desc">{{ msg.isReceived ? '已收款' : (msg.isSelf ? '等待对方收款' : '转账给你') }}</div></div>
                                         </div>
                                         <div class="finance-footer">微信转账</div>
+                                    </div>
+                                    
+                                    <!-- 外卖代付请求卡片 -->
+                                    <div v-else-if="msg.type === 'takeout_pay'" class="chat-bubble-takeout">
+                                        <div class="takeout-header">
+                                            <div class="takeout-icon"><i class="fas fa-hamburger"></i></div>
+                                            <div><div class="takeout-title">外卖代付</div><div class="text-[10px] text-gray-400">请求你帮忙付款</div></div>
+                                        </div>
+                                        <div class="takeout-info mt-2">
+                                            <div class="flex justify-between"><span class="text-gray-400">订单内容</span><span class="font-bold text-gray-800 truncate max-w-[120px]">{{ msg.takeoutData.name }}</span></div>
+                                        </div>
+                                        <div class="takeout-amount">¥{{ msg.takeoutData.amount }}</div>
+                                        <div v-if="!msg.handled" class="takeout-actions">
+                                            <div class="takeout-btn reject" @click.stop="rejectTakeout(msg)">拒绝</div>
+                                            <div class="takeout-btn accept" @click.stop="acceptTakeout(msg)">付款</div>
+                                        </div>
+                                        <div v-else class="takeout-status">{{ msg.handledResult === 'accepted' ? '已付款' : '已拒绝' }}</div>
+                                    </div>
+                                    
+                                    <!-- 角色主动给你点的外卖卡片 -->
+                                    <div v-else-if="msg.type === 'takeout_order'" class="chat-bubble-takeout">
+                                        <div class="takeout-header">
+                                            <div class="takeout-icon"><i class="fas fa-motorcycle"></i></div>
+                                            <div><div class="takeout-title">外卖配送中</div><div class="text-[10px] text-gray-400">骑手正在飞奔</div></div>
+                                        </div>
+                                        <div class="takeout-info mt-2">
+                                            <div class="flex justify-between"><span class="text-gray-400">订单内容</span><span class="font-bold text-gray-800 truncate max-w-[120px]">{{ msg.takeoutData.name }}</span></div>
+                                            <div class="flex justify-between"><span class="text-gray-400">订单金额</span><span class="font-bold text-gray-800">¥{{ msg.takeoutData.amount }}</span></div>
+                                            <div class="flex justify-between"><span class="text-gray-400">预计送达</span><span class="font-bold text-gray-800">{{ msg.takeoutData.eta }}</span></div>
+                                            <div class="flex justify-between mt-2 pt-2 border-t border-gray-100"><span class="text-gray-400">备注</span><span class="text-gray-600 truncate max-w-[120px]">{{ msg.takeoutData.note || '无' }}</span></div>
+                                        </div>
                                     </div>
                                     
                                     <!-- 亲密付邀请 -->
@@ -3214,7 +3285,7 @@ createApp({
             masks:[], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: '' },
             masks: [], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', bio: '', nudge: '', signature: '', avatar: '' },
             worldData: [], expandedFolders: [], worldModal: { show: false, type: 'folder', name: '', content: '', parentId: '' }, viewFileModal: { show: false, data: {} },
-            worldBinderModal: { show: false },
+            worldBinderModal: { show: false, expandedFolders:[] },
             modelSelectModal: { show: false }, 
             chatContextMenu: { show: false, x: 0, y: 0, msg: null, index: -1, isSelf: false },
             folderSelectModal: { show: false }, 
@@ -4531,15 +4602,24 @@ createApp({
             const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
             const mask = this.getMaskById(session.maskId);
             
+            // --- 精准读取勾选的世界书记忆 ---
             let worldContext = "";
-            let folderIds = session.boundWorldbookFolderIds || [];
-            if (session.boundWorldbookFolderId) folderIds.push(session.boundWorldbookFolderId);
-            folderIds = [...new Set(folderIds)];
-
+            let fileIds = session.boundWorldbookFileIds ||[];
+            
+            // 兼容以前的旧版文件夹勾选
+            let folderIds = session.boundWorldbookFolderIds ||[];
             if (folderIds.length > 0) {
-                const files = this.worldData.filter(i => i.type === 'file' && folderIds.includes(i.parentId) && i.isActive !== false);
+                folderIds.forEach(fid => {
+                    const fs = this.getFiles(fid).map(f => f.id);
+                    fileIds = [...fileIds, ...fs];
+                });
+            }
+            fileIds =[...new Set(fileIds)]; // 去重
+
+            if (fileIds.length > 0) {
+                const files = this.worldData.filter(i => i.type === 'file' && fileIds.includes(i.id) && i.isActive !== false);
                 if (files.length > 0) {
-                    worldContext = "\n[World Info]:\n" + files.map(f => `(${f.name}): ${f.content}`).join("\n");
+                    worldContext = "\n[世界书·深度记忆库]:\n以下内容是你们之间的深刻记忆或世界观设定，如果对话涉及，请根据这些内容作出反应：\n" + files.map(f => `《${f.name}》: ${f.content}`).join("\n");
                 }
             }
             
@@ -4647,6 +4727,8 @@ Structure:
   "fake_image": "OPTIONAL: description of a photo you want to send",
   "red_packet": { "amount": "8.88", "note": "Happy Day" },
   "transfer": { "amount": "52.00", "note": "For you" },
+  "takeout_pay": "OPTIONAL: 当你想撒娇求我给你买外卖时输出该对象, 例 { \"name\": \"麦当劳双人餐\", \"amount\": \"58.50\" }",
+  "takeout_order": "OPTIONAL: 当你霸总发作/心疼我，主动给我点外卖时输出该对象, 例 { \"name\": \"热牛奶和暖胃粥\", \"amount\": \"35.00\", \"note\": \"记得趁热喝\", \"eta\": \"30分钟\" }",
   "location": { "name": "Place Name", "address": "Detailed Address" },
   "qinmi_reply": "accept" OR "reject",
   "music_control": "next" OR "prev" OR "stop",
@@ -4829,7 +4911,30 @@ Structure:
                     }
                     session.messages.push({ type: 'system', content: content, time: Date.now() });
                 }
-
+                
+                // --- 解析外卖事件 ---
+                if (parsed.takeout_pay) {
+                    session.messages.push({
+                        type: 'takeout_pay',
+                        takeoutData: parsed.takeout_pay,
+                        handled: false,
+                        isSelf: false,
+                        time: Date.now(),
+                        avatar: session.avatar
+                    });
+                    session.lastMessage = '[外卖代付请求]';
+                }
+                if (parsed.takeout_order) {
+                    session.messages.push({
+                        type: 'takeout_order',
+                        takeoutData: parsed.takeout_order,
+                        isSelf: false,
+                        time: Date.now(),
+                        avatar: session.avatar
+                    });
+                    session.lastMessage = '[主动为你点了外卖]';
+                }
+                
                 if (parsed.red_packet || Math.random() < 0.05) {
                     const amount = parsed.red_packet ? parsed.red_packet.amount : (Math.random() * 100).toFixed(2);
                     const note = parsed.red_packet ? parsed.red_packet.note : "恭喜发财";
@@ -5138,31 +5243,105 @@ Structure:
             this.statusHistoryModal.show = true; 
         },
         togglePin() { if (this.wechatState.activeSession) { this.wechatState.activeSession.isPinned = !this.wechatState.activeSession.isPinned; this.saveData(); } },
-        bindWorldFolder(folderId) {
+        // === 世界书绑定升级逻辑 ===
+        toggleBinderFolder(id) {
+            const idx = this.worldBinderModal.expandedFolders.indexOf(id);
+            if(idx > -1) this.worldBinderModal.expandedFolders.splice(idx, 1);
+            else this.worldBinderModal.expandedFolders.push(id);
+        },
+        isWorldFileBound(fid) {
+            const session = this.wechatState.activeSession;
+            if (!session) return false;
+            return session.boundWorldbookFileIds && session.boundWorldbookFileIds.includes(fid);
+        },
+        isFolderFullyBound(folderId) {
+            const session = this.wechatState.activeSession;
+            if (!session) return false;
+            if (session.boundWorldbookFolderIds && session.boundWorldbookFolderIds.includes(folderId)) return true; // 旧版全选兼容
+            const files = this.getFiles(folderId);
+            if (files.length === 0) return false;
+            return files.every(f => this.isWorldFileBound(f.id));
+        },
+        isFolderPartiallyBound(folderId) {
+            if (this.isFolderFullyBound(folderId)) return false;
+            const files = this.getFiles(folderId);
+            return files.some(f => this.isWorldFileBound(f.id));
+        },
+        toggleWorldFolderBinding(folderId) {
             const session = this.wechatState.activeSession;
             if (!session) return;
-            if (!session.boundWorldbookFolderIds) session.boundWorldbookFolderIds = [];
-            if (folderId === null) { session.boundWorldbookFolderIds = []; session.boundWorldbookFolderId = null; } 
-            else {
-                const idx = session.boundWorldbookFolderIds.indexOf(folderId);
-                if (idx > -1) session.boundWorldbookFolderIds.splice(idx, 1);
-                else session.boundWorldbookFolderIds.push(folderId);
+            if (!session.boundWorldbookFileIds) session.boundWorldbookFileIds =[];
+            
+            const files = this.getFiles(folderId);
+            const isFullyBound = this.isFolderFullyBound(folderId);
+            
+            if (isFullyBound) {
+                // 全部解绑
+                const fileIds = files.map(f => f.id);
+                session.boundWorldbookFileIds = session.boundWorldbookFileIds.filter(id => !fileIds.includes(id));
+                if(session.boundWorldbookFolderIds) session.boundWorldbookFolderIds = session.boundWorldbookFolderIds.filter(id => id !== folderId);
+            } else {
+                // 绑定该文件夹下所有文件
+                files.forEach(f => {
+                    if (!session.boundWorldbookFileIds.includes(f.id)) session.boundWorldbookFileIds.push(f.id);
+                });
             }
             this.saveData();
         },
-        toggleWorldBinding(fid) { this.bindWorldFolder(fid); }, 
-        isFolderBound(fid) {
+        toggleWorldFileBinding(fileId) {
             const session = this.wechatState.activeSession;
-            if (!session) return false;
-            if (session.boundWorldbookFolderId === fid) return true; 
-            return session.boundWorldbookFolderIds && session.boundWorldbookFolderIds.includes(fid);
+            if (!session) return;
+            if (!session.boundWorldbookFileIds) session.boundWorldbookFileIds =[];
+            
+            const idx = session.boundWorldbookFileIds.indexOf(fileId);
+            if (idx > -1) session.boundWorldbookFileIds.splice(idx, 1);
+            else session.boundWorldbookFileIds.push(fileId);
+            this.saveData();
+        },
+        clearAllWorldBindings() {
+            const session = this.wechatState.activeSession;
+            if (!session) return;
+            session.boundWorldbookFolderIds =[];
+            session.boundWorldbookFolderId = null;
+            session.boundWorldbookFileIds =[];
+            this.saveData();
         },
         getWorldbookStatus() {
             const session = this.wechatState.activeSession;
             if (!session) return '未绑定';
-            let count = (session.boundWorldbookFolderIds?.length || 0) + (session.boundWorldbookFolderId ? 1 : 0);
-            if (session.boundWorldbookFolderId && session.boundWorldbookFolderIds?.includes(session.boundWorldbookFolderId)) count--; 
-            return count > 0 ? `已绑定 ${count} 个` : '未绑定';
+            let count = session.boundWorldbookFileIds?.length || 0;
+            if (session.boundWorldbookFolderIds?.length > 0) count += session.boundWorldbookFolderIds.length; // 旧版兼容
+            return count > 0 ? `已选中 ${count} 份资料` : '未绑定';
+        },
+
+        // === 外卖代付交互逻辑 ===
+        acceptTakeout(msg) {
+            const amount = parseFloat(msg.takeoutData.amount);
+            if (this.wallet.balance < amount) return this.showToast('钱包余额不足，付款失败');
+            
+            this.addToWallet('expense', amount, this.wechatState.activeSession.name, `外卖代付: ${msg.takeoutData.name}`);
+            msg.handled = true;
+            msg.handledResult = 'accepted';
+            this.saveData();
+            this.showToast('付款成功 (-¥' + amount + ')');
+            
+            // 发送同意反馈给 AI
+            this.wechatState.activeSession.messages.push({
+                type: 'system', content: `[你已成功为TA代付了外卖：${msg.takeoutData.name}]`, time: Date.now()
+            });
+            this.triggerReceive(); // 刺激AI接着回复
+        },
+        rejectTakeout(msg) {
+            msg.handled = true;
+            msg.handledResult = 'rejected';
+            this.saveData();
+            this.showToast('已拒绝付款');
+            
+            // 发送拒绝反馈给 AI
+            this.wechatState.activeSession.messages.push({
+                type: 'system', content: `[你残忍地拒绝了外卖代付请求]`, time: Date.now()
+            });
+            this.triggerReceive(); // 刺激AI给出伤心/生气反应
         },
         selectModel(model) { this.apiConfig.selectedModel = model; this.saveData(); this.modelSelectModal.show = false; },
         getMaskById(id) { return this.masks.find(m => m.id === id) || { avatar: '' }; },
