@@ -1015,423 +1015,22 @@
     </transition>
 
     <!-- 弹窗组件 -->
-    <transition name="scale"><div v-if="modelSelectModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[60vh]"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><h3 class="font-bold text-lg text-gray-900">选择模型</h3><button @click="modelSelectModal.show = false" class="text-gray-400 font-medium text-sm">关闭</button></div><div class="flex-1 overflow-y-auto p-2 space-y-1"><div v-if="availableModels.length===0" class="p-4 text-center text-xs text-gray-400">列表为空</div><div v-for="model in availableModels" :key="model" @click="selectModel(model)" class="p-3.5 rounded-xl flex items-center justify-between active:bg-gray-50 transition" :class="apiConfig.selectedModel === model ? 'bg-blue-50' : ''"><span class="font-bold text-sm text-gray-800">{{ model }}</span><i v-if="apiConfig.selectedModel === model" class="fas fa-check text-blue-500"></i></div></div></div></div></transition>            
+    <transition name="scale"><div v-if="modelSelectModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[60vh]"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><h3 class="font-bold text-lg text-gray-900">选择模型</h3><button @click="modelSelectModal.show = false" class="text-gray-400 font-medium text-sm">关闭</button></div><div class="flex-1 overflow-y-auto p-2 space-y-1"><div v-if="availableModels.length===0" class="p-4 text-center text-xs text-gray-400">列表为空</div><div v-for="model in availableModels" :key="model" @click="selectModel(model)" class="p-3.5 rounded-xl flex items-center justify-between active:bg-gray-50 transition" :class="apiConfig.selectedModel === model ? 'bg-blue-50' : ''"><span class="font-bold text-sm text-gray-800">{{ model }}</span><i v-if="apiConfig.selectedModel === model" class="fas fa-check text-blue-500"></i></div></div></div></div></transition>
 
-    <!-- 位置填写弹窗 -->
-    <transition name="scale">
-        <div v-if="locationInputModal.show" class="fixed inset-0 z-[60000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl p-6 flex flex-col items-center">
-                <div class="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4 text-blue-500 text-2xl">
-                    <i class="fas fa-map-marker-alt"></i>
-                </div>
-                <h3 class="text-lg font-bold mb-4">发送位置</h3>
-                <div class="w-full space-y-3">
-                    <input v-model="locationInputModal.name" placeholder="位置名称 (如: xx咖啡馆)" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-100 outline-none">
-                    <input v-model="locationInputModal.address" placeholder="详细地址 (选填)" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-100 outline-none">
-                </div>
-                <div class="flex gap-3 w-full mt-4">
-                    <button @click="locationInputModal.show = false" class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm">取消</button>
-                    <button @click="sendLocation" class="flex-1 py-3 bg-black text-white rounded-xl font-bold text-sm">发送</button>
-                </div>
-            </div>
-        </div>
-    </transition>
-
-    <!-- 面具编辑/添加弹窗 -->
-    <transition name="scale"><div v-if="maskModal.show" class="fixed inset-0 z-[60000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[90%] max-h-[85vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col animate-scale-in"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10"><button @click="maskModal.show = false" class="text-gray-500 font-medium text-sm">取消</button><h3 class="font-bold text-lg text-gray-900">{{ maskForm.id ? '编辑面具' : '添加面具' }}</h3><button @click="saveMask" class="text-black font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg">保存</button></div><div class="flex-1 overflow-y-auto p-6 space-y-5"><div class="flex flex-col items-center gap-2"><div class="w-24 h-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative cursor-pointer active:opacity-70 transition" @click="triggerMaskAvatar"><img v-if="maskForm.avatar" :src="maskForm.avatar" class="w-full h-full object-cover"><div v-else class="flex flex-col items-center text-gray-400"><i class="fas fa-camera text-2xl mb-1"></i><span class="text-[10px]">上传头像</span></div></div></div><div class="space-y-4"><div><label class="text-xs text-gray-500 ml-1 mb-1 block">名字</label><input v-model="maskForm.name" placeholder="输入名字" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">网名 (ID)</label><input v-model="maskForm.username" placeholder="输入网名/微信号" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">性别</label><div class="flex gap-3"><div @click="maskForm.gender = '男'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="maskForm.gender==='男'?'bg-blue-50 border-blue-200 text-blue-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-mars"></i> 男</div><div @click="maskForm.gender = '女'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="maskForm.gender==='女'?'bg-pink-50 border-pink-200 text-pink-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-venus"></i> 女</div></div></div><div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">身高(cm)</label><input v-model="maskForm.height" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">体重(kg)</label><input v-model="maskForm.weight" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div><div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">年龄</label><input v-model="maskForm.age" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">生日</label><input v-model="maskForm.birthday" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">拍一拍</label><input v-model="maskForm.nudge" placeholder="拍一拍后缀" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">个性签名</label><input v-model="maskForm.signature" placeholder="输入个性签名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">背景资料 (Bio)</label><textarea v-model="maskForm.bio" placeholder="输入这个面具的人设背景..." class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none h-24 resize-none"></textarea></div><div v-if="maskForm.id" class="pt-4"><button @click="deleteMask(maskForm.id)" class="w-full py-3 bg-white text-red-500 border border-gray-200 rounded-xl font-bold text-sm">删除此面具</button></div></div></div><input type="file" ref="maskAvatarInput" accept="image/*" class="hidden" @change="handleMaskAvatar"></div></div></transition>
-
-    <!-- 一起听音乐界面 (Music Player) -->
-    <transition name="app-slide">
-        <div v-if="musicModal.show" class="music-player-overlay">
-            <div class="music-header relative">
-                <button @click="minimizeMusic" class="w-8 h-8 flex items-center justify-center"><i class="fas fa-chevron-down text-xl"></i></button>
-                <!-- 将歌名和歌手移到中间偏右（绝对定位居中） -->
-                <div class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
-                    <span class="text-base font-bold">{{ musicModal.songTitle || '---' }}</span>
-                    <span class="text-xs text-gray-400">{{ musicModal.artist || '---' }}</span>
-                </div>
-                <div class="flex items-center gap-4">
-                     <button @click="stopListenTogether" class="text-gray-400 hover:text-white"><i class="fas fa-power-off text-lg"></i></button>
-                     <button @click="openMusicManager" class="w-8 h-8 flex items-center justify-center"><i class="fas fa-ellipsis-h text-xl"></i></button>
-                </div>
-            </div>
-            
-            <div class="music-disc-container">
-                <!-- 双头像展示 (仅在非歌词模式显示) -->
-                <div v-if="!musicModal.showLyrics" class="avatar-connector">
-                    <div class="music-avatar-small"><img :src="getChatAvatar({isSelf: true})" class="w-full h-full object-cover"></div>
-                    <div class="music-avatar-small"><img :src="getChatAvatar({isSelf: false, targetId: wechatState.activeSession?.targetId})" class="w-full h-full object-cover"></div>
-                </div>
-                <!-- 状态文字：点击修改 -->
-                <div v-if="!musicModal.showLyrics" class="text-xs text-gray-300 absolute top-[22%] cursor-pointer active:opacity-50" @click="editMusicStatusText">{{ musicModal.customStatusText || 'TA 就在你身边, 一起听了 1355 小时' }}</div>
-                
-                <!-- 歌词模式 -->
-                <div v-if="musicModal.showLyrics" class="lyric-view" ref="lyricContainer" @click="musicModal.showLyrics = false">
-                    <div v-if="musicModal.currentLyrics.length === 0" class="lyric-placeholder">纯音乐模式</div>
-                    <div v-else>
-                        <div class="h-32"></div>
-                        <div v-for="(line, idx) in musicModal.currentLyrics" :key="idx" 
-                             class="lyric-line" :class="{'active': idx === musicModal.activeLyricIndex}">
-                            {{ line.text }}
-                        </div>
-                        <div class="h-40"></div>
-                    </div>
-                </div>
-                
-                <!-- 唱片模式 -->
-                <div v-else class="music-disc" :class="musicModal.isPlaying ? 'animate-spin-slow' : ''" @click="toggleLyricView">
-                    <div class="music-disc-inner relative">
-                         <!-- 唱片纹理/封面 -->
-                         <img v-if="musicModal.coverUrl" :src="musicModal.coverUrl" class="w-full h-full object-cover">
-                         <img v-else :src="defaultMusicCover" class="w-full h-full object-cover opacity-80">
-                         <div v-if="!musicModal.coverUrl" class="absolute inset-0 bg-black/20"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="music-controls">
-                <div class="flex justify-between px-4 text-2xl text-gray-400">
-                    <i class="fas fa-heart text-red-500"></i>
-                    <i class="fas fa-download"></i>
-                    <i class="fas fa-comment-dots"></i>
-                    <i class="fas fa-ellipsis-v"></i>
-                </div>
-                <div>
-                    <!-- 拖拽进度条 -->
-                    <input type="range" class="music-slider" min="0" :max="musicModal.durationSec || 0" v-model="musicModal.currentSec" @input="seekAudio">
-                    <div class="music-time"><span>{{ formatTime(musicModal.currentSec) }}</span><span>{{ formatTime(musicModal.durationSec) }}</span></div>
-                </div>
-                <div class="music-buttons">
-                    <!-- 播放模式切换: 列表(repeat), 单曲(redo-alt-1), 随机(random) -->
-                    <i class="fas text-gray-400 text-lg cursor-pointer" 
-                       :class="musicModal.playMode === 'random' ? 'fa-random text-white' : (musicModal.playMode === 'loop' ? 'fa-redo-alt relative' : 'fa-repeat text-white')" 
-                       @click="togglePlayMode">
-                       <span v-if="musicModal.playMode === 'loop'" class="absolute text-[8px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-black">1</span>
-                    </i>
-                    
-                    <i class="fas fa-step-backward text-white text-2xl" @click="prevSong"></i>
-                    <div class="w-16 h-16 rounded-full bg-white flex items-center justify-center text-black text-2xl cursor-pointer" @click="toggleMusicPlay">
-                        <i :class="musicModal.isPlaying ? 'fas fa-pause' : 'fas fa-play'"></i>
-                    </div>
-                    <i class="fas fa-step-forward text-white text-2xl" @click="nextSong"></i>
-                    
-                    <!-- 播放列表按钮 -->
-                    <i class="fas fa-list text-gray-400 text-lg cursor-pointer hover:text-white" @click="togglePlaylist"></i>
-                </div>
-            </div>
-        </div>
-    </transition>
-
-    <!-- 音乐管理界面 (全屏) & 播放列表 (半屏) -->
-    <transition name="app-slide">
-        <!-- 1. 全屏管理界面 (右上角三个点进入) -->
-        <div v-if="musicManager.show" class="fixed inset-0 z-[60001] bg-[#f7f7f7] flex flex-col">
-            <div class="h-[60px] pt-4 px-4 flex items-center justify-between bg-white border-b border-gray-100">
-                <button @click="closeMusicManager" class="w-8 h-8 flex items-center justify-center"><i class="fas fa-chevron-left text-lg"></i></button>
-                <h1 class="text-base font-bold">音乐库管理</h1>
-                <div class="flex gap-3 text-xs font-bold">
-                    <button @click="triggerLocalMusic">本地</button>
-                    <button @click="triggerUrlMusic">URL</button>
-                    <button @click="musicManager.isMulti = !musicManager.isMulti" :class="musicManager.isMulti ? 'text-red-500' : ''">多选</button>
-                </div>
-            </div>
-            <div class="flex-1 overflow-y-auto p-4 bg-white">
-                <div v-if="musicPlaylist.length === 0" class="text-center text-gray-400 mt-20 text-xs">暂无音乐，请添加</div>
-                <div v-for="(song, idx) in musicPlaylist" :key="song.id" class="flex flex-col border-b border-gray-50 py-3">
-                    <div class="flex items-center justify-between active:bg-gray-50 cursor-pointer">
-                        <div class="flex items-center gap-3 overflow-hidden w-full">
-                            <div v-if="musicManager.isMulti" class="shrink-0" @click.stop="toggleSelectSong(song.id)">
-                                <div class="w-4 h-4 rounded-full border border-gray-300" :class="musicManager.selectedIds.includes(song.id) ? 'bg-black border-black' : ''"></div>
-                            </div>
-                            <div class="w-10 h-10 rounded bg-gray-100 overflow-hidden shrink-0">
-                                <img v-if="song.cover" :src="song.cover" class="w-full h-full object-cover">
-                                <div v-else class="w-full h-full bg-gray-300 flex items-center justify-center text-gray-500"><i class="fas fa-compact-disc"></i></div>
-                            </div>
-                            <div class="flex flex-col min-w-0 flex-1">
-                                <div class="text-sm font-bold truncate">{{ song.title }}</div>
-                                <div class="text-xs text-gray-400 truncate">{{ song.artist }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- 管理按钮区 -->
-                    <div class="flex gap-2 mt-2 pl-13 justify-between items-center">
-                        <div class="flex gap-2">
-                             <button @click.stop="triggerCoverUpload(song)" class="text-[10px] bg-gray-100 px-2 py-1 rounded text-gray-600">专辑</button>
-                             <button @click.stop="editSongInfo(song)" class="text-[10px] bg-gray-100 px-2 py-1 rounded text-gray-600">歌曲</button>
-                             <button @click.stop="reuploadLyrics(song)" class="text-[10px] bg-gray-100 px-2 py-1 rounded text-gray-600">歌词</button>
-                        </div>
-                        <span class="text-[10px] text-gray-300">{{ song.playCount || 0 }} 次</span>
-                    </div>
-                </div>
-            </div>
-            <div v-if="musicManager.isMulti && musicManager.selectedIds.length > 0" class="p-4 bg-white border-t border-gray-100 flex justify-center pb-safe">
-                 <button @click="deleteSelectedSongs" class="text-red-500 font-bold text-sm">删除选中 ({{ musicManager.selectedIds.length }})</button>
-            </div>
-        </div>
-    </transition>
-    
-    <!-- 2. 半屏播放列表 (点击播放器右下角图标进入) -->
-    <transition name="app-slide">
-        <div v-if="musicModal.showPlaylist" class="fixed inset-0 z-[61000]">
-            <div class="absolute inset-0 bg-transparent" @click="musicModal.showPlaylist = false"></div>
-            <div class="music-list-screen">
-                 <div class="p-4 bg-white border-b border-gray-100 font-bold text-sm sticky top-0 flex justify-between">
-                     <span>播放列表 ({{ musicPlaylist.length }})</span>
-                     <span class="text-gray-400 font-normal text-xs" @click="togglePlayMode">{{ getPlayModeName() }}</span>
-                 </div>
-                 <div class="flex-1 overflow-y-auto bg-white p-4">
-                     <div v-if="musicPlaylist.length === 0" class="text-center text-gray-400 mt-10 text-xs">列表为空</div>
-                     <div v-for="song in musicPlaylist" :key="song.id" @click="playSong(song)" class="flex items-center justify-between py-3 border-b border-gray-50 active:bg-gray-50 cursor-pointer">
-                         <div class="flex items-center gap-3 overflow-hidden">
-                             <div class="text-sm font-bold truncate" :class="musicModal.currentId === song.id ? 'text-red-500' : 'text-gray-900'">{{ song.title }}</div>
-                             <div class="text-xs text-gray-400 truncate">- {{ song.artist }}</div>
-                         </div>
-                         <i v-if="musicModal.currentId === song.id" class="fas fa-volume-up text-red-500 text-xs"></i>
-                     </div>
-                 </div>
-            </div>
-        </div>
-    </transition>
-    
-    <!-- 灵动岛 (Dynamic Island) -->
-    <transition name="scale">
-        <div v-if="musicModal.isMinimized && musicModal.currentId" class="dynamic-island" @click="restoreMusicPlayer">
-            <div class="island-art">
-                <img :src="musicModal.coverUrl || defaultMusicCover" class="w-full h-full object-cover" :class="musicModal.isPlaying ? 'animate-spin-slow' : ''">
-            </div>
-            <div class="island-text">
-                {{ getCurrentLyricText() || musicModal.songTitle }}
-            </div>
-            <div class="w-4 flex justify-center">
-                 <i class="fas fa-signal text-[8px] animate-pulse"></i>
-            </div>
-        </div>
-    </transition>
-
-    <input type="file" ref="musicFileInput" accept="audio/*" class="hidden" @change="handleMusicFilePick">
-    <input type="file" ref="coverInput" accept="image/*" class="hidden" @change="handleCoverFilePick">
-
-    <!-- 添加音乐弹窗 -->
-    <transition name="scale">
-        <div v-if="addMusicModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div class="bg-white w-[85%] rounded-2xl overflow-hidden shadow-2xl p-5 flex flex-col gap-4">
-                <h3 class="text-lg font-bold text-center">{{ addMusicModal.mode === 'edit' ? '编辑信息' : '添加音乐信息' }}</h3>
-                <input v-model="addMusicModal.title" placeholder="歌名" class="bg-gray-50 p-2 rounded-lg text-sm border border-gray-200 outline-none">
-                <input v-model="addMusicModal.artist" placeholder="歌手 (选填)" class="bg-gray-50 p-2 rounded-lg text-sm border border-gray-200 outline-none">
-                
-                <div class="border-t border-gray-100 pt-2">
-                    <div class="text-xs font-bold text-gray-500 mb-2">歌词</div>
-                    <div class="flex gap-2 mb-2">
-                        <button @click="addMusicModal.lyricType='file'" class="flex-1 py-1 text-xs rounded border transition" :class="addMusicModal.lyricType==='file'?'bg-black text-white':'bg-white text-gray-500'">文件导入</button>
-                        <button @click="addMusicModal.lyricType='text'" class="flex-1 py-1 text-xs rounded border transition" :class="addMusicModal.lyricType==='text'?'bg-black text-white':'bg-white text-gray-500'">文本粘贴</button>
-                    </div>
-                    <div v-if="addMusicModal.lyricType==='file'">
-                        <button @click="triggerLrcPick" class="w-full py-2 bg-gray-100 rounded text-xs text-blue-500">{{ addMusicModal.lrcFile ? addMusicModal.lrcFile.name : '选择 .lrc 文件' }}</button>
-                        <input type="file" ref="lrcInput" accept=".lrc,.txt" class="hidden" @change="handleLrcFilePick">
-                    </div>
-                    <textarea v-else v-model="addMusicModal.lrcText" class="w-full h-20 bg-gray-50 p-2 text-xs rounded resize-none outline-none" placeholder="[00:00.00] 歌词内容..."></textarea>
-                </div>
-
-                <div class="flex gap-2">
-                    <button @click="addMusicModal.show=false" class="flex-1 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-bold">取消</button>
-                    <button @click="confirmMusicInfo" class="flex-1 py-2 bg-black text-white rounded-lg text-sm font-bold">保存</button>
-                </div>
-            </div>
-        </div>
-    </transition>
-
-    <!-- 红包填写弹窗 -->
-    <transition name="scale">
-        <div v-if="redPacketModal.show" class="fixed inset-0 z-[60000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div class="bg-[#f3f4f6] w-[85%] rounded-[12px] overflow-hidden shadow-2xl flex flex-col items-center animate-scale-in">
-                <div class="w-full bg-[#ea5f39] p-4 text-center text-[#fce8cd] font-medium text-lg relative">
-                    发红包
-                    <div class="absolute right-4 top-4 text-sm cursor-pointer" @click="redPacketModal.show = false">取消</div>
-                </div>
-                <div class="p-6 w-full space-y-4">
-                    <div class="bg-white rounded-lg p-3 flex items-center">
-                        <span class="text-gray-900 font-medium mr-2">金额</span>
-                        <input type="number" v-model="redPacketModal.amount" placeholder="0.00" class="flex-1 bg-transparent text-right outline-none text-lg font-bold placeholder-gray-300">
-                        <span class="text-gray-900 font-medium ml-2">元</span>
-                    </div>
-                    <div class="bg-white rounded-lg p-3">
-                         <input v-model="redPacketModal.note" placeholder="恭喜发财，大吉大利" class="w-full bg-transparent outline-none text-base">
-                    </div>
-                    <div class="text-center text-3xl font-bold my-4">¥{{ redPacketModal.amount || '0.00' }}</div>
-                    <button @click="sendRedPacket" class="w-full py-3 bg-[#ea5f39] text-[#fce8cd] rounded-lg font-bold text-base shadow-sm active:bg-[#c24e38]">塞钱进红包</button>
-                </div>
-            </div>
-        </div>
-    </transition>
-
-    <!-- 转账填写弹窗 -->
-    <transition name="scale">
-        <div v-if="transferModal.show" class="fixed inset-0 z-[60000] flex items-center justify-center bg-white/100">
-            <div class="w-full h-full flex flex-col bg-white">
-                <div class="h-[44px] flex items-center px-4">
-                     <i class="fas fa-chevron-left text-lg cursor-pointer" @click="transferModal.show = false"></i>
-                </div>
-                <div class="p-6 flex flex-col">
-                    <div class="flex items-center gap-4 mb-8">
-                         <div class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100"><img :src="getChatAvatar({isSelf: false, targetId: wechatState.activeSession.targetId})" class="w-full h-full object-cover"></div>
-                         <div>
-                             <div class="font-bold text-lg">{{ wechatState.activeSession?.name }}</div>
-                             <div class="text-gray-400 text-sm">微信号: {{ getCurrentSessionId() }}</div>
-                         </div>
-                    </div>
-                    <div class="text-sm text-gray-500 mb-4">转账金额</div>
-                    <div class="flex items-end gap-2 border-b border-gray-100 pb-2 mb-6">
-                        <span class="text-4xl font-bold">¥</span>
-                        <input type="number" v-model="transferModal.amount" placeholder="" class="flex-1 bg-transparent outline-none text-5xl font-bold h-16">
-                    </div>
-                    <div class="flex items-center justify-between mb-8">
-                         <input v-model="transferModal.note" placeholder="添加转账说明" class="text-sm text-gray-500 bg-transparent outline-none w-full">
-                    </div>
-                    <button @click="sendTransfer" class="w-full py-3.5 bg-[#07c160] text-white rounded-lg font-bold text-base shadow-sm active:opacity-90">转账</button>
-                </div>
-            </div>
-        </div>
-    </transition>
-
-    <!-- 亲密付选择弹窗 (入口) -->
-    <transition name="scale">
-        <div v-if="qinmiSelectModal.show" class="fixed inset-0 z-[62000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl p-6 flex flex-col items-center">
-                <div class="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-4 text-[#d95556] text-3xl">
-                    <i class="fas fa-heart"></i>
-                </div>
-                <h3 class="text-lg font-bold mb-6">亲密付</h3>
-                <div class="flex gap-4 w-full">
-                    <button @click="startQinmiProcess('give')" class="flex-1 flex flex-col items-center gap-2 p-4 bg-red-50 rounded-xl active:scale-95 transition">
-                        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#d95556] shadow-sm"><i class="fas fa-gift"></i></div>
-                        <span class="font-bold text-sm text-[#d95556]">我给TA开通</span>
-                        <span class="text-[10px] text-gray-400">我为TA买单</span>
-                    </button>
-                    <button @click="startQinmiProcess('ask')" class="flex-1 flex flex-col items-center gap-2 p-4 bg-blue-50 rounded-xl active:scale-95 transition">
-                        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-500 shadow-sm"><i class="fas fa-hand-holding-heart"></i></div>
-                        <span class="font-bold text-sm text-blue-600">求TA帮我开通</span>
-                        <span class="text-[10px] text-gray-400">TA为我买单</span>
-                    </button>
-                </div>
-                <div class="mt-4 text-xs text-gray-400 cursor-pointer" @click="qinmiSelectModal.show = false">取消</div>
-            </div>
-        </div>
-    </transition>
-
-    <!-- 支付方式选择弹窗 (消费模拟) -->
-    <transition name="app-slide">
-        <div v-if="paymentSelectModal.show" class="fixed inset-0 z-[70000]">
-             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="paymentSelectModal.show = false"></div>
-             <div class="ios-list-modal bg-white">
-                 <div class="p-4 text-center font-bold border-b border-gray-100 relative">
-                     确认支付
-                     <i class="fas fa-times absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer" @click="paymentSelectModal.show = false"></i>
-                 </div>
-                 <div class="p-8 text-center">
-                     <div class="text-3xl font-bold">¥{{ paymentSelectModal.amount }}</div>
-                     <div class="text-gray-400 text-sm mt-1">模拟消费</div>
-                 </div>
-                 <div class="px-4 pb-8 space-y-2">
-                     <div class="text-xs text-gray-400 ml-2 mb-1">选择付款方式</div>
-                     <div @click="confirmPayment('balance')" class="p-4 rounded-xl border border-gray-100 flex justify-between items-center active:bg-gray-50 cursor-pointer">
-                         <div class="flex items-center gap-3">
-                             <i class="fas fa-wallet text-green-500 text-xl"></i>
-                             <div>
-                                 <div class="font-bold text-sm">零钱</div>
-                                 <div class="text-xs text-gray-400">余额: ¥{{ wallet.balance }}</div>
-                             </div>
-                         </div>
-                         <i class="fas fa-check text-green-500" v-if="wallet.balance >= paymentSelectModal.amount"></i>
-                     </div>
-                     <div v-for="pay in getAvailableQinmiSources()" :key="pay.id" @click="confirmPayment('qinmi', pay)" class="p-4 rounded-xl border border-gray-100 flex justify-between items-center active:bg-gray-50 cursor-pointer">
-                         <div class="flex items-center gap-3">
-                             <i class="fas fa-heart text-[#d95556] text-xl"></i>
-                             <div>
-                                 <div class="font-bold text-sm">亲密付 ({{ getFriendName(pay.targetId) }})</div>
-                                 <div class="text-xs text-gray-400">剩余额度: ¥{{ (pay.limit - pay.balanceUsed).toFixed(2) }}</div>
-                             </div>
-                         </div>
-                         <i class="fas fa-chevron-right text-gray-300"></i>
-                     </div>
-                 </div>
-             </div>
-        </div>
-    </transition>
-
-    <!-- 消息弹窗 -->
-    <transition name="app-slide">
-        <div v-if="globalNotification.show" class="top-notification-banner" @click="jumpToChat(globalNotification.sessionId)">
-            <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden shrink-0"><img :src="globalNotification.avatar" class="w-full h-full object-cover"></div>
-            <div class="flex-1 min-w-0"><div class="font-bold text-sm truncate">{{ globalNotification.title }}</div><div class="text-xs text-gray-500 truncate">{{ globalNotification.content }}</div></div>
-            <span class="text-xs text-gray-400">现在</span>
-        </div>
-    </transition>
-
-    <!-- 长按菜单 遮罩层 -->
-    <div v-if="chatContextMenu.show" class="fixed inset-0 z-[99998] bg-transparent" @click.stop="closeAllMenus"></div>
-    <transition name="fade">
-        <div v-if="chatContextMenu.show" class="chat-context-menu" :style="{top: chatContextMenu.y + 'px', left: chatContextMenu.x + 'px'}" @click.stop>
-            <div class="context-item" @click="handleChatMenuAction('copy')"><i class="far fa-copy text-lg"></i><span>复制</span></div>
-            <div class="context-item" @click="handleChatMenuAction('forward')"><i class="fas fa-share text-lg"></i><span>转发</span></div>
-            <div class="context-item" @click="handleChatMenuAction('edit')"><i class="fas fa-pen text-lg"></i><span>编辑</span></div>
-            <div class="context-item" @click="handleChatMenuAction('favorite')"><i class="fas fa-cube text-lg"></i><span>收藏</span></div>
-            <div class="context-item" @click="handleChatMenuAction('delete')"><i class="far fa-trash-alt text-lg"></i><span>删除</span></div>
-            <div class="context-item" @click="handleChatMenuAction('multi')"><i class="fas fa-list-check text-lg"></i><span>多选</span></div>
-            <div class="context-item" @click="handleChatMenuAction('quote')"><i class="fas fa-quote-right text-lg"></i><span>引用</span></div>
-            <div v-if="chatContextMenu.isSelf" class="context-item" @click="handleChatMenuAction('recall')"><i class="fas fa-undo text-lg"></i><span>撤回</span></div>
-            <div v-if="!chatContextMenu.isSelf" class="context-item" @click="handleChatMenuAction('regenerate')"><i class="fas fa-sync-alt text-lg"></i><span>重回</span></div>
-        </div>
-    </transition>    
-
-    <!-- 世界书绑定弹窗 (支持文件夹全选/展开单选) -->
+    <!-- 世界书绑定弹窗 -->
     <transition name="scale">
         <div v-if="worldBinderModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
             <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[60vh]">
-                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><h3 class="font-bold text-lg text-gray-900">世界书记忆绑定</h3><button @click="worldBinderModal.show = false" class="text-black font-bold text-sm bg-gray-100 px-3 py-1.5 rounded-lg active:scale-95">完成</button></div>
-                <div class="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50">
-                    
-                    <div @click="bindWorldFolder(null)" class="p-3.5 rounded-xl border border-gray-200 bg-white text-center text-gray-400 font-bold text-xs active:bg-gray-100 mb-3 shadow-sm transition">一键清空所有绑定</div>
-                    
-                    <!-- 文件夹列表 -->
-                    <div v-for="folder in folders" :key="folder.id" class="flex flex-col border border-gray-100 rounded-xl overflow-hidden shadow-sm bg-white">
-                        <div class="p-3.5 flex items-center justify-between cursor-pointer active:bg-gray-50 transition" @click="toggleWorldBinderFolder(folder.id)">
-                            <div class="flex items-center gap-3">
-                                <i class="fas fa-chevron-right text-gray-300 text-[10px] transition-transform" :class="{'rotate-90': worldBinderExpanded.includes(folder.id)}"></i>
-                                <i class="fas fa-folder text-yellow-400"></i>
-                                <span class="font-bold text-sm text-gray-800">{{ folder.name }}</span>
-                            </div>
-                            <div class="flex items-center gap-2" @click.stop>
-                                <span class="text-[10px] text-gray-400 font-bold">全选</span>
-                                <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer transition" :class="isFolderBound(folder.id) ? 'bg-black border-black' : 'bg-gray-50 hover:bg-gray-200'" @click.stop="toggleWorldBinding(folder.id)">
-                                    <i v-if="isFolderBound(folder.id)" class="fas fa-check text-white text-[10px]"></i>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- 展开的文件列表 -->
-                        <transition name="expand">
-                            <div v-if="worldBinderExpanded.includes(folder.id)" class="bg-[#fcfcfc] border-t border-gray-100 flex flex-col">
-                                <div v-if="getFiles(folder.id).length===0" class="p-3 text-center text-xs text-gray-400 italic">空文件夹</div>
-                                <div v-for="file in getFiles(folder.id)" :key="file.id" class="p-3 pl-10 border-b border-gray-50 last:border-0 flex items-center justify-between cursor-pointer hover:bg-gray-100 transition" @click="toggleWorldFileBinding(file.id)">
-                                    <div class="flex items-center gap-3"><i class="fas fa-file-alt text-gray-300 text-sm"></i><span class="text-[13px] font-medium text-gray-600 truncate">{{ file.name }}</span></div>
-                                    <!-- Checkbox (受文件夹全选限制) -->
-                                    <div class="w-4 h-4 rounded-sm border flex items-center justify-center transition" :class="isFileBound(file.id) || isFolderBound(folder.id) ? 'bg-black border-black' : 'border-gray-300 bg-white'">
-                                        <i v-if="isFileBound(file.id) || isFolderBound(folder.id)" class="fas fa-check text-white text-[9px]"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </transition>
-                    </div>
-                    
-                    <!-- 根目录的散落文件 -->
-                    <div v-for="file in rootFiles" :key="file.id" class="p-3.5 bg-white border border-gray-100 shadow-sm rounded-xl flex items-center justify-between cursor-pointer active:bg-gray-50 transition" @click="toggleWorldFileBinding(file.id)">
-                        <div class="flex items-center gap-3 ml-4"><i class="fas fa-file-alt text-gray-400"></i><span class="font-bold text-sm text-gray-700">{{ file.name }}</span></div>
-                        <div class="w-4 h-4 rounded-sm border border-gray-300 flex items-center justify-center transition" :class="isFileBound(file.id) ? 'bg-black border-black' : 'bg-white'">
-                            <i v-if="isFileBound(file.id)" class="fas fa-check text-white text-[9px]"></i>
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><h3 class="font-bold text-lg text-gray-900">绑定世界书 (多选)</h3><button @click="worldBinderModal.show = false" class="text-blue-500 font-bold text-sm">完成</button></div>
+                <div class="flex-1 overflow-y-auto p-2 space-y-1">
+                    <div @click="bindWorldFolder(null)" class="p-3.5 rounded-xl border border-dashed border-gray-200 text-center text-gray-400 text-xs active:bg-gray-50 mb-2">不绑定 (默认)</div>
+                    <div v-for="folder in folders" :key="folder.id" @click="toggleWorldBinding(folder.id)" class="p-3.5 rounded-xl flex items-center justify-between active:bg-gray-50 transition border border-gray-50">
+                        <div class="flex items-center gap-3"><i class="fas fa-folder text-yellow-400"></i><span class="font-bold text-sm text-gray-800">{{ folder.name }}</span></div>
+                        <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center transition" :class="isFolderBound(folder.id) ? 'bg-black border-black' : ''">
+                            <i v-if="isFolderBound(folder.id)" class="fas fa-check text-white text-xs"></i>
                         </div>
                     </div>
-
-                    <div v-if="folders.length===0 && rootFiles.length===0" class="text-center text-xs text-gray-400 py-8">暂无世界书内容</div>
+                    <div v-if="folders.length===0" class="text-center text-xs text-gray-400 py-8">暂无文件夹</div>
                 </div>
             </div>
         </div>
@@ -1726,8 +1325,10 @@
     <!-- 世界书添加/编辑文件 Modal -->
     <transition name="scale"><div v-if="worldModal.show" class="fixed inset-0 z-[55000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl p-6 space-y-4"><h3 class="text-lg font-bold text-center text-gray-900">{{ worldModal.id ? '编辑文件' : (worldModal.type === 'folder' ? '新建文件夹' : '新建文件') }}</h3><input v-model="worldModal.name" placeholder="请输入名称" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none"><div v-if="worldModal.type === 'file'" class="space-y-4"><div class="space-y-1"><label class="text-xs text-gray-500 ml-1">归类文件夹</label><div @click="folderSelectModal.show = true" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 flex justify-between items-center cursor-pointer text-gray-700"><span :class="worldModal.parentId ? 'text-black' : 'text-gray-400'">{{ getFolderName(worldModal.parentId) }}</span><i class="fas fa-chevron-right text-xs text-gray-300"></i></div></div><textarea v-model="worldModal.content" placeholder="输入文件内容..." class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none h-32 resize-none"></textarea></div><div class="flex gap-3 pt-2"><button @click="worldModal.show = false" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold text-sm">取消</button><button @click="saveWorldItem" class="flex-1 bg-black text-white py-3 rounded-xl font-bold text-sm">保存</button></div></div></div></transition>
     <transition name="scale"><div v-if="addContactModal.show" class="fixed inset-0 z-[55000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[90%] max-h-[85vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col animate-scale-in"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10"><button @click="addContactModal.show = false" class="text-gray-500 font-medium text-sm">取消</button><h3 class="font-bold text-lg text-gray-900">{{ newContact.id ? '编辑朋友' : '添加朋友' }}</h3><button @click="saveNewContact" class="text-black font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg">完成</button></div><div class="flex-1 overflow-y-auto p-6 space-y-5"><div class="flex flex-col items-center gap-2"><div class="w-24 h-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative cursor-pointer active:opacity-70 transition" @click="triggerAddContactAvatar"><img v-if="newContact.avatar" :src="newContact.avatar" class="w-full h-full object-cover"><div v-else class="flex flex-col items-center text-gray-400"><i class="fas fa-camera text-2xl mb-1"></i><span class="text-[10px]">上传头像</span></div></div></div><div class="space-y-4"><div><label class="text-xs text-gray-500 ml-1 mb-1 block">姓名</label><input v-model="newContact.name" placeholder="输入姓名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">备注</label><input v-model="newContact.remark" placeholder="输入备注名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><div class="flex justify-between items-center ml-1 mb-1"><label class="text-xs text-gray-500 block">网名 (ID)</label><button @click="autoFillProfile('username')" class="text-[10px] text-purple-500 font-bold active:scale-95"><i class="fas fa-magic"></i> AI填充</button></div><input v-model="newContact.username" placeholder="输入网名/微信号" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">性别</label><div class="flex gap-3"><div @click="newContact.gender = '男'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="newContact.gender==='男'?'bg-blue-50 border-blue-200 text-blue-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-mars"></i> 男</div><div @click="newContact.gender = '女'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="newContact.gender==='女'?'bg-pink-50 border-pink-200 text-pink-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-venus"></i> 女</div></div></div><div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">身高(cm)</label><input v-model="newContact.height" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">体重(kg)</label><input v-model="newContact.weight" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div>
-<div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">年龄</label><input v-model="newContact.age" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">生日</label><input v-model="newContact.birthday" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">拍一拍</label><input v-model="newContact.nudge" placeholder="拍一拍后缀" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><div class="flex justify-between items-center ml-1 mb-1"><label class="text-xs text-gray-500 block">个性签名</label><button @click="autoFillProfile('signature')" class="text-[10px] text-purple-500 font-bold active:scale-95"><i class="fas fa-magic"></i> AI填充</button></div><input v-model="newContact.signature" placeholder="输入个性签名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">背景资料</label><textarea v-model="newContact.bio" placeholder="输入人设、背景故事..." class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none h-24 resize-none"></textarea></div></div></div><input type="file" ref="addContactAvatarInput" accept="image/*" class="hidden" @change="handleAddContactAvatar"></div></div></transition>
+<div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">年龄</label><input v-model="newContact.age" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">生日</label><input v-model="newContact.birthday" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">拍一拍</label><input v-model="newContact.nudge" placeholder="拍一拍后缀" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><div class="flex justify-between items-center ml-1 mb-1"><label class="text-xs text-gray-500 block">个性签名</label><button @click="autoFillProfile('signature')" class="text-[10px] text-purple-500 font-bold active:scale-95"><i class="fas fa-magic"></i> AI填充</button></div><input v-model="newContact.signature" placeholder="输入个性签名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">背景资料</label><textarea v-model="newContact.bio" placeholder="输入人设、背景故事..." class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none h-24 resize-none"></textarea></div></div></div><input type="file" ref="addContactAvatarInput" accept="image/*" class="hidden" @change="handleAddContactAvatar"></div></div></transition>    
 
+    <!-- 面具编辑/添加弹窗 -->
+    <transition name="scale"><div v-if="maskModal.show" class="fixed inset-0 z-[60000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[90%] max-h-[85vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col animate-scale-in"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10"><button @click="maskModal.show = false" class="text-gray-500 font-medium text-sm">取消</button><h3 class="font-bold text-lg text-gray-900">{{ maskForm.id ? '编辑面具' : '添加面具' }}</h3><button @click="saveMask" class="text-black font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg">保存</button></div><div class="flex-1 overflow-y-auto p-6 space-y-5"><div class="flex flex-col items-center gap-2"><div class="w-24 h-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative cursor-pointer active:opacity-70 transition" @click="triggerMaskAvatar"><img v-if="maskForm.avatar" :src="maskForm.avatar" class="w-full h-full object-cover"><div v-else class="flex flex-col items-center text-gray-400"><i class="fas fa-camera text-2xl mb-1"></i><span class="text-[10px]">上传头像</span></div></div></div><div class="space-y-4"><div><label class="text-xs text-gray-500 ml-1 mb-1 block">名字</label><input v-model="maskForm.name" placeholder="输入名字" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">网名 (ID)</label><input v-model="maskForm.username" placeholder="输入网名/微信号" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">性别</label><div class="flex gap-3"><div @click="maskForm.gender = '男'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="maskForm.gender==='男'?'bg-blue-50 border-blue-200 text-blue-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-mars"></i> 男</div><div @click="maskForm.gender = '女'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="maskForm.gender==='女'?'bg-pink-50 border-pink-200 text-pink-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-venus"></i> 女</div></div></div><div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">身高(cm)</label><input v-model="maskForm.height" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">体重(kg)</label><input v-model="maskForm.weight" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div><div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">年龄</label><input v-model="maskForm.age" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">生日</label><input v-model="maskForm.birthday" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">拍一拍</label><input v-model="maskForm.nudge" placeholder="拍一拍后缀" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">个性签名</label><input v-model="maskForm.signature" placeholder="输入个性签名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">背景资料 (Bio)</label><textarea v-model="maskForm.bio" placeholder="输入这个面具的人设背景..." class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none h-24 resize-none"></textarea></div><div v-if="maskForm.id" class="pt-4"><button @click="deleteMask(maskForm.id)" class="w-full py-3 bg-white text-red-500 border border-gray-200 rounded-xl font-bold text-sm">删除此面具</button></div></div></div><input type="file" ref="maskAvatarInput" accept="image/*" class="hidden" @change="handleMaskAvatar"></div></div></transition>    
     <!-- 状态栏 -->
     <transition name="fade">
         <div v-if="!hideStatusBar" class="h-[44px] flex justify-between items-center px-6 pt-2 text-[15px] z-[5000] absolute top-0 w-full select-none pointer-events-none status-bar-text text-black">
@@ -2519,35 +2120,6 @@
                                     <div v-else-if="msg.type === 'location'">
                                         <div class="location-header"><div class="location-title">{{ msg.name }}</div><div class="location-desc">{{ msg.address }}</div></div>
                                         <div class="location-map"><i class="fas fa-map-marker-alt location-pin"></i></div>
-                                    </div>
-                                    <!-- 外卖专属卡片 (黑白灰高级UI) -->
-                                    <div v-else-if="msg.type === 'takeaway'" class="w-[240px] bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col font-sans">
-                                        <!-- 顶部 Header -->
-                                        <div class="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-                                            <span class="font-bold text-gray-800 text-[13px] tracking-wide">{{ msg.subType === 'pay_for_me' ? '外卖代付请求' : '外卖订单配送中' }}</span>
-                                            <i class="fas fa-motorcycle text-gray-400"></i>
-                                        </div>
-                                        <!-- 订单信息区域 -->
-                                        <div class="p-4 flex flex-col gap-2 text-sm text-gray-600 bg-white">
-                                            <div class="flex justify-between"><span class="text-gray-400 text-xs">商品</span><span class="font-medium text-gray-800 truncate max-w-[130px]">{{ msg.foodName }}</span></div>
-                                            <div class="flex justify-between"><span class="text-gray-400 text-xs">金额</span><span class="font-bold text-black font-mono">¥{{ msg.amount }}</span></div>
-                                            
-                                            <!-- 别人为我点的专属信息 -->
-                                            <template v-if="msg.subType === 'ordered_for_you'">
-                                                <div class="flex justify-between"><span class="text-gray-400 text-xs">下单时间</span><span class="text-gray-800 font-mono text-xs">{{ formatChatTime(msg.time) }}</span></div>
-                                                <div class="flex justify-between"><span class="text-gray-400 text-xs">预计送达</span><span class="text-gray-900 font-bold">{{ msg.eta }}</span></div>
-                                                <div v-if="msg.remark" class="flex justify-between mt-1 pt-2 border-t border-gray-50"><span class="text-gray-400 text-xs shrink-0">备注</span><span class="truncate ml-2 text-gray-800 text-xs italic">{{ msg.remark }}</span></div>
-                                            </template>
-                                        </div>
-                                        <!-- 底部操作按钮 (仅限求我代付时显示) -->
-                                        <div v-if="msg.subType === 'pay_for_me'" class="flex border-t border-gray-100">
-                                            <template v-if="msg.status === 'pending'">
-                                                <button @click.stop="rejectTakeaway(msg)" class="flex-1 py-3 text-gray-400 font-bold text-[13px] border-r border-gray-100 hover:bg-gray-50 active:bg-gray-100 transition">拒绝</button>
-                                                <button @click.stop="acceptTakeaway(msg)" class="flex-1 py-3 text-black font-bold text-[13px] hover:bg-gray-50 active:bg-gray-100 transition">付款</button>
-                                            </template>
-                                            <div v-else-if="msg.status === 'paid'" class="flex-1 py-3 text-center text-gray-800 text-[12px] bg-gray-50 font-bold tracking-widest"><i class="fas fa-check-circle mr-1"></i>已付款</div>
-                                            <div v-else-if="msg.status === 'rejected'" class="flex-1 py-3 text-center text-gray-400 text-[12px] bg-gray-50 font-bold tracking-widest">已拒绝</div>
-                                        </div>
                                     </div>
                                     
                                     <!-- 转发卡片 -->
@@ -3642,7 +3214,7 @@ createApp({
             masks:[], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: '' },
             masks: [], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', bio: '', nudge: '', signature: '', avatar: '' },
             worldData: [], expandedFolders: [], worldModal: { show: false, type: 'folder', name: '', content: '', parentId: '' }, viewFileModal: { show: false, data: {} },
-            worldBinderModal: { show: false }, worldBinderExpanded:[],
+            worldBinderModal: { show: false },
             modelSelectModal: { show: false }, 
             chatContextMenu: { show: false, x: 0, y: 0, msg: null, index: -1, isSelf: false },
             folderSelectModal: { show: false }, 
@@ -4960,18 +4532,12 @@ createApp({
             const mask = this.getMaskById(session.maskId);
             
             let worldContext = "";
-            let folderIds = session.boundWorldbookFolderIds ||[];
+            let folderIds = session.boundWorldbookFolderIds || [];
             if (session.boundWorldbookFolderId) folderIds.push(session.boundWorldbookFolderId);
             folderIds = [...new Set(folderIds)];
-            
-            let fileIds = session.boundWorldbookFileIds ||[];
 
-            if (folderIds.length > 0 || fileIds.length > 0) {
-                // 筛选规则：如果该文件自己的 ID 在 fileIds 里，或者它老爸的 ID 在 folderIds 里全选了，就加载给 AI
-                const files = this.worldData.filter(i => 
-                    i.type === 'file' && i.isActive !== false && 
-                    (folderIds.includes(i.parentId) || fileIds.includes(i.id))
-                );
+            if (folderIds.length > 0) {
+                const files = this.worldData.filter(i => i.type === 'file' && folderIds.includes(i.parentId) && i.isActive !== false);
                 if (files.length > 0) {
                     worldContext = "\n[World Info]:\n" + files.map(f => `(${f.name}): ${f.content}`).join("\n");
                 }
@@ -5088,11 +4654,8 @@ Structure:
   "html_widget": "OPTIONAL: Valid HTML string using Tailwind CSS...",
   "change_avatar": true OR false,
   "sticker_id": "OPTIONAL: 填入你想发的表情包的纯数字 ID",
-  "invite_music": true (OPTIONAL: 当你想主动分享音乐时输出 true，此时绝对不要在 reply 里发文字提示，系统会自动发卡片),
-  "takeaway_request": { "foodName": "外卖名字", "amount": "金额" }, // OPTIONAL: 当你提到饿了，想让对方付钱给你点外卖时输出
-  "takeaway_order": { "foodName": "外卖名字", "amount": "金额", "remark": "备注要求" } // OPTIONAL: 当你主动付钱给对方点外卖时输出
+  "invite_music": true (OPTIONAL: 当你想主动分享音乐时输出 true，此时绝对不要在 reply 里发文字提示，系统会自动发卡片)
 }
-`;
 
 注意！！！"reply" 必须是一个字符串数组（Array）！如果你想连续发送多条消息，请务必把每一句话作为数组里的一个独立元素，例如 ["在吗？", "我想你了", "晚上一起吃饭吗？"]，绝对不要把所有话挤在一条消息里！`;
             
@@ -5247,15 +4810,6 @@ Structure:
                         avatar: session.avatar 
                     };
                     session.messages.push(locMsg); session.lastMessage = '[位置]';
-                }
-                // --- 解析外卖系统 ---
-                if (parsed.takeaway_request) {
-                    const twMsg = { type: 'takeaway', subType: 'pay_for_me', foodName: parsed.takeaway_request.foodName || '一份外卖', amount: parseFloat(parsed.takeaway_request.amount || '0').toFixed(2), status: 'pending', isSelf: false, time: Date.now(), avatar: session.avatar };
-                    session.messages.push(twMsg); session.lastMessage = '[外卖代付请求]';
-                }
-                if (parsed.takeaway_order) {
-                    const twMsg = { type: 'takeaway', subType: 'ordered_for_you', foodName: parsed.takeaway_order.foodName || '一份外卖', amount: parseFloat(parsed.takeaway_order.amount || '0').toFixed(2), remark: parsed.takeaway_order.remark || '无', eta: (Math.floor(Math.random() * 20) + 30) + '分钟', isSelf: false, time: Date.now(), avatar: session.avatar };
-                    session.messages.push(twMsg); session.lastMessage = '[外卖订单]';
                 }
                 
                 // 解析 AI 触发的拍一拍逻辑
@@ -5584,65 +5138,31 @@ Structure:
             this.statusHistoryModal.show = true; 
         },
         togglePin() { if (this.wechatState.activeSession) { this.wechatState.activeSession.isPinned = !this.wechatState.activeSession.isPinned; this.saveData(); } },
-        // --- 细颗粒度世界书绑定逻辑 ---
-        toggleWorldBinderFolder(id) {
-            const idx = this.worldBinderExpanded.indexOf(id);
-            if (idx > -1) this.worldBinderExpanded.splice(idx, 1);
-            else this.worldBinderExpanded.push(id);
-        },
         bindWorldFolder(folderId) {
             const session = this.wechatState.activeSession;
             if (!session) return;
-            if (!session.boundWorldbookFolderIds) session.boundWorldbookFolderIds =[];
-            if (!session.boundWorldbookFileIds) session.boundWorldbookFileIds =[];
-            
-            // 一键清空所有
-            if (folderId === null) { 
-                session.boundWorldbookFolderIds =[]; 
-                session.boundWorldbookFileIds =[]; 
-                session.boundWorldbookFolderId = null; 
-            } else {
+            if (!session.boundWorldbookFolderIds) session.boundWorldbookFolderIds = [];
+            if (folderId === null) { session.boundWorldbookFolderIds = []; session.boundWorldbookFolderId = null; } 
+            else {
                 const idx = session.boundWorldbookFolderIds.indexOf(folderId);
                 if (idx > -1) session.boundWorldbookFolderIds.splice(idx, 1);
                 else session.boundWorldbookFolderIds.push(folderId);
             }
             this.saveData();
         },
-        toggleWorldBinding(fid) { this.bindWorldFolder(fid); },
-        toggleWorldFileBinding(fileId) {
-            const session = this.wechatState.activeSession;
-            if (!session) return;
-            if (!session.boundWorldbookFileIds) session.boundWorldbookFileIds =[];
-            
-            const idx = session.boundWorldbookFileIds.indexOf(fileId);
-            if (idx > -1) session.boundWorldbookFileIds.splice(idx, 1);
-            else session.boundWorldbookFileIds.push(fileId);
-            this.saveData();
-        },
+        toggleWorldBinding(fid) { this.bindWorldFolder(fid); }, 
         isFolderBound(fid) {
             const session = this.wechatState.activeSession;
             if (!session) return false;
             if (session.boundWorldbookFolderId === fid) return true; 
             return session.boundWorldbookFolderIds && session.boundWorldbookFolderIds.includes(fid);
         },
-        isFileBound(fileId) {
-            const session = this.wechatState.activeSession;
-            if (!session) return false;
-            return session.boundWorldbookFileIds && session.boundWorldbookFileIds.includes(fileId);
-        },
         getWorldbookStatus() {
             const session = this.wechatState.activeSession;
             if (!session) return '未绑定';
-            
-            let countF = (session.boundWorldbookFolderIds?.length || 0);
-            if (session.boundWorldbookFolderId && session.boundWorldbookFolderIds?.includes(session.boundWorldbookFolderId)) countF--;
-            let countFile = (session.boundWorldbookFileIds?.length || 0);
-            
-            let res =[];
-            if(countF > 0 || session.boundWorldbookFolderId) res.push(`${countF + (session.boundWorldbookFolderId ? 1 : 0)}本`);
-            if(countFile > 0) res.push(`${countFile}页`);
-            
-            return res.length > 0 ? `已附魔: ` + res.join(' ') : '未绑定';
+            let count = (session.boundWorldbookFolderIds?.length || 0) + (session.boundWorldbookFolderId ? 1 : 0);
+            if (session.boundWorldbookFolderId && session.boundWorldbookFolderIds?.includes(session.boundWorldbookFolderId)) count--; 
+            return count > 0 ? `已绑定 ${count} 个` : '未绑定';
         },
         selectModel(model) { this.apiConfig.selectedModel = model; this.saveData(); this.modelSelectModal.show = false; },
         getMaskById(id) { return this.masks.find(m => m.id === id) || { avatar: '' }; },
@@ -7373,34 +6893,6 @@ ${settings.bannedWords && settings.bannedWords.trim() ? `5. 【绝对禁忌词�
              this.transferModal.show = false;
              this.scrollToBottom();
              this.saveData();
-        },
-        // --- 外卖代付交互逻辑 ---
-        acceptTakeaway(msg) {
-            const amt = parseFloat(msg.amount);
-            if (this.wallet.balance < amt) return this.showToast('钱包余额不足，无法代付');
-            
-            // 扣款
-            this.addToWallet('expense', amt, this.wechatState.activeSession.name, `外卖代付: ${msg.foodName}`);
-            msg.status = 'paid';
-            
-            // 发送系统旁白
-            const sysMsg = { type: 'system', content: `你已成功为TA代付了外卖（¥${msg.amount}）`, time: Date.now() };
-            this.wechatState.activeSession.messages.push(sysMsg);
-            this.saveData();
-            this.showToast('代付成功');
-            
-            // 自动触发AI的一句道谢（模拟真人收到外卖的喜悦）
-            setTimeout(() => { this.triggerReceive(); }, 1500);
-        },
-        rejectTakeaway(msg) {
-            msg.status = 'rejected';
-            const sysMsg = { type: 'system', content: `你残忍地拒绝了外卖代付请求`, time: Date.now() };
-            this.wechatState.activeSession.messages.push(sysMsg);
-            this.saveData();
-            this.showToast('已拒绝');
-            
-            // 自动触发AI的一句抱怨
-            setTimeout(() => { this.triggerReceive(); }, 1500);
         },
         
         addToWallet(type, amount, source, desc) {
