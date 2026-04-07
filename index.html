@@ -231,10 +231,12 @@
         .system-recall-tip { text-align: center; font-size: 12px; color: #9ca3af; margin: 12px 0; display: flex; align-items: center; justify-content: center; gap: 4px; }
         .recall-link { color: #576b95; cursor: pointer; font-weight: bold; }
 
-        .chat-context-menu { position: fixed; background: #4c4c4c; color: white; border-radius: 12px; padding: 0; z-index: 99999; box-shadow: 0 8px 30px rgba(0,0,0,0.4); display: flex; flex-wrap: wrap; width: 260px; }
-        .chat-context-menu::after { content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid #4c4c4c; }
-        .context-item { width: 25%; height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; gap: 4px; cursor: pointer; }
-        .context-item:active { background: rgba(255,255,255,0.1); border-radius: 8px; }
+        /* 全新毛玻璃长按菜单 UI */
+        .chat-context-menu { position: fixed; background: rgba(35, 35, 35, 0.95); backdrop-filter: blur(10px); color: white; border-radius: 16px; padding: 8px; z-index: 99999; box-shadow: 0 10px 40px rgba(0,0,0,0.25); display: flex; flex-wrap: wrap; width: 270px; gap: 4px 0; }
+        .chat-context-menu::after { display: none; } /* 取消写死的小三角 */
+        .context-item { width: 25%; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; gap: 6px; cursor: pointer; border-radius: 12px; transition: all 0.2s; color: #f3f4f6; }
+        .context-item:active { background: rgba(255,255,255,0.15); }
+        .context-item i { font-size: 20px; }
 
         .top-notification-banner { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 380px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 16px; padding: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); z-index: 100000; display: flex; align-items: center; gap: 12px; cursor: pointer; animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes slideDown { from { transform: translate(-50%, -100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
@@ -289,25 +291,25 @@
         /* 朋友圈操作按钮 (三个点) */
         .moment-action-btn { background: #f7f7f7; padding: 0 8px; border-radius: 4px; color: #576b95; font-size: 16px; font-weight: bold; cursor: pointer; height: 20px; line-height: 16px; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; position: absolute; right: 0; z-index: 10; }
         
-        /* 朋友圈菜单 (黑色) - 覆盖三个点 */
+        /* 朋友圈菜单 (黑色) - 覆盖三个点 (上下加宽) */
         .moment-menu { 
             position: absolute; 
-            right: 0; top: 0; 
-            height: 100%; 
+            right: 0; top: 50%; transform: translateY(-50%); /* 居中对齐 */
+            height: 38px; /* 固定加宽的高度 */
             background: #4c4c4c; 
-            border-radius: 4px; 
+            border-radius: 6px; 
             display: flex; align-items: center; 
             color: white; 
             padding: 0; 
             overflow: hidden; 
-            animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            animation: popInMoment 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
             z-index: 20; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
         }
-        .moment-menu-item { padding: 0 16px; height: 100%; display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; white-space: nowrap; border-right: 1px solid rgba(255,255,255,0.1); }
+        .moment-menu-item { padding: 0 18px; height: 100%; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap; border-right: 1px solid rgba(255,255,255,0.1); }
         .moment-menu-item:last-child { border-right: none; }
         .moment-menu-item:active { background: rgba(255,255,255,0.1); }
-        @keyframes popIn { from { transform: scaleX(0); transform-origin: right center; opacity: 0; } to { transform: scaleX(1); opacity: 1; } }
+        @keyframes popInMoment { from { transform: translateY(-50%) scaleX(0); transform-origin: right center; opacity: 0; } to { transform: translateY(-50%) scaleX(1); opacity: 1; } }
         
         .moment-likes-comments { background: #f7f7f7; border-radius: 4px; margin-top: 8px; padding: 6px 10px; font-size: 13px; }
         .moment-likes { color: #576b95; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 4px; margin-bottom: 4px; display: flex; items-center; gap: 4px; line-height: 1.4; }
@@ -4716,7 +4718,7 @@ Structure:
   "sticker_id": "OPTIONAL: 填入你想发的表情包的纯数字 ID",
   "invite_music": true (OPTIONAL: 当你想主动分享音乐时输出 true，此时绝对不要在 reply 里发文字提示，系统会自动发卡片)
   "food_payment": { "item": "奶茶", "amount": "25.00" }, // OPTIONAL: 当你要点外卖并向我撒娇让我代付时输出
-  "food_delivery": { "item": "炸鸡", "amount": "45.00", "remark": "按时吃饭", "eta": "30分钟" } // OPTIONAL: 当你主动给我点外卖时输出
+  "food_delivery": { "item": "炸鸡", "amount": "45.00", "remark": "按时吃饭", "eta": "19:30" } // OPTIONAL: 当你主动给我点外卖时输出。eta 绝对不能写“xx分钟”，必须是具体时间点(如 19:30)！
 }
 
 注意！！！"reply" 必须是一个字符串数组（Array）！如果你想连续发送多条消息，请务必把每一句话作为数组里的一个独立元素，例如 ["在吗？", "我想你了", "晚上一起吃饭吗？"]，绝对不要把所有话挤在一条消息里！`;
@@ -4918,12 +4920,20 @@ Structure:
                     session.lastMessage = '[外卖代付]';
                 }
                 if (parsed.food_delivery) {
+                    let etaText = parsed.food_delivery.eta || '尽快';
+                    // 智能拦截：如果AI不听话输出了“30分钟”，JS自动计算具体时间
+                    if (etaText.includes('分钟')) {
+                        let mins = parseInt(etaText) || 30;
+                        let d = new Date(Date.now() + mins * 60000);
+                        etaText = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                    }
+                    
                     session.messages.push({ 
                         type: 'food_delivery', 
                         item: parsed.food_delivery.item || '外卖', 
                         amount: parsed.food_delivery.amount || '0.00', 
                         remark: parsed.food_delivery.remark || '', 
-                        eta: parsed.food_delivery.eta || '尽快', 
+                        eta: etaText, 
                         isSelf: false, 
                         time: Date.now(), 
                         avatar: session.avatar 
@@ -5176,8 +5186,23 @@ Structure:
             }
         },
         showChatContextMenu(e, msg, index) {
-            const rect = e.target.closest('.flex').getBoundingClientRect();
-            this.chatContextMenu = { show: true, x: 20, y: rect.bottom + 5, msg, index, isSelf: msg.isSelf };
+            // 锁定真正的气泡元素
+            const bubbleEl = e.target.closest('.chat-bubble') || e.target.closest('.flex');
+            const rect = bubbleEl.getBoundingClientRect();
+            const menuWidth = 270;
+            const menuHeight = 150; // 菜单的估算高度
+            
+            // X轴智能居中：以气泡中心为基准，并且防止超出屏幕左右边缘
+            let x = rect.left + (rect.width / 2) - (menuWidth / 2);
+            x = Math.max(10, Math.min(window.innerWidth - menuWidth - 10, x));
+            
+            // Y轴智能悬浮：默认悬浮在气泡正上方。如果气泡太靠上，则显示在气泡下方
+            let y = rect.top - menuHeight - 10;
+            if (y < 60) {
+                y = rect.bottom + 10;
+            }
+            
+            this.chatContextMenu = { show: true, x: x, y: y, msg, index, isSelf: msg.isSelf };
         },
         handleChatMenuAction(action) {
             const { msg, index } = this.chatContextMenu;
@@ -6785,6 +6810,12 @@ ${settings.bannedWords && settings.bannedWords.trim() ? `5. 【绝对禁忌词�
         },
         
         handleChatBubbleClick(msg) {
+            // 【新增】如果处于多选模式，点击气泡直接勾选！
+            if (this.isMultiSelectMode) {
+                this.toggleSelectMessage(msg);
+                return;
+            }
+            
             if(msg.type === 'red_packet') {
                 if(!msg.isSelf) { 
                     if (!msg.isOpened) {
