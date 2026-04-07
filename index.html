@@ -1955,6 +1955,10 @@
                             <div class="moment-meta mt-1">
                                 <div class="moment-time flex items-center gap-2">
                                     {{ formatChatTime(moment.time) }}
+                                    
+                                    <!-- 删除按钮：仅自己发的朋友圈，在时间旁边显示垃圾桶标识 -->
+                                    <i v-if="moment.name === homeProfile.name" class="far fa-trash-alt text-[#576b95] cursor-pointer ml-1 hover:opacity-70 transition text-sm" @click.stop="handleMomentAction('delete', moment)"></i>
+                                    
                                     <!-- 仅自己可见/分组可见 图标提示 -->
                                     <i v-if="moment.visibility === 'private'" class="fas fa-lock text-gray-300"></i>
                                     <i v-else-if="moment.visibility === 'share_to' || moment.visibility === 'dont_share_to'" class="fas fa-user-friends text-gray-300"></i>
@@ -1968,7 +1972,8 @@
                                             <div class="moment-menu-item" @click="handleMomentAction('comment', moment)"><i class="far fa-comment"></i><span>评论</span></div>
                                             <div class="moment-menu-item" @click="handleMomentAction('forward', moment)"><i class="fas fa-share"></i><span>转发</span></div>
                                             <div v-if="moment.name === homeProfile.name" class="moment-menu-item" @click="handleMomentAction('generate', moment)"><i class="fas fa-magic"></i><span>生成</span></div>
-                                            <div class="moment-menu-item text-red-400" @click="handleMomentAction('delete', moment)"><i class="far fa-trash-alt"></i><span>删除</span></div>
+                                            <!-- 角色的朋友圈菜单才保留删除选项 -->
+                                            <div v-if="moment.name !== homeProfile.name" class="moment-menu-item text-red-400" @click="handleMomentAction('delete', moment)"><i class="far fa-trash-alt"></i><span>删除</span></div>
                                         </div>
                                     </transition>
                                 </div>
@@ -5000,7 +5005,8 @@ Structure:
                          
                          if(this.notificationConfig.currentSound) new Audio(this.notificationConfig.currentSound).play();
                          
-                         if (Math.random() < 0.2) {
+                         // 【概率调低】将触发概率降低为 2% (0.02)，大幅减少 AI 刷屏发朋友圈的频率
+                         if (Math.random() < 0.02) {
                              setTimeout(() => {
                                  this.generateAIMomentFromChat(session, seg);
                              }, 5000);
