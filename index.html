@@ -1017,7 +1017,7 @@
     <!-- 弹窗组件 -->
     <transition name="scale"><div v-if="modelSelectModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[60vh]"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><h3 class="font-bold text-lg text-gray-900">选择模型</h3><button @click="modelSelectModal.show = false" class="text-gray-400 font-medium text-sm">关闭</button></div><div class="flex-1 overflow-y-auto p-2 space-y-1"><div v-if="availableModels.length===0" class="p-4 text-center text-xs text-gray-400">列表为空</div><div v-for="model in availableModels" :key="model" @click="selectModel(model)" class="p-3.5 rounded-xl flex items-center justify-between active:bg-gray-50 transition" :class="apiConfig.selectedModel === model ? 'bg-blue-50' : ''"><span class="font-bold text-sm text-gray-800">{{ model }}</span><i v-if="apiConfig.selectedModel === model" class="fas fa-check text-blue-500"></i></div></div></div></div></transition>
 
-    <!-- 世界书绑定弹窗 (支持文件夹与单文件细粒度勾选) -->
+    <!-- 世界书绑定弹窗 (支持文件夹与单文件细粒度勾选，加入防崩溃兜底) -->
     <transition name="scale">
         <div v-if="worldBinderModal.show" class="fixed inset-0 z-[65000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
             <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[70vh]">
@@ -1035,11 +1035,11 @@
                                 <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center transition" :class="isFolderBound(folder.id) ? 'bg-black border-black' : 'bg-white'" @click.stop="toggleWorldBinding(folder.id)">
                                     <i v-if="isFolderBound(folder.id)" class="fas fa-check text-white text-[10px]"></i>
                                 </div>
-                                <i class="fas fa-chevron-right text-gray-300 text-xs transition-transform" :class="{'rotate-90': worldBinderModal.expanded.includes(folder.id)}"></i>
+                                <i class="fas fa-chevron-right text-gray-300 text-xs transition-transform" :class="{'rotate-90': (worldBinderModal.expanded ||[]).includes(folder.id)}"></i>
                             </div>
                         </div>
                         <!-- 展开的文件列表 -->
-                        <div v-show="worldBinderModal.expanded.includes(folder.id)" class="bg-gray-50/50 border-t border-gray-50">
+                        <div v-show="(worldBinderModal.expanded ||[]).includes(folder.id)" class="bg-gray-50/50 border-t border-gray-50">
                             <div v-if="getFiles(folder.id).length===0" class="p-3 text-center text-xs text-gray-400">该文件夹为空</div>
                             <div v-for="file in getFiles(folder.id)" :key="file.id" class="p-3 pl-10 border-b border-gray-50 last:border-0 flex items-center justify-between cursor-pointer active:bg-gray-100 transition" @click="toggleWorldFileBinding(file.id)">
                                 <div class="flex items-center gap-2 min-w-0"><i class="fas fa-file-alt text-gray-400 text-xs shrink-0"></i><span class="text-xs text-gray-700 truncate">{{ file.name }}</span></div>
@@ -5264,9 +5264,17 @@ Structure:
             return session.boundWorldbookFileIds && session.boundWorldbookFileIds.includes(fileId);
         },
         toggleBinderFolder(fid) {
+            // 【重要防崩溃】如果检测到旧存档里没有 expanded 数组，强行初始化为空数组
+            if (!this.worldBinderModal.expanded) {
+                this.worldBinderModal.expanded =[];
+            }
+            
             const idx = this.worldBinderModal.expanded.indexOf(fid);
-            if (idx > -1) this.worldBinderModal.expanded.splice(idx, 1);
-            else this.worldBinderModal.expanded.push(fid);
+            if (idx > -1) {
+                this.worldBinderModal.expanded.splice(idx, 1);
+            } else {
+                this.worldBinderModal.expanded.push(fid);
+            }
         },
         getWorldbookStatus() {
             const session = this.wechatState.activeSession;
