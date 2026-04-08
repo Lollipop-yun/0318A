@@ -3715,6 +3715,7 @@ createApp({
             this.saveData();
         },
         // One-click generate random AI comment for my diary
+        // One-click generate random AI comment for my diary
         async generateAICommentForMyDiary(diary) {
             if (!this.apiConfig.apiKey) return this.showToast('请先配置 API Key');
             if (this.wechatState.friendList.length === 0) return this.showToast('暂无好友');
@@ -3726,25 +3727,24 @@ createApp({
                 let url = this.apiConfig.baseUrl.trim().replace(/\/+$/, '');
                 if (!url.endsWith('/v1')) url += '/v1';
                 
-                const systemPrompt = `You are ${randomFriend.name}. Persona: ${randomFriend.bio || 'None'}. 
-                Context: You are reading the user's diary entry.
-                Diary Content: "${diary.content}"
-                
-                Task: Write a short, natural comment (max 20 words). Match your persona. No Markdown.`;
+                const systemPrompt = `你是 ${randomFriend.name}。人设: ${randomFriend.bio || '无'}。
+你在偷看我写的日记：“${diary.content}”。
+请根据你的人设，写一句非常简短的评论(最多15个字)。严禁说“哈哈”、“赞”等敷衍词汇，必须符合人物性格！不准加引号！`;
 
                 const res = await fetch(`${url}/chat/completions`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiConfig.apiKey.trim()}` },
                     body: JSON.stringify({ 
                         model: this.apiConfig.selectedModel, 
-                        messages: [
+                        messages:[
                             { role: 'system', content: systemPrompt },
-                            { role: 'user', content: 'Write a comment.' }
-                        ]
+                            { role: 'user', content: '直接输出评论内容，不要加引号。' }
+                        ],
+                        temperature: this.apiConfig.temperature || 0.7
                     })
                 });
                 
-                if(!res.ok) throw new Error();
+                if(!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
                 const replyText = data.choices[0].message.content.trim();
                 
@@ -3755,14 +3755,269 @@ createApp({
                     replyTo: null
                 });
                 this.saveData();
-                this.showToast('评论生成成功');
+                this.showToast('日记评论生成成功');
 
-                // 【新增】30% 概率触发角色看完日记后来找你私聊
+                // 30% 概率触发私聊
                 if (Math.random() < 0.3) {
                     this.triggerPrivateMessageFromPost(randomFriend, "日记", diary.content);
                 }
 
-            } catch(e) { console.error(e); this.showToast('生成失败'); }
+            } catch(e) { console.error(e); this.showToast('生成失败: ' + e.message); }
+        },
+        async generateAIReplyToDiaryComment(diary, userComment) {
+            if (!this.apiConfig.apiKey) return;
+            
+            let friendId = diary.friendId;
+            if (friendId === 'mine' && userComment.replyTo) {
+                 const f = this.wechatState.friendList.find(f => (f.remark || f.name) === userComment.replyTo);
+                 if(f) friendId = f.id;
+                 else return; 
+            }
+            
+            const friend = this.wechatState.friendList.find(f => f.id === friendId);
+            if(!friend) return;
+
+            this.showToast(`${friend.name} 正在回复...`);
+
+            setTimeout(async () => {
+                try {
+                    let url = this.apiConfig.baseUrl.trim().replace(/\/+$/, '');
+                    if (!url.endsWith('/v1')) url += '/v1';
+                    
+                    const systemPrompt = `You are ${friend.name}. Persona: ${friend.bio || 'None'}. 
+                    Context: ${diary.friendId === 'mine' ? "You commented on the user's diary, and they replied to you." : "The user commented on your diary entry."}
+                    Diary Content: "${diary.content}"
+                    User's Comment: "${userComment.text}"
+                    
+                    Task: Write a short, natural reply to the user's comment (max 20 words). Match your persona. No Markdown.`;
+
+                    const res = await fetch(`${url}/chat/completions`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiConfig.apiKey.trim()}` },
+                        body: JSON.stringify({ 
+                            model: this.apiConfig.selectedModel, 
+                            messages:[
+                                { role: 'system', content: systemPrompt },
+                                { role: 'user', content: 'Reply now.' }
+                            ],
+                            temperature: this.apiConfig.temperature || 0.7
+                        })
+                    });
+                    
+                    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
+                    const replyText = data.choices[0].message.content.trim();
+                    
+                    diary.comments.push({
+                        user: friend.remark || friend.name,
+                        text: replyText,
+                        replyTo: this.homeProfile.name
+                    });
+                    this.saveData();
+                    this.showToast(`${friend.name} 回复了你`);
+
+                } catch(e) { console.error(e); this.showToast('回复生成失败: ' + e.message); }
+            }, 1000); 
+        },
+        toggleDiaryMultiSelect() {
+            this.diaryState.isMultiSelect = !this.diaryState.isMultiSelect;
+            this.diaryState.selectedIds =[];
+        },
+        toggleSelectDiary(id) {
+            const idx = this.diaryState.selectedIds.indexOf(id);
+            if(idx > -1) this.diaryState.selectedIds.splice(idx, 1);
+            else this.diaryState.selectedIds.push(id);
+        },
+        deleteSelectedDiaries() {
+            if(this.diaryState.selectedIds.length === 0) return;
+            this.showConfirm(`确定删除选中的 ${this.diaryState.selectedIds.length} 篇日记？`, () => {
+                this.diaries = this.diaries.filter(d => !this.diaryState.selectedIds.includes(d.id));
+                this.diaryState.selectedIds =[];
+                this.diaryState.isMultiSelect = false;
+                this.saveData();
+                this.showToast('已删除');
+            });
+        },
+        // --- 朋友圈生成逻辑 ---
+        async generateAICommentForMoment(moment) {
+            if (this.wechatState.friendList.length === 0) return this.showToast('暂无好友');
+            
+            const eligibleFriends = this.wechatState.friendList.filter(f => this.canAIFriendSeeMoment(moment, f));
+            
+            if (eligibleFriends.length === 0) {
+                return this.showToast('由于权限设置，没有 AI 好友可见此条动态');
+            }
+
+            const aiFriend = eligibleFriends[Math.floor(Math.random() * eligibleFriends.length)];
+            this.showToast(`${aiFriend.name} 正在思考...`);
+
+            let commentText = "";
+            if (this.apiConfig.apiKey) {
+                 try {
+                    let url = this.apiConfig.baseUrl.trim().replace(/\/+$/, '');
+                    if (!url.endsWith('/v1')) url += '/v1';
+                    const res = await fetch(`${url}/chat/completions`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiConfig.apiKey.trim()}` },
+                        body: JSON.stringify({ 
+                            model: this.apiConfig.selectedModel, 
+                            messages:[
+                                { role: 'system', content: `你是 ${aiFriend.name}, 这是你的人设: ${aiFriend.bio || '无'}。你在刷朋友圈时看到了这条动态: "${moment.content}"。请根据你的人设，写一句非常简短的评论(最多15个字)。严禁说“哈哈”、“赞”、“不错”等敷衍词汇，必须符合人物性格！` },
+                                { role: 'user', content: '直接输出评论内容，不要加引号。' }
+                            ],
+                            temperature: this.apiConfig.temperature || 0.7
+                        })
+                    });
+                    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
+                    commentText = data.choices[0].message.content.trim();
+                    
+                    moment.comments.push({
+                        user: aiFriend.remark || aiFriend.name,
+                        text: commentText
+                    });
+                    this.saveData();
+                    this.showToast('朋友圈评论成功');
+                    
+                    // 30% 概率触发私聊
+                    if (Math.random() < 0.3) {
+                        this.triggerPrivateMessageFromPost(aiFriend, "朋友圈", moment.content);
+                    }
+                } catch(e) { return this.showToast('生成评论失败: ' + e.message); }
+            } else { return this.showToast('请先配置 API Key'); }
+        },
+        async generateAIReplyToComment(moment, aiFriend, userComment, isAuthorReply = false) {
+            if (!this.canAIFriendSeeMoment(moment, aiFriend)) return;
+
+            this.showToast(`${aiFriend.name} 正在打字...`);
+
+            setTimeout(async () => {
+                let replyText = "";
+                if (this.apiConfig.apiKey) {
+                     try {
+                        let url = this.apiConfig.baseUrl.trim().replace(/\/+$/, '');
+                        if (!url.endsWith('/v1')) url += '/v1';
+
+                        const session = this.wechatState.sessions.find(s => s.targetId === aiFriend.id);
+                        let myName = this.homeProfile.name;
+                        let myBio = "无";
+                        let recentChatContext = "无近期聊天记录。";
+
+                        if (session) {
+                            const mask = this.getMaskById(session.maskId);
+                            myName = mask.name || this.homeProfile.name;
+                            myBio = mask.bio || "无";
+                            
+                            if (session.messages && session.messages.length > 0) {
+                                 const recentMsgs = session.messages.slice(-5).map(m => `[${m.isSelf ? myName : aiFriend.name}]: ${m.content}`).join('\n');
+                                 recentChatContext = `你们最近的聊天内容:\n${recentMsgs}`;
+                            }
+                        }
+                        
+                        const now = new Date();
+                        const exactTime = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+                        
+                        let context = isAuthorReply 
+                            ? `这是你发的朋友圈: "${moment.content}"。你的好友(名字:${myName}, 人设:${myBio})评论了你: "${userComment}"。`
+                            : `在朋友圈下，你的好友(名字:${myName}, 人设:${myBio})回复了你的评论: "${userComment}"。`;
+                            
+                        context += `\n[当前真实时间]: ${exactTime}\n参考资料：${recentChatContext}`;
+
+                        const res = await fetch(`${url}/chat/completions`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiConfig.apiKey.trim()}` },
+                            body: JSON.stringify({ 
+                                model: this.apiConfig.selectedModel, 
+                                messages:[
+                                    { role: 'system', content: `你是 ${aiFriend.name}。这是你的人设: ${aiFriend.bio || '无'}。${context} 请根据你的人设以及你们的聊天记录，用符合你性格的口吻简短回复（10字以内）。绝对不要只回“哈哈”、“嗯”！` },
+                                    { role: 'user', content: '直接输出回复内容，不要加引号。' }
+                                ],
+                                temperature: this.apiConfig.temperature || 0.7
+                            })
+                        });
+                        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const data = await res.json();
+                        replyText = data.choices[0].message.content.trim();
+                        
+                        moment.comments.push({
+                            user: aiFriend.remark || aiFriend.name,
+                            text: replyText,
+                            replyTo: this.homeProfile.name 
+                        });
+                        this.saveData();
+                        this.showToast(`${aiFriend.name} 回复了你`);
+                    } catch(e) { 
+                        console.error("Reply to comment failed", e); 
+                        this.showToast('回复失败: ' + e.message); 
+                    }
+                }
+            }, 1000); 
+        },
+        // --- 看完动态后触发私聊的统一处理中心 ---
+        async triggerPrivateMessageFromPost(friend, postType, postContent) {
+            if (!this.apiConfig.apiKey) return;
+            
+            // 极大缩短延迟，变为2秒，防止假死感
+            setTimeout(async () => {
+                try {
+                    let url = this.apiConfig.baseUrl.trim().replace(/\/+$/, '');
+                    if (!url.endsWith('/v1')) url += '/v1';
+                    
+                    const systemPrompt = `你是 ${friend.name}。这是你的人设: ${friend.bio || '无'}。你刚刚看到了我发的${postType}动态：“${postContent}”，并且在下面评了论。现在你意犹未尽，决定立刻给我发一条微信私信，继续顺着刚才的话题聊，或者因为动态里的内容调侃/关心我。
+                    要求：
+                    1. 像微信聊天一样，口语化、简短自然，像真人的第一反应。
+                    2. 严禁使用各种网文描写或套路，不要写旁白，完全是现代人正常的微信对话。
+                    3. 直接输出你要发的话，不要加引号。`;
+
+                    const res = await fetch(`${url}/chat/completions`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiConfig.apiKey.trim()}` },
+                        body: JSON.stringify({ 
+                            model: this.apiConfig.selectedModel, 
+                            messages:[
+                                { role: 'system', content: systemPrompt },
+                                { role: 'user', content: '现在发一条私信给我吧。' }
+                            ],
+                            temperature: this.apiConfig.temperature || 0.7
+                        })
+                    });
+                    
+                    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
+                    const msgContent = data.choices[0].message.content.trim();
+                    
+                    let session = this.wechatState.sessions.find(s => s.targetId === friend.id);
+                    if (!session) {
+                        const myMaskId = this.wechatState.activeSession?.maskId || (this.masks.length > 0 ? this.masks[0].id : null);
+                        if(!myMaskId) return; 
+                        this.createSession(friend, this.getMaskById(myMaskId));
+                        session = this.wechatState.sessions[0];
+                    }
+                    
+                    session.messages.push({
+                        content: msgContent,
+                        isSelf: false,
+                        time: Date.now(),
+                        avatar: session.avatar,
+                        type: 'text'
+                    });
+                    session.lastMessage = msgContent;
+                    
+                    if (this.currentApp !== 'wechat' || this.wechatState.activeNav !== 'room' || this.wechatState.activeSession?.id !== session.id || document.hidden) {
+                        session.unreadCount = (session.unreadCount || 0) + 1;
+                        if (!document.hidden) {
+                            this.showGlobalNotification(session, msgContent);
+                        }
+                        this.sendPushNotification('微信新消息', session.name, msgContent, session.avatar);
+                    } else {
+                        this.scrollToBottom();
+                    }
+                    
+                    if(this.notificationConfig.currentSound) new Audio(this.notificationConfig.currentSound).play();
+                    this.saveData();
+
+                } catch(e) { console.error("动态触发私聊失败", e); }
+            }, 2000); 
         },
         async generateAIReplyToDiaryComment(diary, userComment) {
             if (!this.apiConfig.apiKey) return;
