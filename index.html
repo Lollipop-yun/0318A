@@ -1341,7 +1341,24 @@
         </div>
     </transition>
 
-    <transition name="scale"><div v-if="chatWizard.show" class="fixed inset-0 z-[55000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[90%] h-[70vh] rounded-2xl overflow-hidden shadow-2xl flex flex-col animate-scale-in"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><button @click="closeChatWizard" class="text-gray-500 font-medium text-sm">取消</button><h3 class="font-bold text-lg text-gray-900">{{ chatWizard.step === 1 ? '选择我的面具' : (chatWizard.type === 'single' ? '选择好友' : '选择群成员') }}</h3><button v-if="chatWizard.step === 2 && chatWizard.type === 'group'" @click="finishCreateChat" class="text-black font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg">完成</button></div><div class="flex-1 overflow-y-auto p-4 space-y-3"><div v-if="chatWizard.step === 1"><div v-if="masks.length === 0" class="text-center text-gray-400 mt-20 text-xs">没有可用面具，请去"我-面具"添加</div><div v-for="mask in masks" :key="mask.id" @click="selectWizardMask(mask)" class="bg-white border border-gray-100 p-3 rounded-xl flex items-center gap-3 active:bg-gray-50 cursor-pointer"><div class="w-10 h-10 rounded-full bg-gray-100 overflow-hidden"><img v-if="mask.avatar" :src="mask.avatar" class="w-full h-full object-cover"></div><div class="flex-1 min-w-0"><h4 class="font-bold text-sm truncate">{{ mask.name }}</h4><p class="text-xs text-gray-400 truncate">{{ mask.bio || '无介绍' }}</p></div><i class="fas fa-chevron-right text-gray-300 text-xs shrink-0"></i></div></div><div v-if="chatWizard.step === 2"><div v-if="wechatState.friendList.length === 0" class="text-center text-gray-400 mt-20 text-xs">通讯录暂无好友</div><div v-for="friend in wechatState.friendList" :key="friend.id" @click="selectWizardContact(friend)" class="bg-white border p-3 rounded-xl flex items-center gap-3 active:bg-gray-50 cursor-pointer transition" :class="chatWizard.selectedContacts.includes(friend.id) ? 'border-black bg-gray-50' : 'border-gray-100'"><div v-if="chatWizard.type === 'group'" class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center" :class="{'bg-black border-black': chatWizard.selectedContacts.includes(friend.id)}"><i v-if="chatWizard.selectedContacts.includes(friend.id)" class="fas fa-check text-white text-[10px]"></i></div><div class="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden"><img v-if="friend.avatar" :src="friend.avatar" class="w-full h-full object-cover"></div><span class="font-bold text-sm">{{ friend.remark || friend.name }}</span></div></div></div></div></div></transition>
+    <transition name="scale"><div v-if="chatWizard.show" class="fixed inset-0 z-[55000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[90%] h-[70vh] rounded-2xl overflow-hidden shadow-2xl flex flex-col animate-scale-in"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white"><button @click="closeChatWizard" class="text-gray-500 font-medium text-sm">取消</button><h3 class="font-bold text-lg text-gray-900">{{ chatWizard.step === 1 ? '选择我的面具' : (chatWizard.type === 'single' ? '选择好友' : '选择群成员') }}</h3><button v-if="chatWizard.step === 2 && chatWizard.type === 'group'" @click="finishCreateChat" class="text-black font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg">完成</button></div><div class="flex-1 overflow-y-auto p-4 space-y-3"><div v-if="chatWizard.step === 1"><div v-if="masks.length === 0" class="text-center text-gray-400 mt-20 text-xs">没有可用面具，请去"我-面具"添加</div><div v-for="mask in masks" :key="mask.id" @click="selectWizardMask(mask)" class="bg-white border border-gray-100 p-3 rounded-xl flex items-center gap-3 active:bg-gray-50 cursor-pointer"><div class="w-10 h-10 rounded-full bg-gray-100 overflow-hidden"><img v-if="mask.avatar" :src="mask.avatar" class="w-full h-full object-cover"></div><div class="flex-1 min-w-0"><h4 class="font-bold text-sm truncate">{{ mask.name }}</h4><p class="text-xs text-gray-400 truncate">{{ mask.bio || '无介绍' }}</p></div><i class="fas fa-chevron-right text-gray-300 text-xs shrink-0"></i></div></div><div v-if="chatWizard.step === 2">
+    <!-- 群聊专属：旁观模式开关 -->
+    <div v-if="chatWizard.type === 'group'" class="bg-gray-50 rounded-xl p-3 mb-3 flex justify-between items-center border border-gray-100 shadow-sm">
+        <div>
+            <div class="font-bold text-sm text-gray-800">开启旁观模式</div>
+            <div class="text-[10px] text-gray-400 mt-0.5">我不进群，仅在暗中观察他们聊天</div>
+        </div>
+        <input type="checkbox" id="observer-toggle" class="switch-checkbox" v-model="chatWizard.isObserver">
+        <label for="observer-toggle" class="switch-label"><div class="switch-button"></div></label>
+    </div>
+    
+    <div v-if="wechatState.friendList.length === 0" class="text-center text-gray-400 mt-20 text-xs">通讯录暂无好友</div>
+    <div v-for="friend in wechatState.friendList" :key="friend.id" @click="selectWizardContact(friend)" class="bg-white border p-3 rounded-xl flex items-center gap-3 active:bg-gray-50 cursor-pointer transition mb-2" :class="chatWizard.selectedContacts.includes(friend.id) ? 'border-black bg-gray-50' : 'border-gray-100'">
+        <div v-if="chatWizard.type === 'group'" class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center shrink-0" :class="{'bg-black border-black': chatWizard.selectedContacts.includes(friend.id)}"><i v-if="chatWizard.selectedContacts.includes(friend.id)" class="fas fa-check text-white text-[10px]"></i></div>
+        <div class="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden shrink-0"><img v-if="friend.avatar" :src="friend.avatar" class="w-full h-full object-cover"></div>
+        <span class="font-bold text-sm">{{ friend.remark || friend.name }}</span>
+    </div>
+</div></div></div></div></transition>
 
     <!-- 世界书添加/编辑文件 Modal -->
     <transition name="scale"><div v-if="worldModal.show" class="fixed inset-0 z-[55000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl p-6 space-y-4"><h3 class="text-lg font-bold text-center text-gray-900">{{ worldModal.id ? '编辑文件' : (worldModal.type === 'folder' ? '新建文件夹' : '新建文件') }}</h3><input v-model="worldModal.name" placeholder="请输入名称" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none"><div v-if="worldModal.type === 'file'" class="space-y-4"><div class="space-y-1"><label class="text-xs text-gray-500 ml-1">归类文件夹</label><div @click="folderSelectModal.show = true" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 flex justify-between items-center cursor-pointer text-gray-700"><span :class="worldModal.parentId ? 'text-black' : 'text-gray-400'">{{ getFolderName(worldModal.parentId) }}</span><i class="fas fa-chevron-right text-xs text-gray-300"></i></div></div><textarea v-model="worldModal.content" placeholder="输入文件内容..." class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none h-32 resize-none"></textarea></div><div class="flex gap-3 pt-2"><button @click="worldModal.show = false" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold text-sm">取消</button><button @click="saveWorldItem" class="flex-1 bg-black text-white py-3 rounded-xl font-bold text-sm">保存</button></div></div></div></transition>
@@ -1677,6 +1694,7 @@
         </div>
         
         <!-- 文件上传 Inputs -->
+        <input type="file" ref="groupAvatarInput" accept="image/*" class="hidden" @change="handleGroupAvatarChange">
         <input type="file" ref="homeAvatarInput" accept="image/*" class="hidden" @change="handleHomeAvatarChange">
         <input type="file" ref="cardAvatarInput" accept="image/*" class="hidden" @change="handleCardAvatarChange">
         <input type="file" ref="widgetImageInput" accept="image/*" class="hidden" @change="handleWidgetImageChange">
@@ -2316,14 +2334,22 @@
                         </div>
                     </transition>
 
+                    <!-- 旁观模式专属输入栏 -->
+                    <div v-if="wechatState.activeSession.isObserver" class="flex items-center gap-2 px-4 py-2.5 bg-white border-t border-gray-100">
+                        <div class="flex-1 h-[38px] flex items-center justify-center text-gray-400 text-xs font-bold tracking-widest bg-gray-50 rounded-full border border-gray-200">
+                            <i class="fas fa-eye mr-2"></i> 旁观模式：静静看他们聊
+                        </div>
+                        <!-- 保留接收按钮，让用户点击后可以推进群聊剧情 -->
+                        <button @click="triggerReceive" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 transition shrink-0 active:scale-95 bg-gray-100 rounded-full"><i class="far fa-comment-dots text-sm"></i></button>
+                    </div>
                     <!-- 多选操作栏 -->
-                    <div v-if="isMultiSelectMode" class="flex items-center justify-around h-[50px]">
+                    <div v-else-if="isMultiSelectMode" class="flex items-center justify-around h-[50px]">
                         <button @click="deleteSelectedMessages" class="flex flex-col items-center text-gray-500"><i class="far fa-trash-alt text-lg"></i><span class="text-[10px]">删除</span></button>
                         <button @click="favoriteSelectedMessages" class="flex flex-col items-center text-gray-500"><i class="fas fa-cube text-lg"></i><span class="text-[10px]">收藏</span></button>
                         <button @click="openForwardModal" class="flex flex-col items-center text-gray-500"><i class="fas fa-share text-lg"></i><span class="text-[10px]">转发</span></button>
                         <button @click="isMultiSelectMode = false" class="flex flex-col items-center text-gray-500"><i class="fas fa-times text-lg"></i><span class="text-[10px]">取消</span></button>
                     </div>
-                    <!-- 正常输入栏 (优化布局) -->
+                    <!-- 正常输入栏 -->
                     <div v-else class="flex items-center gap-2 px-2 py-2">
                         <transition name="fade"><div v-if="replyingTo" class="absolute bottom-full left-0 w-full bg-gray-100 p-2 text-xs text-gray-500 border-t border-gray-200 flex justify-between items-center z-10"><span>引用: {{ replyingTo.content }}</span><button @click="replyingTo=null"><i class="fas fa-times"></i></button></div></transition>
                         
@@ -2335,7 +2361,7 @@
                         <button @click="showStickerPanel = !showStickerPanel" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-yellow-500 transition shrink-0" :class="showStickerPanel ? 'text-yellow-500' : ''"><i class="far fa-smile text-xl"></i></button>
                         
                         <button v-if="inputMsg.trim().length > 0" @click="sendMessage" class="w-8 h-8 flex items-center justify-center text-gray-500 active:text-green-500 transition shrink-0"><i class="fas fa-check-circle text-2xl"></i></button>
-                        <!-- 接收按钮：灰色外观 (外圈+三点) 尺寸调小 -->
+                        <!-- 接收按钮 -->
                         <button v-else @click="triggerReceive" class="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-600 transition shrink-0 active:scale-95"><i class="far fa-comment-dots text-xl"></i></button>
                     </div>
                 </div>
@@ -2656,43 +2682,66 @@
             
             <!-- 聊天详情页 -->
             <div v-if="wechatState.activeNav === 'chat-details'" class="flex-1 flex flex-col bg-white absolute inset-0 z-30">
-                <header class="h-[90px] pt-10 px-4 flex items-center bg-white border-b border-gray-100"><button @click="wechatState.activeNav = 'room'" class="w-8 h-8 flex items-center justify-center"><i class="fas fa-chevron-left text-lg text-black"></i></button><h1 class="font-bold text-[17px] ml-2">聊天详情</h1></header><div class="flex-1 overflow-y-auto p-5"><div class="bg-gray-50 rounded-2xl p-4 flex items-center gap-4 mb-6 cursor-pointer active:bg-gray-100 transition" @click="editCurrentSessionFriend"><div class="w-16 h-16 rounded-full bg-white overflow-hidden shadow-sm shrink-0"><img :src="getCurrentSessionAvatar()" class="w-full h-full object-cover"></div><div class="flex-1 min-w-0"><h3 class="font-bold text-lg text-gray-900 truncate">{{ wechatState.activeSession.name }}</h3><p class="text-xs text-gray-500 mt-1 truncate">ID: {{ getCurrentSessionId() }}</p><p class="text-xs text-gray-400 mt-1 truncate">{{ getCurrentSessionBio() }}</p></div><i class="fas fa-chevron-right text-gray-300"></i></div>
-                <div class="space-y-6">
-                    <div class="flex justify-between items-center"><span class="text-sm">查找聊天记录</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
-                    <!-- 本聊专属头像入口 (NEW) -->
-                    <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="openAvatarSetting">
-                        <span class="text-sm">设置本聊专属头像</span>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs text-gray-400" v-if="wechatState.activeSession.customAvatarSelf || wechatState.activeSession.customAvatarTarget">已设置</span>
-                            <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                <header class="h-[90px] pt-10 px-4 flex items-center bg-white border-b border-gray-100"><button @click="wechatState.activeNav = 'room'" class="w-8 h-8 flex items-center justify-center"><i class="fas fa-chevron-left text-lg text-black"></i></button><h1 class="font-bold text-[17px] ml-2">聊天详情</h1></header>
+                <div class="flex-1 overflow-y-auto p-5">
+                    
+                    <!-- 顶部资料卡片 (区分群聊与单聊) -->
+                    <div class="bg-gray-50 rounded-2xl p-4 flex items-center gap-4 mb-6 cursor-pointer active:bg-gray-100 transition" @click="wechatState.activeSession.isGroup ? editGroupProfile() : editCurrentSessionFriend()">
+                        <div class="w-16 h-16 rounded-full bg-white overflow-hidden shadow-sm shrink-0">
+                            <img :src="wechatState.activeSession.isGroup ? wechatState.activeSession.avatar : getCurrentSessionAvatar()" class="w-full h-full object-cover">
                         </div>
-                    </div>
-                    <!-- 头像显示模式入口 -->
-                    <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="avatarModeModal.show = true">
-                        <span class="text-sm">头像显示设置</span>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs text-gray-400">{{ getAvatarModeName() }}</span>
-                            <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-bold text-lg text-gray-900 truncate">{{ wechatState.activeSession.isGroup ? (wechatState.activeSession.remark || wechatState.activeSession.name) : wechatState.activeSession.name }}</h3>
+                            <p class="text-xs text-gray-500 mt-1 truncate">{{ wechatState.activeSession.isGroup ? '群号: ' + wechatState.activeSession.groupIdNum : 'ID: ' + getCurrentSessionId() }}</p>
+                            <p class="text-xs text-gray-400 mt-1 truncate">{{ wechatState.activeSession.isGroup ? wechatState.activeSession.bio : getCurrentSessionBio() }}</p>
                         </div>
+                        <i class="fas fa-chevron-right text-gray-300"></i>
                     </div>
-                    <!-- 聊天背景入口 -->
-                    <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="navigateToChatBgSettings"><span class="text-sm">设置当前聊天背景</span><div class="flex items-center gap-2"><span class="text-xs text-gray-400">{{ wechatState.activeSession.wallpaper ? '已设置' : '默认' }}</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div></div>
-                    
-                    <!-- 时间感应开关 -->
-                    <div class="flex justify-between items-center"><span class="text-sm">时间感应</span><input type="checkbox" class="switch-checkbox" id="time-sense-toggle" v-model="wechatState.activeSession.enableTimeSense" @change="saveData"><label for="time-sense-toggle" class="switch-label"><div class="switch-button"></div></label></div>
-                    
-                    <!-- 气泡翻译开关 -->
-                    <div class="flex justify-between items-center"><span class="text-sm">点击气泡翻译(外语/方言)</span><input type="checkbox" class="switch-checkbox" id="translate-toggle" v-model="wechatState.activeSession.enableClickTranslate" @change="saveData"><label for="translate-toggle" class="switch-label"><div class="switch-button"></div></label></div>
+                
+                    <div class="space-y-6">
+                        <div class="flex justify-between items-center"><span class="text-sm">查找聊天记录</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
+                        
+                        <!-- 本聊专属头像入口 (群聊屏蔽) -->
+                        <div v-if="!wechatState.activeSession.isGroup" class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="openAvatarSetting">
+                            <span class="text-sm">设置本聊专属头像</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-gray-400" v-if="wechatState.activeSession.customAvatarSelf || wechatState.activeSession.customAvatarTarget">已设置</span>
+                                <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- 头像显示模式入口 -->
+                        <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="avatarModeModal.show = true">
+                            <span class="text-sm">头像显示设置</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-gray-400">{{ getAvatarModeName() }}</span>
+                                <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- 聊天背景入口 -->
+                        <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="navigateToChatBgSettings"><span class="text-sm">设置当前聊天背景</span><div class="flex items-center gap-2"><span class="text-xs text-gray-400">{{ wechatState.activeSession.wallpaper ? '已设置' : '默认' }}</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div></div>
+                        
+                        <!-- 时间感应开关 -->
+                        <div class="flex justify-between items-center"><span class="text-sm">时间感应</span><input type="checkbox" class="switch-checkbox" id="time-sense-toggle" v-model="wechatState.activeSession.enableTimeSense" @change="saveData"><label for="time-sense-toggle" class="switch-label"><div class="switch-button"></div></label></div>
+                        
+                        <!-- 气泡翻译开关 -->
+                        <div class="flex justify-between items-center"><span class="text-sm">点击气泡翻译(外语/方言)</span><input type="checkbox" class="switch-checkbox" id="translate-toggle" v-model="wechatState.activeSession.enableClickTranslate" @change="saveData"><label for="translate-toggle" class="switch-label"><div class="switch-button"></div></label></div>
 
-                    <div class="flex justify-between items-center"><span class="text-sm">置顶聊天</span><input type="checkbox" class="switch-checkbox" id="pin-chat-toggle" :checked="wechatState.activeSession?.isPinned" @change="togglePin"><label for="pin-chat-toggle" class="switch-label"><div class="switch-button"></div></label></div>
-                    
-                    <!-- 加入黑名单 (新增) -->
-                    <div class="flex justify-between items-center"><span class="text-sm">加入黑名单</span><input type="checkbox" class="switch-checkbox" id="block-toggle" v-model="wechatState.activeSession.isBlocked" @change="saveData"><label for="block-toggle" class="switch-label"><div class="switch-button"></div></label></div>
+                        <div class="flex justify-between items-center"><span class="text-sm">置顶聊天</span><input type="checkbox" class="switch-checkbox" id="pin-chat-toggle" :checked="wechatState.activeSession?.isPinned" @change="togglePin"><label for="pin-chat-toggle" class="switch-label"><div class="switch-button"></div></label></div>
+                        
+                        <!-- 加入黑名单 (群聊屏蔽) -->
+                        <div v-if="!wechatState.activeSession.isGroup" class="flex justify-between items-center"><span class="text-sm">加入黑名单</span><input type="checkbox" class="switch-checkbox" id="block-toggle" v-model="wechatState.activeSession.isBlocked" @change="saveData"><label for="block-toggle" class="switch-label"><div class="switch-button"></div></label></div>
 
-                    <div class="flex justify-between items-center cursor-pointer active:opacity-50" @click="worldBinderModal.show = true"><div class="flex flex-col"><span class="text-sm">绑定世界书 (可多选)</span><span class="text-xs text-gray-400 mt-0.5">{{ getWorldbookStatus() }}</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
-                    <button @click="confirmClearChatHistory" class="w-full text-red-500 font-bold text-sm py-2 text-center">清空聊天记录</button>
-                    <button @click="confirmDeleteFriend" class="w-full text-red-500 font-bold text-sm py-2 text-center border-t border-gray-100">删除好友</button>
-                </div>
+                        <div class="flex justify-between items-center cursor-pointer active:opacity-50" @click="worldBinderModal.show = true"><div class="flex flex-col"><span class="text-sm">绑定世界书 (可多选)</span><span class="text-xs text-gray-400 mt-0.5">{{ getWorldbookStatus() }}</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
+                        
+                        <button @click="confirmClearChatHistory" class="w-full text-red-500 font-bold text-sm py-2 text-center">清空聊天记录</button>
+                        
+                        <!-- 删除好友 / 解散群聊 自动切换 -->
+                        <button @click="wechatState.activeSession.isGroup ? confirmDismissGroup() : confirmDeleteFriend()" class="w-full text-red-500 font-bold text-sm py-2 text-center border-t border-gray-100">
+                            {{ wechatState.activeSession.isGroup ? '解散并退出群聊' : '删除好友' }}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -3271,7 +3320,7 @@ createApp({
             wechatState: { activeFilter: 'Chats', activeNav: 'chat', contacts: [], searchQuery: '', friendList: [], sessions: [], activeSession: null, showPlusMenu: false, showChatFunctions: false, showAttachMenu: false, groups: [], newFriends: [] },
             expandedGroups: ['all'],
             groupSelectModal: { show: false },
-            addContactModal: { show: false }, chatWizard: { show: false, step: 1, type: 'single', selectedContacts: [], selectedMask: null },
+            addContactModal: { show: false }, chatWizard: { show: false, step: 1, type: 'single', selectedContacts:[], selectedMask: null, isObserver: false },
             newContact: { name: '', remark: '', username: '', gender: '男', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: '' },
             masks:[], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: '' },
             masks: [], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', bio: '', nudge: '', signature: '', avatar: '' },
@@ -4481,6 +4530,52 @@ createApp({
             }
         },
         clearChatHistory() { this.confirmClearChatHistory(); }, 
+        
+        // --- 群聊专属功能 ---
+        editGroupProfile() {
+            const session = this.wechatState.activeSession;
+            if(!session || !session.isGroup) return;
+            
+            // 依次弹窗修改：群名 -> 群备注 -> 简介，最后询问是否换头像
+            this.showInput('修改群聊名称', session.name, '请输入群名', (name) => {
+                if(name) { session.name = name; this.saveData(); }
+                setTimeout(() => {
+                    this.showInput('修改群备注', session.remark, '相当于仅自己可见的群名', (remark) => {
+                        if(remark !== undefined) { session.remark = remark; this.saveData(); }
+                        setTimeout(() => {
+                            this.showInput('修改群简介', session.bio, '输入背景设定', (bio) => {
+                                if(bio !== undefined) { session.bio = bio; this.saveData(); }
+                                setTimeout(() => {
+                                    this.showConfirm('群资料已保存，是否需要更换群头像？', () => {
+                                        this.$refs.groupAvatarInput.click();
+                                    });
+                                }, 300);
+                            });
+                        }, 300);
+                    });
+                }, 300);
+            });
+        },
+        async handleGroupAvatarChange(e) {
+            const f = e.target.files[0]; if(!f) return;
+            try { 
+                this.wechatState.activeSession.avatar = await compressImage(f, 300); 
+                this.saveData(); 
+                this.showToast('群头像已更新');
+            } catch(e){}
+            e.target.value = '';
+        },
+        confirmDismissGroup() {
+            this.showConfirm('确定解散并退出群聊吗？聊天记录将被永久清除。', () => {
+                const sid = this.wechatState.activeSession.id;
+                this.wechatState.sessions = this.wechatState.sessions.filter(s => s.id !== sid);
+                this.wechatState.activeSession = null;
+                this.wechatState.activeNav = 'chat';
+                this.saveData();
+                this.showToast('群聊已解散');
+            });
+        },
+        // --------------------
 
         // --- 美化功能相关逻辑 ---
         updateDynamicStyles() {
@@ -4677,9 +4772,38 @@ createApp({
             else { const idx = this.chatWizard.selectedContacts.indexOf(friend.id); if(idx > -1) this.chatWizard.selectedContacts.splice(idx, 1); else this.chatWizard.selectedContacts.push(friend.id); }
         },
         finishCreateChat() {
-            if (this.chatWizard.selectedContacts.length === 0) return this.showToast('请选择成员');
-            const groupFakeFriend = { id: Date.now().toString(), name: `群聊(${this.chatWizard.selectedContacts.length})`, avatar: '' }; 
-            this.createSession(groupFakeFriend, this.chatWizard.selectedMask); this.chatWizard.show = false;
+            if (this.chatWizard.selectedContacts.length < 2) return this.showToast('发起群聊至少需要邀请 2 个角色');
+            
+            const groupIdNum = Math.floor(Math.random() * 900000000) + 100000000; // 随机生成 9 位群号
+            // 如果我是旁观者，群人数就是角色数；如果我在群里，群人数还要 +1
+            const totalMembers = this.chatWizard.selectedContacts.length + (this.chatWizard.isObserver ? 0 : 1);
+            
+            const session = { 
+                id: 'group_' + Date.now().toString(), 
+                targetId: 'group_' + Date.now().toString(), 
+                isGroup: true, // 核心标识：证明这是群聊
+                groupIdNum: groupIdNum.toString(),
+                name: `群聊(${totalMembers})`, 
+                remark: '', // 群备注
+                bio: '暂无群简介', // 群简介
+                avatar: 'https://pic1.imgdb.cn/item/69d20c54ee81d8282b3ec61f.png', // 默认群头像(多人Icon)
+                maskId: this.chatWizard.selectedMask.id, 
+                members: [...this.chatWizard.selectedContacts], // 保存群员ID
+                isObserver: this.chatWizard.isObserver, // 是否旁观
+                messages:[], 
+                lastMessage: '', 
+                time: Date.now(),
+                isPinned: false, 
+                wallpaper: '', 
+                groupId: null, 
+                avatarMode: 'all',
+                isBlocked: false
+            };
+            this.wechatState.sessions.unshift(session);
+            this.chatWizard.show = false;
+            this.enterChatRoom(session); 
+            this.saveData();
+            this.showToast('群聊创建成功');
         },
         createSession(target, mask) {
             let session = this.wechatState.sessions.find(s => s.targetId === target.id);
