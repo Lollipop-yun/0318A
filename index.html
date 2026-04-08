@@ -1214,8 +1214,8 @@
             <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl p-6 relative" @click.stop>
                 <div class="absolute top-4 right-4 text-gray-400 cursor-pointer" @click="openStatusHistory"><i class="far fa-clock text-xl"></i></div>
                 <div class="text-center mb-6">
-                    <div class="w-20 h-20 rounded-full bg-gray-100 mx-auto mb-3 overflow-hidden border-2 border-white shadow-lg"><img :src="getChatAvatar({isSelf: false, targetId: wechatState.activeSession.targetId})" class="w-full h-full object-cover"></div>
-                    <h3 class="text-xl font-bold text-gray-900">{{ wechatState.activeSession?.name }}</h3>
+                    <div class="w-20 h-20 rounded-full bg-gray-100 mx-auto mb-3 overflow-hidden border-2 border-white shadow-lg"><img :src="currentStatus.avatar || getChatAvatar({isSelf: false, targetId: wechatState.activeSession.targetId})" class="w-full h-full object-cover"></div>
+                    <h3 class="text-xl font-bold text-gray-900">{{ currentStatus.name || wechatState.activeSession?.name }}</h3>
                     <p class="text-xs text-gray-400 mt-1">Current State</p>
                 </div>
                 <div class="space-y-4 text-sm">
@@ -1693,6 +1693,49 @@
             </div>
         </div>
         
+        <!-- 群聊资料设置弹窗 -->
+        <transition name="scale">
+            <div v-if="groupProfileModal.show" class="fixed inset-0 z-[75000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col">
+                    <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0"><button @click="groupProfileModal.show = false" class="text-gray-500 font-medium text-sm">取消</button><h3 class="font-bold text-lg text-gray-900">群聊设置</h3><button @click="saveGroupProfile" class="text-black font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg">完成</button></div>
+                    <div class="flex-1 overflow-y-auto p-6 space-y-4">
+                        <div class="flex flex-col items-center gap-2">
+                            <div class="w-20 h-20 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden cursor-pointer" @click="$refs.groupAvatarInput2.click()">
+                                <img :src="groupProfileModal.avatar" class="w-full h-full object-cover">
+                            </div>
+                        </div>
+                        <div><label class="text-xs text-gray-500 ml-1 mb-1 block">群名称</label><input v-model="groupProfileModal.name" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div>
+                        <div><label class="text-xs text-gray-500 ml-1 mb-1 block">群备注 (仅自己可见)</label><input v-model="groupProfileModal.remark" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div>
+                        <div><label class="text-xs text-gray-500 ml-1 mb-1 block">群简介 (AI背景设定)</label><textarea v-model="groupProfileModal.bio" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none h-24 resize-none"></textarea></div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- 本聊专属面具切换弹窗 -->
+        <transition name="app-slide">
+            <div v-if="sessionMaskModal.show" class="fixed inset-0 z-[70000]">
+                <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="sessionMaskModal.show = false"></div>
+                <div class="ios-list-modal">
+                    <div class="ios-list-header">选择身份面具 <button class="absolute right-4 text-blue-500 font-normal text-sm" @click="sessionMaskModal.show = false">取消</button></div>
+                    <div class="ios-list-content">
+                        <div class="p-3 mb-2 bg-gray-50 rounded-xl flex items-center justify-between cursor-pointer" @click="editSessionCustomMask">
+                            <span class="text-sm font-bold text-blue-500"><i class="fas fa-edit mr-2"></i>修改本聊专属面具设定</span>
+                        </div>
+                        <div v-for="mask in masks" :key="mask.id" class="ios-list-item" @click="switchSessionMask(mask.id)">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-gray-100 overflow-hidden"><img :src="mask.avatar" class="w-full h-full object-cover"></div>
+                                <span class="text-gray-800 font-medium">{{ mask.name }}</span>
+                            </div>
+                            <i v-if="wechatState.activeSession?.maskId === mask.id && !wechatState.activeSession?.customMask" class="fas fa-check text-blue-500"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <input type="file" ref="groupAvatarInput2" accept="image/*" class="hidden" @change="handleGroupAvatarChange2">
+        
         <!-- 文件上传 Inputs -->
         <input type="file" ref="groupAvatarInput" accept="image/*" class="hidden" @change="handleGroupAvatarChange">
         <input type="file" ref="homeAvatarInput" accept="image/*" class="hidden" @change="handleHomeAvatarChange">
@@ -2060,8 +2103,8 @@
             <div v-if="wechatState.activeNav === 'room'" class="flex-1 flex flex-col bg-[#fdfdfd] absolute inset-0 z-20">
                 <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white/95 backdrop-blur border-b border-gray-100 z-30">
                     <button @click="wechatState.activeNav = 'chat'" class="w-8 h-8 flex items-center justify-center"><i class="fas fa-chevron-left text-lg text-gray-800"></i></button>
-                    <!-- 点击标题显示心声 -->
-                    <div class="flex flex-col items-center cursor-pointer active:opacity-50 absolute left-1/2 -translate-x-1/2" @click="openStatusModal">
+                    <!-- 点击标题显示心声 (群聊屏蔽) -->
+                    <div class="flex flex-col items-center cursor-pointer active:opacity-50 absolute left-1/2 -translate-x-1/2" @click="!wechatState.activeSession.isGroup && openStatusModal()">
                         <h1 class="font-medium text-[16px] text-gray-900 flex items-center gap-1">
                             <span v-if="isTyping">对方正在输入中<span class="typing-dot">.</span><span class="typing-dot">.</span><span class="typing-dot">.</span></span>
                             <span v-else>{{ getCurrentChatTitle() }}</span>
@@ -2101,9 +2144,9 @@
                             
                             <!-- 头像 (双击触发拍一拍) -->
                             <div v-if="getAvatarVisibility(msg, i) !== 'remove'" 
-                                 class="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-gray-100 transition-opacity" 
+                                 class="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-gray-100 transition-opacity cursor-pointer" 
                                  :class="getAvatarVisibility(msg, i) === 'invisible' ? 'opacity-0 pointer-events-none' : ''"
-                                 @dblclick="handleAvatarDblClick(msg)" @contextmenu.prevent="showChatContextMenu($event, msg, i)">
+                                 @click="handleAvatarClick(msg)" @dblclick="handleAvatarDblClick(msg)" @contextmenu.prevent="showChatContextMenu($event, msg, i)">
                                 <img :src="getChatAvatar(msg)" class="w-full h-full object-cover">
                             </div>
                             
@@ -2686,7 +2729,7 @@
                 <div class="flex-1 overflow-y-auto p-5">
                     
                     <!-- 顶部资料卡片 (区分群聊与单聊) -->
-                    <div class="bg-gray-50 rounded-2xl p-4 flex items-center gap-4 mb-6 cursor-pointer active:bg-gray-100 transition" @click="wechatState.activeSession.isGroup ? editGroupProfile() : editCurrentSessionFriend()">
+                    <div class="bg-gray-50 rounded-2xl p-4 flex items-center gap-4 mb-6 cursor-pointer active:bg-gray-100 transition" @click="wechatState.activeSession.isGroup ? openGroupProfileModal() : editCurrentSessionFriend()">
                         <div class="w-16 h-16 rounded-full bg-white overflow-hidden shadow-sm shrink-0">
                             <img :src="wechatState.activeSession.isGroup ? wechatState.activeSession.avatar : getCurrentSessionAvatar()" class="w-full h-full object-cover">
                         </div>
@@ -2700,6 +2743,15 @@
                 
                     <div class="space-y-6">
                         <div class="flex justify-between items-center"><span class="text-sm">查找聊天记录</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
+                        
+                        <!-- 本聊专属面具绑定入口 -->
+                        <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="openSessionMaskModal">
+                            <span class="text-sm">当前身份面具</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-gray-400">{{ getMaskById(wechatState.activeSession.maskId).name }}</span>
+                                <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                            </div>
+                        </div>
                         
                         <!-- 本聊专属头像入口 (群聊屏蔽) -->
                         <div v-if="!wechatState.activeSession.isGroup" class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="openAvatarSetting">
@@ -3321,8 +3373,11 @@ createApp({
             expandedGroups: ['all'],
             groupSelectModal: { show: false },
             addContactModal: { show: false }, chatWizard: { show: false, step: 1, type: 'single', selectedContacts:[], selectedMask: null, isObserver: false },
-            newContact: { name: '', remark: '', username: '', gender: '男', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: '' },
-            masks:[], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: '' },
+            newContact: { name: '', remark: '', username: '', gender: '男', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: 'https://pic1.imgdb.cn/item/69d5d388fe07599d0e204634.jpg' },
+            masks:[], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', bio: '', nudge: '', signature: '', avatar: 'https://pic1.imgdb.cn/item/69d5d388fe07599d0e204634.jpg' },
+            groupProfileModal: { show: false, name: '', remark: '', bio: '', avatar: '' },
+            sessionMaskModal: { show: false },
+            isEditingSessionMask: false,
             masks: [], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', bio: '', nudge: '', signature: '', avatar: '' },
             worldData: [], expandedFolders: [], worldModal: { show: false, type: 'folder', name: '', content: '', parentId: '' }, viewFileModal: { show: false, data: {} },
             worldBinderModal: { show: false, expanded:[] },
@@ -4531,51 +4586,110 @@ createApp({
         },
         clearChatHistory() { this.confirmClearChatHistory(); }, 
         
-        // --- 群聊专属功能 ---
-        editGroupProfile() {
+        // --- 本聊专属面具逻辑 ---
+        openSessionMaskModal() {
+            this.sessionMaskModal.show = true;
+        },
+        switchSessionMask(maskId) {
+            const session = this.wechatState.activeSession;
+            if(session) {
+                session.maskId = maskId;
+                session.customMask = null; // 清除独立修改，回到全局
+                this.saveData();
+                this.sessionMaskModal.show = false;
+                this.showToast('已切换面具');
+            }
+        },
+        editSessionCustomMask() {
+            const session = this.wechatState.activeSession;
+            if(!session) return;
+            // 复制当前面具数据供独立修改
+            const baseMask = this.getMaskById(session.maskId);
+            this.maskForm = JSON.parse(JSON.stringify(baseMask));
+            this.isEditingSessionMask = true;
+            this.sessionMaskModal.show = false;
+            this.maskModal.show = true;
+        },
+        
+        // --- 拦截全局面具保存，处理专属面具 ---
+        saveMask() {
+            if(!this.maskForm.name) return this.showToast('请输入姓名');
+            if(!this.maskForm.avatar) this.maskForm.avatar = 'https://pic1.imgdb.cn/item/69d5d388fe07599d0e204634.jpg';
+            
+            if (this.isEditingSessionMask && this.wechatState.activeSession) {
+                this.wechatState.activeSession.customMask = { ...this.maskForm };
+                this.isEditingSessionMask = false;
+                this.showToast('本聊专属设定已生效');
+            } else {
+                if(this.maskForm.id) { const idx = this.masks.findIndex(m => m.id === this.maskForm.id); if(idx !== -1) this.masks[idx] = { ...this.maskForm }; } 
+                else { this.masks.push({ ...this.maskForm, id: Date.now().toString() }); }
+                this.showToast('面具已保存全局');
+            }
+            this.saveData(); this.maskModal.show = false; 
+        },
+
+        // --- 拦截获取面具方法，优先读专属 ---
+        getMaskById(id) { 
+            if (this.wechatState.activeSession && this.wechatState.activeSession.maskId === id && this.wechatState.activeSession.customMask) {
+                return this.wechatState.activeSession.customMask;
+            }
+            return this.masks.find(m => m.id === id) || { name: '我', avatar: 'https://pic1.imgdb.cn/item/69d5d388fe07599d0e204634.jpg', bio: '' }; 
+        },
+
+        // --- 头像心声点击 ---
+        handleAvatarClick(msg) {
+            const session = this.wechatState.activeSession;
+            if (!msg.isSelf && session.isGroup) {
+                this.currentStatus = msg.status || { action: '无', thought: '暂无心声', outfit: '未知', note: '无', avatar: msg.avatar, name: msg.name };
+                this.statusModal.show = true;
+            }
+        },
+
+        // --- 获取聊天头像方法 ---
+        getChatAvatar(ctx) {
+            let session = this.wechatState.activeSession;
+            if (ctx.targetId && (!session || session.targetId !== ctx.targetId)) {
+                session = this.wechatState.sessions.find(s => s.targetId === ctx.targetId) || session;
+            }
+            if (!session) return ctx.avatar || '';
+
+            if (ctx.isSelf) {
+                return session.customAvatarSelf || this.getMaskById(session.maskId).avatar;
+            } else {
+                if (session.isGroup) return ctx.avatar || session.avatar; // 群聊返回发消息者的头像
+                return session.customAvatarTarget || session.avatar;
+            }
+        },
+
+        // --- 群聊资料弹窗 ---
+        openGroupProfileModal() {
             const session = this.wechatState.activeSession;
             if(!session || !session.isGroup) return;
-            
-            // 依次弹窗修改：群名 -> 群备注 -> 简介，最后询问是否换头像
-            this.showInput('修改群聊名称', session.name, '请输入群名', (name) => {
-                if(name) { session.name = name; this.saveData(); }
-                setTimeout(() => {
-                    this.showInput('修改群备注', session.remark, '相当于仅自己可见的群名', (remark) => {
-                        if(remark !== undefined) { session.remark = remark; this.saveData(); }
-                        setTimeout(() => {
-                            this.showInput('修改群简介', session.bio, '输入背景设定', (bio) => {
-                                if(bio !== undefined) { session.bio = bio; this.saveData(); }
-                                setTimeout(() => {
-                                    this.showConfirm('群资料已保存，是否需要更换群头像？', () => {
-                                        this.$refs.groupAvatarInput.click();
-                                    });
-                                }, 300);
-                            });
-                        }, 300);
-                    });
-                }, 300);
-            });
+            this.groupProfileModal = {
+                show: true,
+                name: session.name,
+                remark: session.remark || '',
+                bio: session.bio || '',
+                avatar: session.avatar
+            };
         },
-        async handleGroupAvatarChange(e) {
+        async handleGroupAvatarChange2(e) {
             const f = e.target.files[0]; if(!f) return;
-            try { 
-                this.wechatState.activeSession.avatar = await compressImage(f, 300); 
-                this.saveData(); 
-                this.showToast('群头像已更新');
-            } catch(e){}
+            try { this.groupProfileModal.avatar = await compressImage(f, 300); } catch(e){}
             e.target.value = '';
         },
-        confirmDismissGroup() {
-            this.showConfirm('确定解散并退出群聊吗？聊天记录将被永久清除。', () => {
-                const sid = this.wechatState.activeSession.id;
-                this.wechatState.sessions = this.wechatState.sessions.filter(s => s.id !== sid);
-                this.wechatState.activeSession = null;
-                this.wechatState.activeNav = 'chat';
+        saveGroupProfile() {
+            const session = this.wechatState.activeSession;
+            if(session) {
+                session.name = this.groupProfileModal.name;
+                session.remark = this.groupProfileModal.remark;
+                session.bio = this.groupProfileModal.bio;
+                session.avatar = this.groupProfileModal.avatar;
                 this.saveData();
-                this.showToast('群聊已解散');
-            });
+                this.showToast('群资料已保存');
+            }
+            this.groupProfileModal.show = false;
         },
-        // --------------------
 
         // --- 美化功能相关逻辑 ---
         updateDynamicStyles() {
@@ -5061,6 +5175,14 @@ createApp({
                 }
             }
             let contextMessages =[];
+            // --- 处理群聊多角色上下文 ---
+            let groupContext = "";
+            let groupJsonRule = "";
+            if (session.isGroup) {
+                const members = session.members.map(id => this.wechatState.friendList.find(f=>f.id===id)).filter(Boolean);
+                groupContext = `\n【群聊模式警报】当前是一个多人群聊，群名叫"${session.name}"，简介:"${session.bio}"。\n群成员包含：\n` + members.map(m => `- ${m.name}: ${m.bio}`).join('\n') + `\n你必须根据语境，决定现在是哪个群成员在说话，或者多个人连续说话！\n必须在 JSON 中输出 "speaker" 字段指明是谁在说话！`;
+                groupJsonRule = `\n  "speaker": "说话的角色名字 (必填，必须是群成员之一)",`;
+            }
             let systemPrompt = `【AI活人感·极致自然扮演增强提示词】
 你现在将以真实人类的身份、语气、思维方式与我对话，全程保持活人感、自然感、生活化、不机械、不官方、不刻板，禁止出现AI特征、机器感、模板化表达。
 
@@ -5090,7 +5212,8 @@ ${readContext}
 IMPORTANT: You must output ONLY a valid JSON object. No Markdown. No other text.
 Structure:
 {
-  "reply":["第一句话", "第二句话", "第三句话"], 
+  ${session.isGroup ? '"speaker": "说话的角色名字 (必填)",' : ''}
+  "reply":["第一句话", "第二句话"], // 必须是数组！
   "action": "当前动作",
   "thought": "你的心声。必须完全代入角色，用第一人称思考！绝对禁止出现'用户'、'玩家'、'AI'、'人工智能'等破坏沉浸感的词汇！",
   "outfit": "当前穿着",
@@ -5194,10 +5317,24 @@ Structure:
                     segments.push("听听这首歌吧~");
                 }
                 
+                let speakerName = session.name;
+                let speakerAvatar = session.avatar;
+                
+                // 如果是群聊，提取发消息的那个人的名字和头像
+                if (session.isGroup && parsed.speaker) {
+                    speakerName = parsed.speaker;
+                    const member = this.wechatState.friendList.find(f => f.name === parsed.speaker || f.remark === parsed.speaker);
+                    if (member) speakerAvatar = member.avatar;
+                } else if (!session.isGroup && friend) {
+                    speakerName = friend.remark || friend.name;
+                    speakerAvatar = friend.avatar;
+                }
+
+                let statusObj = null;
                 if (parsed.thought || parsed.action) {
-                    const statusObj = { time: Date.now(), action: parsed.action, thought: parsed.thought, outfit: parsed.outfit, note: parsed.note };
+                    statusObj = { time: Date.now(), action: parsed.action, thought: parsed.thought, outfit: parsed.outfit, note: parsed.note, avatar: speakerAvatar, name: speakerName };
                     session.status = statusObj;
-                    if(!session.statusHistory) session.statusHistory = [];
+                    if(!session.statusHistory) session.statusHistory =[];
                     session.statusHistory.unshift(statusObj); 
                     this.currentStatus = statusObj; 
                 }
@@ -5364,7 +5501,9 @@ Structure:
                              content: seg.trim(), 
                              isSelf: false, 
                              time: Date.now(), 
-                             avatar: session.avatar,
+                             avatar: speakerAvatar,
+                             name: speakerName,
+                             status: statusObj, // 将这段心声专属绑定给这条消息
                              type: msgType,
                              duration: msgDuration,
                              isExpanded: false
@@ -5711,7 +5850,7 @@ Structure:
         },
         getCurrentSessionId() { const friend = this.wechatState.friendList.find(f => f.id === this.wechatState.activeSession?.targetId); return friend ? (friend.username || friend.id) : 'unknown'; },
         getCurrentSessionBio() { const friend = this.wechatState.friendList.find(f => f.id === this.wechatState.activeSession?.targetId); return friend ? (friend.signature || '暂无个性签名') : ''; },
-        openAddContactModal() { this.newContact = { name: '', remark: '', username: '', gender: '男', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: '' }; this.addContactModal.show = true; },
+        openAddContactModal() { this.newContact = { name: '', remark: '', username: '', gender: '男', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: 'https://pic1.imgdb.cn/item/69d5d388fe07599d0e204634.jpg' }; this.addContactModal.show = true; },
         editFriend(friend) { this.newContact = { ...friend }; this.addContactModal.show = true; },
         triggerAddContactAvatar() { this.$refs.addContactAvatarInput.click(); },
         async handleAddContactAvatar(e) { const f = e.target.files[0]; if(!f) return; try { this.newContact.avatar = await compressImage(f, 300); } catch(e){} },
@@ -5771,7 +5910,7 @@ Structure:
                 this.maskForm = { ...mask }; 
             } else { 
                 this.maskForm = { 
-                    id: null, name: '', remark: '', username: '', gender: '女', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: '' 
+                    id: null, name: '', remark: '', username: '', gender: '女', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: 'https://pic1.imgdb.cn/item/69d5d388fe07599d0e204634.jpg' 
                 }; 
             } 
             this.maskModal.show = true; 
