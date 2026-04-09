@@ -4219,26 +4219,7 @@ createApp({
 
                 } catch(e) { console.error(e); }
             }, 3000 + Math.random() * 3000);
-        },
-        toggleDiaryMultiSelect() {
-            this.diaryState.isMultiSelect = !this.diaryState.isMultiSelect;
-            this.diaryState.selectedIds = [];
-        },
-        toggleSelectDiary(id) {
-            const idx = this.diaryState.selectedIds.indexOf(id);
-            if(idx > -1) this.diaryState.selectedIds.splice(idx, 1);
-            else this.diaryState.selectedIds.push(id);
-        },
-        deleteSelectedDiaries() {
-            if(this.diaryState.selectedIds.length === 0) return;
-            this.showConfirm(`确定删除选中的 ${this.diaryState.selectedIds.length} 篇日记？`, () => {
-                this.diaries = this.diaries.filter(d => !this.diaryState.selectedIds.includes(d.id));
-                this.diaryState.selectedIds = [];
-                this.diaryState.isMultiSelect = false;
-                this.saveData();
-                this.showToast('已删除');
-            });
-        },
+        },        
 
         // --- 音乐管理与播放逻辑 ---
         showMusicModal() {
@@ -4630,12 +4611,7 @@ createApp({
             }
         },
         clearChatHistory() { this.confirmClearChatHistory(); }, 
-        // --- 确保安全放入 methods 内部的新方法 ---
-        openSessionMaskModal() {
-            this.sessionMaskModal.show = true;
-        },
-        switchSessionMask(maskId) {
-            const session = this.wechatState.activeSession;
+        // --- 确保安全放入 methods 内部的新方法 ---        
             if(session) {
                 session.maskId = maskId;
                 session.customMask = null; 
@@ -5485,19 +5461,7 @@ Structure:
                 } else if (!session.isGroup && friend) {
                     speakerName = friend.remark || friend.name;
                     speakerAvatar = friend.avatar;
-                }
-                        // 兜底：如果AI忘了输出speaker，默认算作第一个群成员说的
-                        const member = this.wechatState.friendList.find(f => f.id === session.members[0]);
-                        if (member) {
-                            speakerName = member.remark || member.name;
-                            speakerAvatar = member.avatar;
-                        }
-                    }
-                } else if (!session.isGroup && friend) {
-                    speakerName = friend.remark || friend.name;
-                    speakerAvatar = friend.avatar;
-                }
-
+                }                        
                 let statusObj = null;
                 if (parsed.thought || parsed.action) {
                     statusObj = { time: Date.now(), action: parsed.action, thought: parsed.thought, outfit: parsed.outfit, note: parsed.note, avatar: speakerAvatar, name: speakerName };
