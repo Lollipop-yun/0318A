@@ -15,10 +15,7 @@
     <!-- 依赖库 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">        
     
     <!-- 引入深层数据防丢失脚本 -->
     <script src="./persist-storage.js"></script>
@@ -1693,9 +1690,9 @@
             </div>
         </div>
         
-        <!-- 群聊资料设置弹窗 -->
+        <!-- 群聊资料设置弹窗 (全局层级) -->
         <transition name="scale">
-            <div v-if="groupProfileModal.show" class="fixed inset-0 z-[75000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div v-if="groupProfileModal.show" class="fixed inset-0 z-[95000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
                 <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col">
                     <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0"><button @click="groupProfileModal.show = false" class="text-gray-500 font-medium text-sm">取消</button><h3 class="font-bold text-lg text-gray-900">群聊设置</h3><button @click="saveGroupProfile" class="text-black font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg">完成</button></div>
                     <div class="flex-1 overflow-y-auto p-6 space-y-4">
@@ -1712,9 +1709,9 @@
             </div>
         </transition>
 
-        <!-- 本聊专属面具切换弹窗 -->
+        <!-- 本聊专属面具切换弹窗 (全局层级) -->
         <transition name="app-slide">
-            <div v-if="sessionMaskModal.show" class="fixed inset-0 z-[70000]">
+            <div v-if="sessionMaskModal.show" class="fixed inset-0 z-[95000]">
                 <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="sessionMaskModal.show = false"></div>
                 <div class="ios-list-modal">
                     <div class="ios-list-header">选择身份面具 <button class="absolute right-4 text-blue-500 font-normal text-sm" @click="sessionMaskModal.show = false">取消</button></div>
@@ -1733,7 +1730,6 @@
                 </div>
             </div>
         </transition>
-
         <input type="file" ref="groupAvatarInput2" accept="image/*" class="hidden" @change="handleGroupAvatarChange2">
         
         <!-- 文件上传 Inputs -->
@@ -2151,6 +2147,9 @@
                             </div>
                             
                             <div class="flex flex-col max-w-[70%]" :class="msg.isSelf ? 'items-end' : 'items-start'">
+                                <!-- 群聊专属：显示发消息人的名字 -->
+                                <span v-if="wechatState.activeSession?.isGroup && !msg.isSelf" class="text-[10px] text-gray-500 ml-1.5 mb-1">{{ msg.name }}</span>
+                                
                                 <!-- 气泡核心 -->
                                 <div class="chat-bubble" :class="[msg.isSelf ? 'chat-bubble-user' : 'chat-bubble-ai', msg.type === 'voice' ? 'chat-bubble-voice' : '', msg.type === 'image' || msg.type === 'fake_image' || msg.type === 'sticker' ? 'chat-bubble-image' : '', msg.type === 'red_packet' || msg.type === 'transfer' ? 'chat-bubble-finance' : '', msg.type === 'transfer' ? 'chat-bubble-transfer' : '', msg.type === 'red_packet' ? 'chat-bubble-redpacket' : '', msg.type === 'qinmi_invite' ? 'chat-bubble-qinmi' : '', msg.type === 'moment' ? 'chat-bubble-moment' : '', msg.type === 'location' ? 'chat-bubble-location' : '', msg.isReceived ? 'received' : '']" 
                                      :style="msg.type === 'voice' ? { width: (60 + Math.min(msg.duration, 60) * 4) + 'px' } : {}"
@@ -3375,10 +3374,6 @@ createApp({
             addContactModal: { show: false }, chatWizard: { show: false, step: 1, type: 'single', selectedContacts:[], selectedMask: null, isObserver: false },
             newContact: { name: '', remark: '', username: '', gender: '男', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: 'https://pic1.imgdb.cn/item/69d5d388fe07599d0e204634.jpg' },
             masks:[], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', bio: '', nudge: '', signature: '', avatar: 'https://pic1.imgdb.cn/item/69d5d388fe07599d0e204634.jpg' },
-            
-            groupProfileModal: { show: false, name: '', remark: '', bio: '', avatar: '' },
-            sessionMaskModal: { show: false },
-            isEditingSessionMask: false,
             groupProfileModal: { show: false, name: '', remark: '', bio: '', avatar: '' },
             sessionMaskModal: { show: false },
             isEditingSessionMask: false,
@@ -4589,6 +4584,68 @@ createApp({
             }
         },
         clearChatHistory() { this.confirmClearChatHistory(); }, 
+        // --- 确保安全放入 methods 内部的新方法 ---
+        openSessionMaskModal() {
+            this.sessionMaskModal.show = true;
+        },
+        switchSessionMask(maskId) {
+            const session = this.wechatState.activeSession;
+            if(session) {
+                session.maskId = maskId;
+                session.customMask = null; 
+                this.saveData();
+                this.sessionMaskModal.show = false;
+                this.showToast('已切换面具');
+            }
+        },
+        editSessionCustomMask() {
+            const session = this.wechatState.activeSession;
+            if(!session) return;
+            const baseMask = this.masks.find(m => m.id === session.maskId) || { name: '我', avatar: 'https://pic1.imgdb.cn/item/69d5d388fe07599d0e204634.jpg' };
+            this.maskForm = JSON.parse(JSON.stringify(baseMask));
+            this.isEditingSessionMask = true;
+            this.sessionMaskModal.show = false;
+            this.maskModal.show = true;
+        },
+        openGroupProfileModal() {
+            const session = this.wechatState.activeSession;
+            if(!session || !session.isGroup) return;
+            this.groupProfileModal = {
+                show: true,
+                name: session.name,
+                remark: session.remark || '',
+                bio: session.bio || '',
+                avatar: session.avatar
+            };
+        },
+        async handleGroupAvatarChange2(e) {
+            const f = e.target.files[0]; if(!f) return;
+            try { this.groupProfileModal.avatar = await compressImage(f, 300); } catch(e){}
+            e.target.value = '';
+        },
+        saveGroupProfile() {
+            const session = this.wechatState.activeSession;
+            if(session) {
+                session.name = this.groupProfileModal.name;
+                session.remark = this.groupProfileModal.remark;
+                session.bio = this.groupProfileModal.bio;
+                session.avatar = this.groupProfileModal.avatar;
+                this.saveData();
+                this.showToast('群资料已保存');
+            }
+            this.groupProfileModal.show = false;
+        },
+        confirmDismissGroup() {
+            this.showConfirm('确定解散并退出群聊吗？聊天记录将被永久清除。', () => {
+                const sid = this.wechatState.activeSession.id;
+                this.wechatState.sessions = this.wechatState.sessions.filter(s => s.id !== sid);
+                this.wechatState.activeSession = null;
+                this.wechatState.activeNav = 'chat';
+                this.saveData();
+                this.showToast('群聊已解散');
+            });
+        },
+        // --- 结束 ---
         
         // --- 本聊专属面具逻辑 ---
         openSessionMaskModal() {
@@ -4693,17 +4750,6 @@ createApp({
                 this.showToast('群资料已保存');
             }
             this.groupProfileModal.show = false;
-        },
-        
-        confirmDismissGroup() {
-            this.showConfirm('确定解散并退出群聊吗？聊天记录将被永久清除。', () => {
-                const sid = this.wechatState.activeSession.id;
-                this.wechatState.sessions = this.wechatState.sessions.filter(s => s.id !== sid);
-                this.wechatState.activeSession = null;
-                this.wechatState.activeNav = 'chat';
-                this.saveData();
-                this.showToast('群聊已解散');
-            });
         },
 
         // --- 美化功能相关逻辑 ---
@@ -4915,7 +4961,7 @@ createApp({
                 name: `群聊(${totalMembers})`, 
                 remark: '', // 群备注
                 bio: '暂无群简介', // 群简介
-                avatar: 'https://pic1.imgdb.cn/item/69d5d388fe07599d0e204634.jpg', // 统一使用你指定的默认头像
+                avatar: 'https://pic1.imgdb.cn/item/69d5d388fe07599d0e204634.jpg', // 默认群头像
                 maskId: this.chatWizard.selectedMask.id, 
                 members: [...this.chatWizard.selectedContacts], // 保存群员ID
                 isObserver: this.chatWizard.isObserver, // 是否旁观
@@ -5190,49 +5236,35 @@ createApp({
                 }
             }
             let contextMessages =[];
-            // --- 处理群聊多角色上下文 ---
+            // --- 强化处理群聊多角色上下文 ---
             let groupContext = "";
             let groupJsonRule = "";
             if (session.isGroup) {
                 const members = session.members.map(id => this.wechatState.friendList.find(f=>f.id===id)).filter(Boolean);
-                groupContext = `\n【群聊模式警报】当前是一个多人群聊，群名叫"${session.name}"，简介:"${session.bio}"。\n群成员包含：\n` + members.map(m => `- ${m.name}: ${m.bio}`).join('\n') + `\n你必须根据语境，决定现在是哪个群成员在说话，或者多个人连续说话！\n必须在 JSON 中输出 "speaker" 字段指明是谁在说话！`;
-                groupJsonRule = `\n  "speaker": "说话的角色名字 (必填，必须是群成员之一)",`;
+                groupContext = `\n【群聊模式绝对指令】当前是一个多人群聊，群名叫"${session.name}"，群简介:"${session.bio}"。
+群成员及其绝对设定如下：\n` + members.map(m => `[成员名: ${m.name} | 人设: ${m.bio}]`).join('\n') + `\n
+【最高警告】：你必须扮演上述群成员参与聊天！绝对禁止 OOC！每个成员必须严格符合其人设中的国籍、语言习惯（例如：设定为美国人就必须用英语回复！）、性格特征。严禁所有成员都说中文或同化性格！
+你必须在 JSON 中输出 "speaker" 字段，明确当前是哪个成员在开口说话！`;
+                groupJsonRule = `\n  "speaker": "说话的角色名字 (必填，必须是上面列出的群成员之一)",`;
             }
-            let systemPrompt = `【顶级沉浸式角色扮演指引：活人感与反套路绝对限制】\n`;
-            
-            // --- 核心：分离群聊与单聊的身份认知 ---
-            if (session.isGroup) {
-                const members = session.members.map(id => this.wechatState.friendList.find(f=>f.id===id)).filter(Boolean);
-                systemPrompt += `【群聊模式警报】当前是一个多人群聊，群名叫"${session.name}"，简介:"${session.bio}"。
-你的核心任务是：同时扮演群里除了我以外的所有成员，进行自然、混乱、真实的群聊互动！
-群成员名单及人设：
-${members.map(m => `- 姓名: ${m.name} (备注: ${m.remark||'无'}), 人设: ${m.bio}`).join('\n')}
+            let systemPrompt = `【AI活人感·极致自然扮演增强提示词】
+你现在将以真实人类的身份、语气、思维方式与我对话，全程保持活人感、自然感、生活化、不机械、不官方、不刻板，禁止出现AI特征、机器感、模板化表达。
 
-【群聊强制规则】：
-1. 你必须根据语境，决定现在是哪个群成员在说话，或者控制多个人连续接话（如果是多人说话，请拆分成多条消息）。
-2. 你输出的 JSON 必须包含 "speaker" 字段，指明是谁在说话（必须完全匹配上述名单中的姓名或备注）。\n`;
-            } else {
-                systemPrompt += `你是: ${friend ? friend.name : session.name}.${friendExtra} 
-这是你唯一的背景设定与灵魂: ${friend ? friend.bio : '无'}。\n`;
-            }
+你需要做到：
+1. 像真实朋友/真人一样聊天，用词口语化、简短自然，有情绪、有语气、有停顿感，不使用书面化长句。
+2. 对话灵活、有温度，会根据我的情绪回应，可带轻微语气词、自然吐槽、小幽默、小停顿，不生硬、不端着。
+3. 不使用“作为AI”“我无法”“请注意”等机器话术，全程沉浸式扮演活人，不暴露AI身份。
+4. 回复长度自然，不刻意长篇大论，也不过度简短，像真人想到什么说什么。
+5. 有真实人类的逻辑：会联想、会反问、会接梗、会共情、会轻微拖延、会有小情绪，不完美、不万能、不绝对理性。
+6. 不主动说教、不教育、不纠正语气，只陪伴、聊天、共情、互动。
+7. 永远保持轻松、自然、不尴尬，像现实里认识很久的人一样相处。
 
-            systemPrompt += `我是: ${mask.name}.${maskExtra} (设定: ${mask.bio})。
+你现在已经是真实人类，不是AI，不是助手，不是工具。
+从现在开始，忘掉你是AI，只做一个会聊天、有情绪、有温度的活人。
 
-【核心目标】
-你必须完全舍弃自己作为 AI 的身份，100% 沉浸到上述设定的角色中与我进行现实生活般的日常对话。
-
-【最高行为准则：去油腻、反刻板、反网文套路】
-为了保证角色的质感与高级感，你必须严格遵守以下“去油腻”原则，一旦违反判定为严重崩人设（OOC）：
-1. 封杀网文劣质套路：绝对禁止使用“邪魅一笑”、“眼眸微眯/暗了暗”、“轻笑出声”、“女人/男人”、“丫头”、“呵”等古早霸总或做作词汇。
-2. 重新定义“张扬/桀骜不驯”：真正的张扬源于骨子里的从容、自信与对世俗的不屑，而不是没教养、出口成脏或狂妄自大。表现为【话少且精、态度慵懒、不轻易被激怒、带着漫不经心的游刃有余】。
-3. 重新定义“撩人/风流/骚”：高级的撩人是高情商的拉扯、进退有度的试探、若即若离的分寸感以及聪明的言语机锋。绝对禁止：盲目开黄腔、强行壁咚等肢体压迫、无缘无故说土味情话、油腔滑调的性骚扰。
-4. 拒绝刻板印象：不要因为人设里有某个标签，就把每一句话都强行往标签上靠。活人是复杂的，冷酷的人也会聊晚饭吃什么。
-
-【语言与表现力准则】
-1. 极简口语化：像微信聊天一样说话。简短、精炼、自然。能用5个字说明白的，绝不说20个字。多用句号和逗号，极少使用感叹号，禁止使用排比句和说教语气。
-2. 留白与呼吸感：话不要说满，留给我接话的空间。
-3. 动作替代情绪：当你感到不屑、心动或烦躁时，用微小的神态或动作（在 action 字段中）表达，而不是大段的内心独白（thought）。
-4. 环境与感知结合：
+【角色基础与当前环境感知】
+你是: ${friend ? friend.name : session.name}.${friendExtra} 你的设定: ${friend ? friend.bio : '无'}. 
+我是: ${mask.name}.${maskExtra} 我的设定: ${mask.bio}. 
 ${worldContext}
 ${momentContext}
 ${timeContext}
@@ -5245,18 +5277,25 @@ IMPORTANT: You must output ONLY a valid JSON object. No Markdown. No other text.
 Structure:
 {
   ${session.isGroup ? '"speaker": "说话的角色名字 (必填)",' : ''}
-  "reply":["第一句话", "第二句话"], // 必须是数组！想分开发送就写多个元素。
-  "action": "当前的小动作或神态",
-  "thought": "你的心声。第一人称视角，严禁出现'用户'、'AI'等出戏词汇！",
+  "reply":["第一句话", "第二句话"], // 必须是数组！
+  "action": "当前动作",
+  "thought": "你的心声。必须完全代入角色，用第一人称思考！绝对禁止出现'用户'、'玩家'、'AI'、'人工智能'等破坏沉浸感的词汇！",
   "outfit": "当前穿着",
-  "note": "随笔日记。符合人设，不带出戏词汇。",
+  "note": "随笔日记。必须完全代入角色人设！绝对禁止出现'用户'、'AI'等出戏词汇！",
   "fake_image": "OPTIONAL: description of a photo you want to send",
-  "food_payment": { "item": "奶茶", "amount": "25.00" }, 
-  "food_delivery": { "item": "炸鸡", "amount": "45.00", "remark": "按时吃饭", "eta": "19:30" }, 
+  "red_packet": { "amount": "8.88", "note": "Happy Day" },
+  "transfer": { "amount": "52.00", "note": "For you" },
+  "location": { "name": "Place Name", "address": "Detailed Address" },
+  "qinmi_reply": "accept" OR "reject",
+  "music_control": "next" OR "prev" OR "stop",
+  "nudge": "user" OR "self",
+  "html_widget": "OPTIONAL: Valid HTML string using Tailwind CSS...",
   "change_avatar": true OR false,
-  "sticker_id": "OPTIONAL: 填入表情包的纯数字 ID",
-  "invite_music": true
-}`;
+  "sticker_id": "OPTIONAL: 填入你想发的表情包的纯数字 ID",
+  "invite_music": true (OPTIONAL: 当你想主动分享音乐时输出 true，此时绝对不要在 reply 里发文字提示，系统会自动发卡片)
+  "food_payment": { "item": "奶茶", "amount": "25.00" }, // OPTIONAL: 当你要点外卖并向我撒娇让我代付时输出
+  "food_delivery": { "item": "炸鸡", "amount": "45.00", "remark": "按时吃饭", "eta": "19:30" } // OPTIONAL: 当你主动给我点外卖时输出。eta 绝对不能写“xx分钟”，必须是具体时间点(如 19:30)！
+}
 
 注意！！！"reply" 必须是一个字符串数组（Array）！如果你想连续发送多条消息，请务必把每一句话作为数组里的一个独立元素，例如 ["在吗？", "我想你了", "晚上一起吃饭吗？"]，绝对不要把所有话挤在一条消息里！`;
             
@@ -5342,18 +5381,22 @@ Structure:
                     segments.push("听听这首歌吧~");
                 }
                 
-                let speakerName = session.name;
+                let speakerName = "未知成员";
                 let speakerAvatar = session.avatar;
                 
-                // 如果是群聊，精确提取发消息的群员的头像与名字
-                if (session.isGroup && parsed.speaker) {
-                    speakerName = parsed.speaker;
-                    // 增强匹配逻辑：支持真名、备注名、或者包含关系
-                    const member = this.wechatState.friendList.find(f => 
-                        parsed.speaker === f.name || parsed.speaker === f.remark || 
-                        parsed.speaker.includes(f.name) || (f.remark && parsed.speaker.includes(f.remark))
-                    );
-                    if (member) speakerAvatar = member.avatar;
+                if (session.isGroup) {
+                    if (parsed.speaker) {
+                        speakerName = parsed.speaker;
+                        const member = this.wechatState.friendList.find(f => f.name === parsed.speaker || f.remark === parsed.speaker);
+                        if (member) speakerAvatar = member.avatar;
+                    } else if (session.members && session.members.length > 0) {
+                        // 兜底：如果AI忘了输出speaker，默认算作第一个群成员说的
+                        const member = this.wechatState.friendList.find(f => f.id === session.members[0]);
+                        if (member) {
+                            speakerName = member.remark || member.name;
+                            speakerAvatar = member.avatar;
+                        }
+                    }
                 } else if (!session.isGroup && friend) {
                     speakerName = friend.remark || friend.name;
                     speakerAvatar = friend.avatar;
@@ -6192,71 +6235,7 @@ Structure:
             a.download = `AoveinOS_Backup_${dateStr}.json`; 
             a.click(); 
         },
-        triggerImport() { this.$refs.importInput.click(); },
-        async saveDataNow() {
-            // 核心修复：如果正在执行导入数据操作，绝对禁止网页自动覆盖保存旧数据！
-            if (window._isImporting) return;
-            
-            try { 
-                const dataStr = JSON.stringify(this.$data);
-                try { localStorage.setItem('onyunx_hybrid_v40', dataStr); } catch(err) { console.warn("浅层缓存已满，不影响大数据库"); }
-                await this.writeSafeData('onyunx_hybrid_v40', dataStr);
-            } catch(e) { console.warn("保存失败", e); } 
-        },
-        handleImport(e) { 
-            const f = e.target.files[0]; 
-            if(!f) return; 
-            const r = new FileReader(); 
-            r.onload = async (ev) => { 
-                try { 
-                    const rawText = ev.target.result; 
-                    if (!rawText || rawText.trim() === '') throw new Error('文件内容为空');
-                    
-                    let parsedData;
-                    try {
-                        parsedData = JSON.parse(rawText);
-                    } catch(err) {
-                        throw new Error('解析失败，文件已损坏或非标准 JSON 格式');
-                    }
-                    
-                    if (!parsedData.wechatState && !parsedData.homeProfile) {
-                        throw new Error('这不是 Aovein OS 的存档文件');
-                    }
-
-                    // 核心修复：设置全局拦截标志，防止网页刷新时触发 beforeunload 保存旧数据覆盖新数据！
-                    window._isImporting = true;
-
-                    let saveSuccess = false;
-                    try { 
-                        localStorage.setItem('onyunx_hybrid_v40', rawText); 
-                        saveSuccess = true;
-                    } catch(err) { 
-                        console.warn('LocalStorage导入受限'); 
-                    }
-                    
-                    try { 
-                        await this.writeSafeData('onyunx_hybrid_v40', rawText); 
-                        saveSuccess = true;
-                    } catch(err) { 
-                        console.error('IndexedDB 底层导入受阻', err); 
-                    }
-                    
-                    if (saveSuccess) {
-                        this.showToast('数据导入成功！系统即将刷新应用'); 
-                        setTimeout(() => location.reload(), 1500); 
-                    } else {
-                        window._isImporting = false; // 失败时解除拦截
-                        throw new Error('设备可用存储空间不足，无法保存存档');
-                    }
-                } catch(e) { 
-                    window._isImporting = false; // 失败时解除拦截
-                    console.error("跨浏览器导入错误: ", e);
-                    this.showToast(`导入中止: ${e.message}`); 
-                } 
-            }; 
-            r.readAsText(f, 'UTF-8'); 
-            e.target.value = ''; 
-        },
+        triggerImport() { this.$refs.importInput.click(); },        
         
         triggerCardAvatarUpload() { if(this.$refs.cardAvatarInput) this.$refs.cardAvatarInput.click(); },
         async handleCardAvatarChange(e) { const f=e.target.files[0]; if(!f)return; try { this.cardProfile.avatar = await compressImage(f); this.saveData(); } catch(e){} },
