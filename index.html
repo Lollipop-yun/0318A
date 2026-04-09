@@ -433,7 +433,7 @@
     </div>
 </div>
 
-<div id="app" v-cloak class="max-w-md mx-auto h-screen bg-[#f3f4f6] flex flex-col relative overflow-hidden shadow-2xl border-x border-gray-200" style="display: none;" @click="closeAllMenus"
+<div id="app" v-cloak class="max-w-md mx-auto h-screen bg-[#f3f4f6] flex flex-col relative overflow-hidden shadow-2xl border-x border-gray-200" @click="closeAllMenus"
      :style="{ '--custom-font': themeConfig.fontFamily ? themeConfig.fontFamily : 'inherit', 'color': themeConfig.fontColor || '#000000', 'font-size': (themeConfig.fontSize || 1) + 'em' }">
 
     <!-- 全局弹窗 (Z-Index 调高) -->
@@ -5449,19 +5449,7 @@ Structure:
                         } else {
                             speakerName = parsed.speaker; // 找不到就原样输出，总比显示群名好
                         }
-                    } 
-                    // 兜底：如果AI连speaker都没输出，抓取群里的第一个人顶替，绝对不能显示群聊名字
-                    if (speakerName === session.name && session.members && session.members.length > 0) {
-                        const member = this.wechatState.friendList.find(f => f.id === session.members[0]);
-                        if (member) {
-                            speakerName = member.remark || member.name;
-                            speakerAvatar = member.avatar;
-                        }
-                    }
-                } else if (!session.isGroup && friend) {
-                    speakerName = friend.remark || friend.name;
-                    speakerAvatar = friend.avatar;
-                }                        
+                    }                        
                 let statusObj = null;
                 if (parsed.thought || parsed.action) {
                     statusObj = { time: Date.now(), action: parsed.action, thought: parsed.thought, outfit: parsed.outfit, note: parsed.note, avatar: speakerAvatar, name: speakerName };
