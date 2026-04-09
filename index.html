@@ -435,15 +435,18 @@
 
 <div id="app" v-cloak class="max-w-md mx-auto h-screen bg-[#f3f4f6] flex flex-col relative overflow-hidden shadow-2xl border-x border-gray-200" style="display: none;" @click="closeAllMenus"
      :style="{ '--custom-font': themeConfig.fontFamily ? themeConfig.fontFamily : 'inherit', 'color': themeConfig.fontColor || '#000000', 'font-size': (themeConfig.fontSize || 1) + 'em' }">
-     
-     <!-- 群聊资料设置弹窗 (全局绝对置顶，新增群员管理) -->
+
+    <!-- 全局弹窗 (Z-Index 调高) -->
+    <transition name="fade"><div v-if="toast.show" class="fixed inset-0 z-[90000] flex items-center justify-center pointer-events-none"><div class="bg-black/70 text-white px-5 py-3 rounded-xl shadow-lg backdrop-blur-sm text-sm font-medium">{{ toast.message }}</div></div></transition>
+    
+    <!-- 群聊资料设置弹窗 (全局绝对顶层) -->
     <transition name="scale">
-        <div v-if="groupProfileModal.show" class="fixed inset-0 z-[99000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+        <div v-if="groupProfileModal.show" class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div class="bg-white w-[85%] max-h-[85vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col">
                 <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10"><button @click="groupProfileModal.show = false" class="text-gray-500 font-medium text-sm">取消</button><h3 class="font-bold text-lg text-gray-900">群聊设置</h3><button @click="saveGroupProfile" class="text-black font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg">完成</button></div>
                 <div class="flex-1 overflow-y-auto p-5 space-y-4">
                     <div class="flex flex-col items-center gap-2">
-                        <div class="w-20 h-20 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden cursor-pointer" @click="$refs.groupAvatarInput2.click()">
+                        <div class="w-16 h-16 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden cursor-pointer" @click="$refs.groupAvatarInput2.click()">
                             <img :src="groupProfileModal.avatar" class="w-full h-full object-cover">
                         </div>
                     </div>
@@ -452,16 +455,20 @@
                     <div><label class="text-xs text-gray-500 ml-1 mb-1 block">群简介 (AI背景设定)</label><textarea v-model="groupProfileModal.bio" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none h-20 resize-none"></textarea></div>
                     
                     <!-- 新增：群成员管理区 -->
-                    <div class="border-t border-gray-100 pt-4">
-                        <div class="flex justify-between items-center mb-3">
-                            <span class="text-xs text-gray-500 font-bold">群成员 ({{ wechatState.activeSession?.members?.length || 0 }})</span>
-                            <button @click="openGroupAddMember" class="text-xs bg-black text-white px-2.5 py-1 rounded-lg font-bold active:scale-95"><i class="fas fa-plus"></i> 邀请</button>
-                        </div>
-                        <div class="flex flex-wrap gap-3 pb-2">
-                            <div v-for="mid in wechatState.activeSession?.members" :key="mid" class="flex flex-col items-center gap-1 relative group w-12">
-                                <div class="w-10 h-10 rounded-full bg-gray-100 overflow-hidden border border-gray-200 shadow-sm"><img :src="getFriendAvatar(mid)" class="w-full h-full object-cover"></div>
-                                <span class="text-[9px] text-gray-600 w-full truncate text-center font-bold">{{ getFriendName(mid) }}</span>
-                                <div @click="kickGroupMember(mid)" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[8px] cursor-pointer shadow-md active:scale-90"><i class="fas fa-times"></i></div>
+                    <div>
+                        <label class="text-xs text-gray-500 ml-1 mb-1 block">群成员 ({{wechatState.activeSession?.members?.length || 0}}人)</label>
+                        <div class="flex flex-wrap gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                            <!-- 成员列表 -->
+                            <div v-for="mid in wechatState.activeSession?.members" :key="mid" class="flex flex-col items-center gap-1 relative w-[42px]">
+                                <div class="w-10 h-10 rounded-xl overflow-hidden bg-white border border-gray-200">
+                                    <img :src="getFriendAvatar(mid)" class="w-full h-full object-cover">
+                                </div>
+                                <span class="text-[9px] text-gray-600 w-full text-center truncate">{{ getFriendName(mid) }}</span>
+                                <div @click="removeGroupMember(mid)" class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] cursor-pointer z-10 shadow-sm font-bold">×</div>
+                            </div>
+                            <!-- 邀请入群按钮 -->
+                            <div @click="openAddGroupMemberModal" class="w-10 h-10 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 cursor-pointer active:bg-gray-200">
+                                <i class="fas fa-plus text-sm"></i>
                             </div>
                         </div>
                     </div>
@@ -470,9 +477,9 @@
         </div>
     </transition>
 
-    <!-- 本聊专属面具切换弹窗 (全局绝对置顶) -->
+    <!-- 本聊专属面具切换弹窗 (全局绝对顶层) -->
     <transition name="app-slide">
-        <div v-if="sessionMaskModal.show" class="fixed inset-0 z-[99000]">
+        <div v-if="sessionMaskModal.show" class="fixed inset-0 z-[100000]">
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="sessionMaskModal.show = false"></div>
             <div class="ios-list-modal pb-safe">
                 <div class="ios-list-header">选择身份面具 <button class="absolute right-4 text-blue-500 font-normal text-sm" @click="sessionMaskModal.show = false">取消</button></div>
@@ -491,9 +498,7 @@
             </div>
         </div>
     </transition>
-
-    <!-- 全局弹窗 (Z-Index 调高) -->
-    <transition name="fade"><div v-if="toast.show" class="fixed inset-0 z-[90000] flex items-center justify-center pointer-events-none"><div class="bg-black/70 text-white px-5 py-3 rounded-xl shadow-lg backdrop-blur-sm text-sm font-medium">{{ toast.message }}</div></div></transition>
+    
     <!-- ================= 移至全局的一起读组件 ================= -->
     <!-- 一起读选择小说弹窗 -->
     <transition name="scale">
@@ -1148,7 +1153,7 @@
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="forwardModal.show = false"></div>
             <div class="ios-list-modal h-[80vh]">
                 <div class="ios-list-header">
-                    {{ forwardModal.mode === 'qinmi' ? '选择好友开通亲密付' : (forwardModal.mode === 'moment' ? '发送给...' : '转发给...') }}
+                    {{ forwardModal.mode === 'qinmi' ? '选择好友开通亲密付' : (forwardModal.mode === 'moment' ? '发送给...' : (forwardModal.mode === 'addGroupMember' ? '邀请好友入群' : '转发给...')) }}
                     <button class="absolute right-4 text-gray-500 font-normal text-sm" @click="forwardModal.show = false">取消</button>
                 </div>
                 <div class="ios-list-content">
@@ -4634,20 +4639,6 @@ createApp({
                 avatar: session.avatar
             };
         },
-        kickGroupMember(mid) {
-            this.showConfirm('确定将该成员移出群聊吗？', () => {
-                const session = this.wechatState.activeSession;
-                if (!session || !session.members) return;
-                session.members = session.members.filter(id => id !== mid);
-                this.saveData();
-                this.showToast('已移出该成员');
-            });
-        },
-        openGroupAddMember() {
-            this.forwardModal.mode = 'add_group_member';
-            this.forwardModal.show = true;
-            this.groupProfileModal.show = false; // 暂时收起群资料，防止遮挡
-        },
         async handleGroupAvatarChange2(e) {
             const f = e.target.files[0]; if(!f) return;
             try { this.groupProfileModal.avatar = await compressImage(f, 300); } catch(e){}
@@ -4750,7 +4741,37 @@ createApp({
                 if (session.isGroup) return ctx.avatar || session.avatar; // 群聊返回发消息者的头像
                 return session.customAvatarTarget || session.avatar;
             }
-        },        
+        },
+
+        // --- 群聊资料弹窗 ---
+        openGroupProfileModal() {
+            const session = this.wechatState.activeSession;
+            if(!session || !session.isGroup) return;
+            this.groupProfileModal = {
+                show: true,
+                name: session.name,
+                remark: session.remark || '',
+                bio: session.bio || '',
+                avatar: session.avatar
+            };
+        },
+        async handleGroupAvatarChange2(e) {
+            const f = e.target.files[0]; if(!f) return;
+            try { this.groupProfileModal.avatar = await compressImage(f, 300); } catch(e){}
+            e.target.value = '';
+        },
+        saveGroupProfile() {
+            const session = this.wechatState.activeSession;
+            if(session) {
+                session.name = this.groupProfileModal.name;
+                session.remark = this.groupProfileModal.remark;
+                session.bio = this.groupProfileModal.bio;
+                session.avatar = this.groupProfileModal.avatar;
+                this.saveData();
+                this.showToast('群资料已保存');
+            }
+            this.groupProfileModal.show = false;
+        },
 
         // --- 美化功能相关逻辑 ---
         updateDynamicStyles() {
@@ -5236,18 +5257,18 @@ createApp({
                 }
             }
             let contextMessages =[];
-            // --- 终极群聊多角色上下文约束 ---
+            // --- 终极强化处理群聊上下文 (强硬约束国籍与语言) ---
             let groupContext = "";
             let groupJsonRule = "";
             if (session.isGroup) {
                 const members = session.members.map(id => this.wechatState.friendList.find(f=>f.id===id)).filter(Boolean);
-                groupContext = `\n【群聊模式绝对指令】当前是一个多人群聊，群名叫"${session.name}"，群简介:"${session.bio}"。
-群内【其他角色】及其绝对设定如下（绝不包含我本人）：\n` + members.map(m => `[角色名: ${m.name} | 国籍/人设: ${m.bio}]`).join('\n') + `\n
-【最高死亡警告】：
-1. 你本次生成只能选择扮演上述名单中的【某一个角色】发言！绝对禁止扮演我（${mask.name}）！
-2. 必须严格符合该角色的国籍与语言习惯（例如：人设是美国人，就必须用纯正英语回复，绝对不能说中文！）。
-3. 必须在 JSON 中输出 "speaker" 字段，严格填入你本次扮演的角色名字！`;
-                groupJsonRule = `\n  "speaker": "说话的角色名 (必填，严格从上述名单中选择)",`;
+                groupContext = `\n【群聊模式核心指令】当前正在进行一个多人群聊，群名称:"${session.name}"，群背景:"${session.bio}"。
+群内包含以下角色（请务必熟读每个角色的设定，尤其是国籍与语种！）：\n` + members.map(m => `👉[角色名: ${m.name} | 设定及国籍: ${m.bio}]`).join('\n') + `\n
+【OOC红线警告】：
+1. 你必须并且只能选择上述【角色名】中的其中一个身份进行发言！
+2. 绝对遵守角色的国籍与母语设定！如果该角色的设定是外国人（如美国人、英国人、日本人等），其输出的 "reply" 必须 100% 使用该国语言（如英语），绝对禁止无视国籍擅自输出中文！
+3. 在 JSON 中，必须精准输出 "speaker" 字段，指明是哪个角色开口了！`;
+                groupJsonRule = `\n  "speaker": "当前说话的角色原名 (必填，严格从上面的列表中抄写名字)",`;
             }
             let systemPrompt = `【AI活人感·极致自然扮演增强提示词】
 你现在将以真实人类的身份、语气、思维方式与我对话，全程保持活人感、自然感、生活化、不机械、不官方、不刻板，禁止出现AI特征、机器感、模板化表达。
@@ -5278,7 +5299,7 @@ ${readContext}
 IMPORTANT: You must output ONLY a valid JSON object. No Markdown. No other text.
 Structure:
 {
-  ${session.isGroup ? '"speaker": "严格填入说话的角色名 (绝对不能填我的名字)",' : ''}
+  ${session.isGroup ? '"speaker": "说话的角色名字 (必填)",' : ''}
   "reply":["第一句话", "第二句话"], // 必须是数组！
   "action": "当前动作",
   "thought": "你的心声。必须完全代入角色，用第一人称思考！绝对禁止出现'用户'、'玩家'、'AI'、'人工智能'等破坏沉浸感的词汇！",
@@ -5383,22 +5404,26 @@ Structure:
                     segments.push("听听这首歌吧~");
                 }
                 
-                let speakerName = "未知成员";
+                let speakerName = "匿名成员";
                 let speakerAvatar = session.avatar;
                 
                 if (session.isGroup) {
-                    // 如果AI成功输出了名字，且不是用户的名字
-                    if (parsed.speaker && parsed.speaker !== session.name && parsed.speaker !== mask.name) {
-                        const member = this.wechatState.friendList.find(f => f.name === parsed.speaker || f.remark === parsed.speaker || parsed.speaker.includes(f.name));
+                    if (parsed.speaker) {
+                        // 智能模糊匹配：只要 AI 输出的名字包含了通讯录里的真名/备注，或者反过来包含，就判定成功
+                        const member = this.wechatState.friendList.find(f => 
+                            session.members.includes(f.id) && 
+                            (f.name.includes(parsed.speaker) || f.remark?.includes(parsed.speaker) || parsed.speaker.includes(f.name))
+                        );
                         if (member) {
                             speakerName = member.remark || member.name;
                             speakerAvatar = member.avatar;
                         } else {
-                            speakerName = parsed.speaker; 
+                            // 如果 AI 瞎编了一个名字，强行纠正为群里的第一个成员
+                            const fallback = this.wechatState.friendList.find(f => f.id === session.members[0]);
+                            if(fallback) { speakerName = fallback.remark || fallback.name; speakerAvatar = fallback.avatar; }
                         }
-                    } 
-                    // 兜底防错：如果AI忘写了，或者写成了用户/群名，强行抓取群里第一个角色顶替
-                    if (speakerName === "未知成员" || speakerName === session.name || speakerName === mask.name) {
+                    } else if (session.members && session.members.length > 0) {
+                        // 兜底：AI 忘了输出 speaker
                         const member = this.wechatState.friendList.find(f => f.id === session.members[0]);
                         if (member) {
                             speakerName = member.remark || member.name;
@@ -5409,6 +5434,8 @@ Structure:
                     speakerName = friend.remark || friend.name;
                     speakerAvatar = friend.avatar;
                 }
+
+                let statusObj = null;
                         // 兜底：如果AI忘了输出speaker，默认算作第一个群成员说的
                         const member = this.wechatState.friendList.find(f => f.id === session.members[0]);
                         if (member) {
@@ -7673,21 +7700,8 @@ ${settings.bannedWords && settings.bannedWords.trim() ? `5. 【绝对禁忌词�
             this.forwardModal.show = true;
         },
         handleFriendSelect(friend) {
-            // 【新增】处理拉入群聊逻辑
-            if (this.forwardModal.mode === 'add_group_member') {
-                const session = this.wechatState.activeSession;
-                if (!session || !session.members) return;
-                if (session.members.includes(friend.id)) {
-                    return this.showToast('该角色已在群内');
-                }
-                session.members.push(friend.id);
-                this.saveData();
-                this.showToast(`已邀请 ${friend.remark || friend.name} 加入群聊`);
-                this.forwardModal.show = false;
-                this.groupProfileModal.show = true; // 重新打开群资料弹窗
-                return;
-            }                       
             if (this.forwardModal.mode === 'qinmi') {
+                // ...亲密付代码保持原样...
                 const inviteType = this.forwardModal.inviteType;
                 const existing = this.wallet.intimatePays.find(p => p.targetId === friend.id && p.status === 'active');
                 if (existing) return this.showToast('该好友已有生效的亲密付');
@@ -7704,6 +7718,7 @@ ${settings.bannedWords && settings.bannedWords.trim() ? `5. 【绝对禁忌词�
                 }
                 this.forwardModal.show = false;
             } else if (this.forwardModal.mode === 'moment') {
+                // ...朋友圈代码保持原样...
                 let session = this.wechatState.sessions.find(s => s.targetId === friend.id);
                 if (!session) {
                     const myMaskId = this.wechatState.activeSession?.maskId || (this.masks.length > 0 ? this.masks[0].id : null);
@@ -7711,23 +7726,39 @@ ${settings.bannedWords && settings.bannedWords.trim() ? `5. 【绝对禁忌词�
                     this.createSession(friend, this.getMaskById(myMaskId));
                     session = this.wechatState.sessions[0];
                 }
-                const msg = {
-                    type: 'moment',
-                    momentData: this.forwardingMoment,
-                    content: '[朋友圈]',
-                    isSelf: true,
-                    time: Date.now(),
-                    avatar: this.getChatAvatar({isSelf: true})
-                };
-                session.messages.push(msg);
-                session.lastMessage = '[朋友圈]';
-                this.saveData();
-                this.forwardModal.show = false;
-                this.showToast('已转发');
-                this.activeMomentMenuId = null;
+                const msg = { type: 'moment', momentData: this.forwardingMoment, content: '[朋友圈]', isSelf: true, time: Date.now(), avatar: this.getChatAvatar({isSelf: true}) };
+                session.messages.push(msg); session.lastMessage = '[朋友圈]';
+                this.saveData(); this.forwardModal.show = false; this.showToast('已转发'); this.activeMomentMenuId = null;
+            } else if (this.forwardModal.mode === 'addGroupMember') {
+                // 【新增】：拉人入群逻辑
+                const session = this.wechatState.activeSession;
+                if (session && session.isGroup) {
+                    if (session.members.includes(friend.id)) {
+                        return this.showToast('该角色已在群聊中');
+                    }
+                    session.members.push(friend.id);
+                    this.saveData();
+                    this.showToast(`已将 ${friend.remark || friend.name} 拉入群聊`);
+                    this.forwardModal.show = false;
+                }
             } else {
                 this.doForward(friend.id);
             }
+        },
+        // 【新增】：踢人和打开拉人弹窗的方法 (放于此处)
+        removeGroupMember(mid) {
+            this.showConfirm('确定将该角色移出群聊吗？', () => {
+                const session = this.wechatState.activeSession;
+                if(session && session.members) {
+                    session.members = session.members.filter(id => id !== mid);
+                    this.saveData();
+                    this.showToast('已移出群聊');
+                }
+            });
+        },
+        openAddGroupMemberModal() {
+            this.forwardModal.mode = 'addGroupMember';
+            this.forwardModal.show = true;
         },
         sendQinmiInviteMessage(friend, inviteType, limit) {
              let session = this.wechatState.sessions.find(s => s.targetId === friend.id);
