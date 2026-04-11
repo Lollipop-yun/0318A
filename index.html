@@ -5066,6 +5066,11 @@ createApp({
             this.inputMsg = ''; 
             this.showStickerPanel = false;
             session.unreadCount = 0; // 【新增】进入聊天室时清空未读红点
+
+            // 【新增】进入聊天室时，自动清除之前留下的临时 API 报错气泡
+            if (session.messages) {
+                session.messages = session.messages.filter(m => !m.isTempError);
+            }
             
             this.$nextTick(() => {
                 setTimeout(() => {
@@ -5075,7 +5080,7 @@ createApp({
             });
 
             this.currentStatus = session.status || {};
-            this.currentStatusHistory = session.statusHistory || [];
+            this.currentStatusHistory = session.statusHistory ||[];
         },
         goToChatDetails() { this.wechatState.activeNav = 'chat-details'; },
         scrollToBottom() { 
@@ -5268,6 +5273,7 @@ createApp({
             // --- 新增：提取 AI 和 User 的身高、体重、生日信息 ---
             // --- 提取 AI 和 User 的身体信息与年龄 ---
             // --- 提取 AI 和 User 的身体信息与年龄 ---
+            // --- 提取 AI 和 User 的身体信息与年龄 ---
             let friendExtra = '';
             if (friend) {
                 if(friend.height) friendExtra += ` 身高:${friend.height}cm`;
@@ -5280,6 +5286,25 @@ createApp({
             if(mask.weight) maskExtra += ` 体重:${mask.weight}kg`;
             if(mask.age) maskExtra += ` 年龄:${mask.age}岁`;
             if(mask.birthday) maskExtra += ` 生日:${mask.birthday}`;
+
+            // --- 构建表情包库感知 ---
+            let stickerContext = "";
+            if (this.stickers && this.stickers.length > 0) {
+                const availableStickers = this.stickers.map((s, idx) => `[ID:${idx} 描述:${s.desc}]`).join(', ');
+                stickerContext = `\n[你的表情包库]: 如果你想发表情包，请在返回JSON的 "sticker_id" 中填入你想发的表情ID。可用表情列表: ${availableStickers}`;
+            }
+            
+            // --- 读取小说连载注入 ---
+            let readContext = "";
+            if (this.readTogetherState.show && this.readTogetherState.activeBookId) {
+                const book = this.bookshelf.find(b => b.id === this.readTogetherState.activeBookId);
+                if (book) {
+                    const brief = book.content.substring(0, 2000).replace(/\n/g, ' ');
+                    readContext = `\n[一起读模式]: 你们现在正在使用手机的"一起读"功能，一起看一本叫《${book.title}》的小说(作者:${book.author})。小说开头内容简述: "${brief}..."。请一定要在聊天中自然地表现出你也在读这本小说，根据你的人设和主角探讨小说的剧情、人设或感想。`;
+                }
+            }
+
+            let contextMessages =[];
 
             // == 【修复群聊身份认知BUG】 ==
             let roleIdentity = "";
@@ -5346,12 +5371,12 @@ Structure:
   "change_avatar": true OR false,
   "sticker_id": "OPTIONAL: 填入你想发的表情包的纯数字 ID",
   "invite_music": true (OPTIONAL: 当你想主动分享音乐时输出 true，此时绝对不要在 reply 里发文字提示，系统会自动发卡片)
-  "food_payment": { "item": "奶茶", "amount": "25.00" }, // OPTIONAL: 当你要点外卖并向我撒娇让我代付时输出
-  "food_delivery": { "item": "炸鸡", "amount": "45.00", "remark": "按时吃饭", "eta": "19:30" } // OPTIONAL: 当你主动给我点外卖时输出。eta 绝对不能写“xx分钟”，必须是具体时间点(如 19:30)！
+  "food_payment": { "item": "奶茶", "amount": "25.00" },
+  "food_delivery": { "item": "炸鸡", "amount": "45.00", "remark": "按时吃饭", "eta": "19:30" }
 }
 
-注意！！！"reply" 必须是一个字符串数组（Array）！如果你想连续发送多条消息，请务必把每一句话作为数组里的一个独立元素，例如 ["在吗？", "我想你了", "晚上一起吃饭吗？"]，绝对不要把所有话挤在一条消息里！`;
-            
+注意！！！"reply" 必须是一个字符串数组（Array）！如果你想连续发送多条消息，请务必把每一句话作为数组里的一个独立元素，例如["在吗？", "我想你了", "晚上一起吃饭吗？"]，绝对不要把所有话挤在一条消息里！`;
+
             contextMessages.push({ role: 'system', content: systemPrompt });
             // --- 读取线下约会相处的记忆 ---
             let offlineMemoryContext = "";
@@ -5701,7 +5726,23 @@ Structure:
 
             } catch(e) {
                 this.isTyping = false;
-                this.showToast('AI 回复失败: ' + e.message);
+                
+                // --- 新增：弹出临时报错气泡 ---
+                let errAvatar = session.avatar;
+                if (!session.isGroup && friend) {
+                    errAvatar = friend.avatar;
+                }
+                session.messages.push({
+                    content: '⚠️ [API 请求失败]: ' + e.message + '\n\n(注意：这是系统报错提示，并非设定剧情。退出此聊天界面重新进入后，该气泡会自动消失)',
+                    isSelf: false,
+                    isTempError: true, // 标记为临时消息
+                    time: Date.now(),
+                    avatar: errAvatar,
+                    type: 'text'
+                });
+                this.scrollToBottom();
+                // 不调用 this.saveData()，保证它不会被永久存盘
+                // -----------------------------
             }
         },
         
