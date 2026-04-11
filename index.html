@@ -5067,6 +5067,9 @@ createApp({
             this.showStickerPanel = false;
             session.unreadCount = 0; // 【新增】进入聊天室时清空未读红点
 
+            // --- 新增：强制解除卡死的“正在输入中”幽灵状态 ---
+            this.isTyping = false; 
+
             // 【新增】进入聊天室时，自动清除之前留下的临时 API 报错气泡
             if (session.messages) {
                 session.messages = session.messages.filter(m => !m.isTempError);
