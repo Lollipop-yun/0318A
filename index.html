@@ -2151,7 +2151,8 @@
                         <span class="text-[10px] text-gray-300 tracking-wider">Only You.</span>
                     </div>
                     <div class="flex items-center gap-1">
-                        <button class="w-8 h-8 flex items-center justify-center text-gray-800" @click="groupSelectModal.show = true"><i class="fas fa-folder-open"></i></button>
+                        <!-- 加上 v-if="!wechatState.activeSession.isGroup" 判断，群聊不显示此按钮 -->
+                        <button v-if="!wechatState.activeSession.isGroup" class="w-8 h-8 flex items-center justify-center text-gray-800" @click="groupSelectModal.show = true"><i class="fas fa-folder-open"></i></button>
                         <button class="w-8 h-8 flex items-center justify-center text-gray-800" @click="goToChatDetails"><i class="fas fa-ellipsis-h"></i></button>
                     </div>
                 </header>                               
@@ -2897,7 +2898,7 @@
                     <!-- 分组视图模式 -->
                     <div v-if="wechatState.activeFilter === 'Group'">
                         <div class="p-4 border-b border-gray-50 flex items-center gap-3 active:bg-gray-50 cursor-pointer" @click="createNewGroup"><div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500"><i class="fas fa-plus"></i></div><span class="font-bold text-gray-800">新建分组</span></div>
-                        <div class="border-b border-gray-50"><div class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer" @click="toggleGroup('all')"><span class="font-bold text-gray-800">全部 ({{ wechatState.sessions.length }})</span><i class="fas fa-chevron-right text-gray-300 transition-transform" :class="{'rotate-90': expandedGroups.includes('all')}"></i></div><div v-show="expandedGroups.includes('all')" class="bg-gray-50/30"><div v-for="session in filteredWechatContacts" :key="session.id" @click="enterChatRoom(session)" class="flex items-center p-4 active:bg-gray-50 transition border-b border-gray-50 last:border-0 relative" :class="{'bg-gray-50': session.isPinned}"><div class="relative shrink-0 mr-3"><div class="w-[50px] h-[50px] rounded-full overflow-hidden wechat-avatar-ring"><div class="w-full h-full rounded-full bg-gray-100 overflow-hidden"><img :src="session.customAvatarTarget || session.avatar" class="w-full h-full object-cover"></div></div></div><div class="flex-1 min-w-0"><div class="flex justify-between items-baseline mb-1"><h3 class="text-[16px] font-semibold text-gray-900 truncate flex items-center gap-1">{{ session.name }} <i v-if="session.isPinned" class="fas fa-thumbtack text-[10px] text-gray-400 rotate-45"></i></h3><span class="text-[11px] text-gray-400 font-normal">刚刚</span></div><div class="flex justify-between items-center"><p class="text-[13px] text-gray-500 truncate max-w-[80%]">{{ session.lastMessage || '...' }}</p><div v-if="session.unreadCount > 0" class="min-w-[16px] h-4 px-[4px] bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow-sm">{{ session.unreadCount > 99 ? '99+' : session.unreadCount }}</div></div></div></div></div></div>
+                        <div class="border-b border-gray-50"><div class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer" @click="toggleGroup('all')"><span class="font-bold text-gray-800">全部 ({{ wechatState.sessions.filter(s => !s.isGroup).length }})</span><i class="fas fa-chevron-right text-gray-300 transition-transform" :class="{'rotate-90': expandedGroups.includes('all')}"></i></div><div v-show="expandedGroups.includes('all')" class="bg-gray-50/30"><div v-for="session in filteredWechatContacts.filter(s => !s.isGroup)" :key="session.id" @click="enterChatRoom(session)" class="flex items-center p-4 active:bg-gray-50 transition border-b border-gray-50 last:border-0 relative" :class="{'bg-gray-50': session.isPinned}"><div class="relative shrink-0 mr-3"><div class="w-[50px] h-[50px] rounded-full overflow-hidden wechat-avatar-ring"><div class="w-full h-full rounded-full bg-gray-100 overflow-hidden"><img :src="session.customAvatarTarget || session.avatar" class="w-full h-full object-cover"></div></div></div><div class="flex-1 min-w-0"><div class="flex justify-between items-baseline mb-1"><h3 class="text-[16px] font-semibold text-gray-900 truncate flex items-center gap-1">{{ session.name }} <i v-if="session.isPinned" class="fas fa-thumbtack text-[10px] text-gray-400 rotate-45"></i></h3><span class="text-[11px] text-gray-400 font-normal">刚刚</span></div><div class="flex justify-between items-center"><p class="text-[13px] text-gray-500 truncate max-w-[80%]">{{ session.lastMessage || '...' }}</p><div v-if="session.unreadCount > 0" class="min-w-[16px] h-4 px-[4px] bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow-sm">{{ session.unreadCount > 99 ? '99+' : session.unreadCount }}</div></div></div></div></div></div>
                         <div v-for="group in wechatState.groups" :key="group.id" class="border-b border-gray-50"><div class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer" @click="toggleGroup(group.id)"><span class="font-bold text-gray-800">{{ group.name }} ({{ getGroupSessions(group.id).length }})</span><div class="flex items-center gap-3"><button @click.stop="deleteGroup(group.id)" class="text-gray-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button><i class="fas fa-chevron-right text-gray-300 transition-transform" :class="{'rotate-90': expandedGroups.includes(group.id)}"></i></div></div><div v-show="expandedGroups.includes(group.id)" class="bg-gray-50/30"><div v-if="getGroupSessions(group.id).length === 0" class="p-4 text-center text-xs text-gray-400">该分组暂无好友</div><div v-for="session in getGroupSessions(group.id)" :key="session.id" @click="enterChatRoom(session)" class="flex items-center p-4 active:bg-gray-50 transition border-b border-gray-50 last:border-0 relative" :class="{'bg-gray-50': session.isPinned}"><div class="relative shrink-0 mr-3"><div class="w-[50px] h-[50px] rounded-full overflow-hidden wechat-avatar-ring"><div class="w-full h-full rounded-full bg-gray-100 overflow-hidden"><img :src="session.customAvatarTarget || session.avatar" class="w-full h-full object-cover"></div></div></div><div class="flex-1 min-w-0"><div class="flex justify-between items-baseline mb-1"><h3 class="text-[16px] font-semibold text-gray-900 truncate flex items-center gap-1">{{ session.name }} <i v-if="session.isPinned" class="fas fa-thumbtack text-[10px] text-gray-400 rotate-45"></i></h3><span class="text-[11px] text-gray-400 font-normal">刚刚</span></div><div class="flex justify-between items-center"><p class="text-[13px] text-gray-500 truncate max-w-[80%]">{{ session.lastMessage || '...' }}</p><div v-if="session.unreadCount > 0" class="min-w-[16px] h-4 px-[4px] bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow-sm">{{ session.unreadCount > 99 ? '99+' : session.unreadCount }}</div></div></div></div></div></div>
                     </div>
                     <!-- 正常视图模式 -->
@@ -4998,7 +4999,7 @@ createApp({
             this.groupSelectModal.show = false;
         },
         getGroupSessions(groupId) {
-            return this.filteredWechatContacts.filter(s => s.groupId === groupId);
+            return this.filteredWechatContacts.filter(s => s.groupId === groupId && !s.isGroup);
         },
 
         startChatWizard(type) { this.wechatState.showPlusMenu = false; this.chatWizard = { show: true, step: 1, type: type, selectedContacts: [], selectedMask: null }; },
@@ -5132,7 +5133,12 @@ createApp({
         sendMessage() {
             if(!this.inputMsg.trim()) return;
             const msg = { content: this.inputMsg, isSelf: true, time: Date.now(), avatar: this.getMaskById(this.wechatState.activeSession.maskId).avatar };
-            if(this.replyingTo) { msg.quote = { name: this.replyingTo.isSelf ? '我' : this.wechatState.activeSession.name, content: this.replyingTo.content }; this.replyingTo = null; }
+            if(this.replyingTo) { 
+                // 修复：如果是群聊，引用显示对应角色的名字；否则显示当前聊天对象的名字
+                let quoteName = this.replyingTo.isSelf ? '我' : (this.wechatState.activeSession.isGroup ? (this.replyingTo.name || '群成员') : this.wechatState.activeSession.name);
+                msg.quote = { name: quoteName, content: this.replyingTo.content }; 
+                this.replyingTo = null; 
+            }
             this.wechatState.activeSession.messages.push(msg);
             this.wechatState.activeSession.lastMessage = this.inputMsg;
             this.inputMsg = ''; this.scrollToBottom(); this.saveData();
@@ -5355,9 +5361,29 @@ ${stickerContext}
 ${readContext}
 
 IMPORTANT: You must output ONLY a valid JSON object. No Markdown. No other text.
+${session.isGroup ? `
+【群聊专属输出格式】
+由于是群聊，你可以让一个或多个角色对当前的对话做出反应。请输出 "group_replies" 数组，每个元素代表一个角色的独立回复！
 Structure:
 {
-  ${session.isGroup ? '"speaker": "说话的角色名字 (必填，必须是上面列出的群成员之一)",' : ''}
+  "group_replies":[
+    {
+      "speaker": "说话的角色名字 (必须是群成员之一)",
+      "reply":["第一句话", "第二句话"], 
+      "action": "当前动作",
+      "thought": "当前心声(第一人称思考)",
+      "outfit": "当前穿着",
+      "note": "随笔日记"
+    }
+  ],
+  "fake_image": "OPTIONAL: description...",
+  "change_avatar": true OR false,
+  "sticker_id": "OPTIONAL: 表情ID",
+  "invite_music": true
+}
+` : `
+Structure:
+{
   "reply":["第一句话", "第二句话"], // 必须是数组！
   "action": "当前动作",
   "thought": "你的心声。必须完全代入角色，用第一人称思考！绝对禁止出现'用户'、'玩家'、'AI'、'人工智能'等破坏沉浸感的词汇！",
@@ -5373,12 +5399,12 @@ Structure:
   "html_widget": "OPTIONAL: Valid HTML string using Tailwind CSS...",
   "change_avatar": true OR false,
   "sticker_id": "OPTIONAL: 填入你想发的表情包的纯数字 ID",
-  "invite_music": true (OPTIONAL: 当你想主动分享音乐时输出 true，此时绝对不要在 reply 里发文字提示，系统会自动发卡片)
+  "invite_music": true,
   "food_payment": { "item": "奶茶", "amount": "25.00" },
   "food_delivery": { "item": "炸鸡", "amount": "45.00", "remark": "按时吃饭", "eta": "19:30" }
 }
-
-注意！！！"reply" 必须是一个字符串数组（Array）！如果你想连续发送多条消息，请务必把每一句话作为数组里的一个独立元素，例如["在吗？", "我想你了", "晚上一起吃饭吗？"]，绝对不要把所有话挤在一条消息里！`;
+`}
+注意！！！"reply" 必须是一个字符串数组！如果你想发多条消息，务必把每一句话拆分为数组里的独立元素！`;
 
             contextMessages.push({ role: 'system', content: systemPrompt });
             // --- 读取线下约会相处的记忆 ---
@@ -5451,247 +5477,115 @@ Structure:
                     parsed = { reply: [rawContent], action: '', thought: '', outfit: '', note: '' };
                 }
 
-                let rawSegments = Array.isArray(parsed.reply) ? parsed.reply : [parsed.reply || ""];
-                // 强制拦截过滤掉 AI 瞎编的系统提示词
-                const segments = rawSegments
-                    .map(s => s.trim())
-                    .filter(s => s && !s.includes('系统提示') && !s.includes('系统通知') && !s.includes('邀请你一起听歌'));
-                
-                // 如果它发了音乐邀请且没说话，帮它补一句
-                if (segments.length === 0 && (parsed.invite_music === true || parsed.invite_music === "true")) {
-                    segments.push("听听这首歌吧~");
+                // === 多人回复支持逻辑 ===
+                let replyBlocks =[];
+                if (session.isGroup && parsed.group_replies && Array.isArray(parsed.group_replies)) {
+                    replyBlocks = parsed.group_replies;
+                } else {
+                    replyBlocks = [parsed];
                 }
-                
-                // == 【修复群聊名字兜底BUG】 ==
-                let speakerName = "未知成员";
-                let speakerAvatar = session.avatar;
-                
-                if (session.isGroup) {
-                    let member = null;
-                    if (parsed.speaker && parsed.speaker !== session.name) {
-                        speakerName = parsed.speaker;
-                        member = this.wechatState.friendList.find(f => f.name === parsed.speaker || f.remark === parsed.speaker);
-                    }
-                    if (!member && session.members && session.members.length > 0) {
-                        // 兜底：如果AI没输出speaker，或者错把群名当成了speaker，强制用第一个成员
-                        member = this.wechatState.friendList.find(f => f.id === session.members[0]);
-                    }
-                    if (member) {
-                        speakerName = member.remark || member.name;
-                        speakerAvatar = member.avatar;
-                    }
-                } else if (!session.isGroup && friend) {
-                    speakerName = friend.remark || friend.name;
-                    speakerAvatar = friend.avatar;
-                }
-                // ============================
-
-                let statusObj = null;
-                if (parsed.thought || parsed.action) {
-                    statusObj = { time: Date.now(), action: parsed.action, thought: parsed.thought, outfit: parsed.outfit, note: parsed.note, avatar: speakerAvatar, name: speakerName };
-                    session.status = statusObj;
-                    if(!session.statusHistory) session.statusHistory =[];
-                    session.statusHistory.unshift(statusObj); 
-                    this.currentStatus = statusObj; 
-                }
-                
-                this.handleAiQinmiResponse(session, parsed.qinmi_reply);
-
-                if (parsed.fake_image) {
-                     const fiMsg = { type: 'fake_image', content: parsed.fake_image, isRevealed: false, isSelf: false, time: Date.now(), avatar: session.avatar };
-                    session.messages.push(fiMsg); session.lastMessage = '[图片]';
-                }
-
-                // --- 解析 AI 生成的动态 HTML UI 卡片 ---
-                if (parsed.html_widget) {
-                    const htmlMsg = { 
-                        type: 'html', 
-                        content: parsed.html_widget, 
-                        isSelf: false, 
-                        time: Date.now(), 
-                        avatar: session.avatar 
-                    };
-                    session.messages.push(htmlMsg); 
-                    session.lastMessage = '[互动卡片]';
-                }
-                // --- 解析 AI 更换头像指令 ---
-                // --- 解析 AI 表情包发送 ---
-                if (parsed.sticker_id !== undefined && this.stickers[parsed.sticker_id]) {
-                    const s = this.stickers[parsed.sticker_id];
-                    session.messages.push({
-                        type: 'sticker',
-                        content: s.url,
-                        desc: s.desc,
-                        isSelf: false,
-                        time: Date.now(),
-                        avatar: session.avatar
-                    });
-                    session.lastMessage = '[表情包]';
-                }
-
-                // --- 解析 AI 更换头像指令 (修复 Base64 乱码 Bug) ---
-                if (parsed.change_avatar === true) {                
-                    // 往前寻找用户最新发送的一张图片
-                    const lastImageMsg = session.messages.slice().reverse().find(msg => msg.type === 'image' && msg.isSelf);
-                    if (lastImageMsg) {
-                        session.avatar = lastImageMsg.content;
-                        session.customAvatarTarget = ''; 
-                        if (friend) friend.avatar = lastImageMsg.content;
-                        
-                        session.messages.push({ 
-                            type: 'system', 
-                            content: `${session.name} 已更换了头像`, 
-                            time: Date.now() 
-                        });
-                    }
-                }
-
-                if (parsed.location) {
-                    const locMsg = { 
-                        type: 'location', 
-                        name: parsed.location.name || '未知位置', 
-                        address: parsed.location.address || '', 
-                        isSelf: false, 
-                        time: Date.now(), 
-                        avatar: session.avatar 
-                    };
-                    session.messages.push(locMsg); session.lastMessage = '[位置]';
-                }
-                
-                // 解析 AI 触发的拍一拍逻辑
-                if (parsed.nudge) {
-                    let targetName = parsed.nudge === 'user' ? '我' : session.name;
-                    let suffix = '';
-                    if (parsed.nudge === 'user') {
-                        const mask = this.getMaskById(session.maskId);
-                        suffix = mask.nudge || '';
-                    } else {
-                        const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
-                        suffix = (friend && friend.nudge) ? friend.nudge : '';
-                    }
-                    let content = `${session.name}拍了拍${targetName}`;
-                    if (suffix) {
-                        content += suffix.startsWith('的') ? suffix : `的${suffix}`;
-                    }
-                    session.messages.push({ type: 'system', content: content, time: Date.now() });
-                }
-
-                if (parsed.red_packet || Math.random() < 0.05) {
-                    const amount = parsed.red_packet ? parsed.red_packet.amount : (Math.random() * 100).toFixed(2);
-                    const note = parsed.red_packet ? parsed.red_packet.note : "恭喜发财";
-                    const rpMsg = { type: 'red_packet', amount: amount, note: note, isSelf: false, time: Date.now(), avatar: session.avatar };
-                    session.messages.push(rpMsg); session.lastMessage = '[微信红包]';
-                }
-
-                if (parsed.transfer || Math.random() < 0.02) {
-                    const amount = parsed.transfer ? parsed.transfer.amount : "520.00";
-                    const note = parsed.transfer ? parsed.transfer.note : "转账给你";
-                    const tfMsg = { type: 'transfer', amount: amount, note: note, isSelf: false, time: Date.now(), avatar: session.avatar };
-                    session.messages.push(tfMsg); session.lastMessage = '[微信转账]';
-                }
-                if (parsed.food_payment) {
-                    session.messages.push({ 
-                        type: 'food_payment', 
-                        item: parsed.food_payment.item || '外卖', 
-                        amount: parsed.food_payment.amount || '0.00', 
-                        status: 'pending', 
-                        isSelf: false, 
-                        time: Date.now(), 
-                        avatar: session.avatar 
-                    });
-                    session.lastMessage = '[外卖代付]';
-                }
-                if (parsed.food_delivery) {
-                    let etaText = parsed.food_delivery.eta || '尽快';
-                    // 智能拦截：如果AI不听话输出了“30分钟”，JS自动计算具体时间
-                    if (etaText.includes('分钟')) {
-                        let mins = parseInt(etaText) || 30;
-                        let d = new Date(Date.now() + mins * 60000);
-                        etaText = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-                    }
-                    
-                    session.messages.push({ 
-                        type: 'food_delivery', 
-                        item: parsed.food_delivery.item || '外卖', 
-                        amount: parsed.food_delivery.amount || '0.00', 
-                        remark: parsed.food_delivery.remark || '', 
-                        eta: etaText, 
-                        isSelf: false, 
-                        time: Date.now(), 
-                        avatar: session.avatar 
-                    });
-                    session.lastMessage = '[外卖订单]';
-                }
-                
-                
+                // ======================
 
                 this.isTyping = false; 
                 this.handleAiIntimatePayConsumption(session);
 
                 let delay = 0;
-                segments.forEach((seg, index) => {
-                    setTimeout(() => {
-                         // 【修复BUG】必须把 msgType 声明放到最前面，否则下方检测推送时会抛出 ReferenceError 崩溃，导致消息无法存入！
-                         let msgType = 'text';
-                         let msgDuration = 0;
-                         if (seg.trim().length > 0 && Math.random() < 0.15) {
-                             msgType = 'voice';
-                             msgDuration = Math.max(1, Math.min(60, Math.ceil(seg.length / 3)));
-                         }
+                
+                replyBlocks.forEach((block) => {
+                    let rawSegments = Array.isArray(block.reply) ? block.reply :[block.reply || ""];
+                    const segments = rawSegments
+                        .map(s => s.trim())
+                        .filter(s => s && !s.includes('系统提示') && !s.includes('系统通知') && !s.includes('邀请你一起听歌'));
 
-                         // 判断是否不在当前聊天界面，或者浏览器被切到了手机后台 (document.hidden)
-                         if (this.currentApp !== 'wechat' || this.wechatState.activeNav !== 'room' || this.wechatState.activeSession.id !== session.id || document.hidden) {
+                    if (segments.length === 0 && (parsed.invite_music === true || parsed.invite_music === "true")) {
+                        segments.push("听听这首歌吧~");
+                    }
+                    
+                    let speakerName = "未知成员";
+                    let speakerAvatar = session.avatar;
+                    
+                    if (session.isGroup) {
+                        let member = null;
+                        if (block.speaker && block.speaker !== session.name) {
+                            speakerName = block.speaker;
+                            member = this.wechatState.friendList.find(f => f.name === block.speaker || f.remark === block.speaker);
+                        }
+                        if (!member && session.members && session.members.length > 0) {
+                            member = this.wechatState.friendList.find(f => f.id === session.members[0]);
+                        }
+                        if (member) {
+                            speakerName = member.remark || member.name;
+                            speakerAvatar = member.avatar;
+                        }
+                    } else if (!session.isGroup && friend) {
+                        speakerName = friend.remark || friend.name;
+                        speakerAvatar = friend.avatar;
+                    }
+
+                    let statusObj = null;
+                    if (block.thought || block.action) {
+                        statusObj = { time: Date.now(), action: block.action, thought: block.thought, outfit: block.outfit, note: block.note, avatar: speakerAvatar, name: speakerName };
+                        session.status = statusObj;
+                        if(!session.statusHistory) session.statusHistory =[];
+                        session.statusHistory.unshift(statusObj); 
+                        this.currentStatus = statusObj; 
+                    }
+
+                    segments.forEach((seg, index) => {
+                        setTimeout(() => {
+                             let msgType = 'text';
+                             let msgDuration = 0;
+                             if (seg.trim().length > 0 && Math.random() < 0.15) {
+                                 msgType = 'voice';
+                                 msgDuration = Math.max(1, Math.min(60, Math.ceil(seg.length / 3)));
+                             }
+
+                             if (this.currentApp !== 'wechat' || this.wechatState.activeNav !== 'room' || this.wechatState.activeSession.id !== session.id || document.hidden) {
+                                 session.unreadCount = (session.unreadCount || 0) + 1; 
+                                 if (!document.hidden) {
+                                     this.showGlobalNotification(session, seg);
+                                 }
+                                 this.sendPushNotification('微信新消息', session.name, msgType === 'voice' ? '[语音]' : seg.trim(), speakerAvatar);
+                             }
+
+                             const aiMsg = { 
+                                 content: seg.trim(), 
+                                 isSelf: false, 
+                                 time: Date.now(), 
+                                 avatar: speakerAvatar,
+                                 name: speakerName,
+                                 status: statusObj, 
+                                 type: msgType,
+                                 duration: msgDuration,
+                                 isExpanded: false
+                             };
+                             session.messages.push(aiMsg);
+                             this.scrollToBottom();
                              
-                             session.unreadCount = (session.unreadCount || 0) + 1; // 【新增】增加未读计数
-
-                             // 如果还在前台，只是在别的界面，显示应用内横幅
-                             if (!document.hidden) {
-                                 this.showGlobalNotification(session, seg);
+                             if (index === segments.length - 1) {
+                                 session.lastMessage = msgType === 'voice' ? '[语音]' : seg.trim();
+                                 if (Math.random() < 0.1) {
+                                     setTimeout(() => {
+                                         const targetIdx = session.messages.indexOf(aiMsg);
+                                         if (targetIdx > -1) {
+                                             session.messages[targetIdx].isRecalled = true; 
+                                             this.saveData();
+                                         }
+                                     }, 3000);
+                                 }
+                                 this.saveData();
                              }
                              
-                             // 只要满足条件，就向系统底层发送推送通知
-                             this.sendPushNotification('微信新消息', session.name, msgType === 'voice' ? '[语音]' : seg.trim(), session.avatar);
-                         }
-
-                         const aiMsg = { 
-                             content: seg.trim(), 
-                             isSelf: false, 
-                             time: Date.now(), 
-                             avatar: speakerAvatar,
-                             name: speakerName,
-                             status: statusObj, // 将这段心声专属绑定给这条消息
-                             type: msgType,
-                             duration: msgDuration,
-                             isExpanded: false
-                         };
-                         session.messages.push(aiMsg);
-                         this.scrollToBottom();
-                         
-                         if (index === segments.length - 1) {
-                             session.lastMessage = msgType === 'voice' ? '[语音]' : seg.trim();
+                             if(this.notificationConfig.currentSound) new Audio(this.notificationConfig.currentSound).play();
                              
-                             if (Math.random() < 0.1) {
+                             if (Math.random() < 0.02) {
                                  setTimeout(() => {
-                                     const targetIdx = session.messages.indexOf(aiMsg);
-                                     if (targetIdx > -1) {
-                                         session.messages[targetIdx].isRecalled = true; 
-                                         this.saveData();
-                                     }
-                                 }, 3000);
+                                     this.generateAIMomentFromChat(session, seg);
+                                 }, 5000);
                              }
-                             this.saveData();
-                         }
-                         
-                         if(this.notificationConfig.currentSound) new Audio(this.notificationConfig.currentSound).play();
-                         
-                         // 【概率调低】将触发概率降低为 2% (0.02)，大幅减少 AI 刷屏发朋友圈的频率
-                         if (Math.random() < 0.02) {
-                             setTimeout(() => {
-                                 this.generateAIMomentFromChat(session, seg);
-                             }, 5000);
-                         }
-                    }, delay);
-                    delay += 1000 + Math.random() * 800; 
+                        }, delay);
+                        delay += 1000 + Math.random() * 800; 
+                    });
                 });
                 // --- 绝对安全追加：等上面所有文字都发完后，再出音乐卡片和切歌 ---
                 setTimeout(() => {
