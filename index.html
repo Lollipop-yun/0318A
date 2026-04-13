@@ -1720,33 +1720,40 @@
                         <div><label class="text-xs text-gray-500 ml-1 mb-1 block">群备注 (仅自己可见)</label><input v-model="groupProfileModal.remark" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div>
                         <div><label class="text-xs text-gray-500 ml-1 mb-1 block">群简介 (AI背景设定)</label><textarea v-model="groupProfileModal.bio" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none h-24 resize-none"></textarea></div>
                         
-                        <!-- 新增：成员管理 -->
+                        <!-- 新增：成员管理与管理员体系 -->
                         <div class="pt-2 border-t border-gray-100">
                             <label class="text-xs font-bold text-gray-800 ml-1 mb-3 block">群成员管理 ({{ wechatState.activeSession?.members?.length || 0 }}人)</label>
-                            <div class="flex flex-wrap gap-4">
-                                <!-- 群主自己 (User) -->
-                                <div class="relative flex flex-col items-center">
-                                    <div class="w-12 h-12 rounded-full bg-gray-100 overflow-hidden border border-gray-200">
+                            <div class="flex flex-wrap gap-4 pb-12">
+                                <!-- 群主(我) -->
+                                <div class="relative group flex flex-col items-center">
+                                    <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-yellow-400 shadow-sm">
                                         <img :src="getMaskById(wechatState.activeSession?.maskId).avatar" class="w-full h-full object-cover">
                                     </div>
-                                    <div class="flex items-center mt-1 gap-1">
-                                        <span class="text-[10px] text-gray-600 max-w-[40px] truncate text-center">我</span>
-                                        <span class="bg-yellow-100 text-yellow-600 text-[8px] px-1 rounded shrink-0">群主</span>
-                                    </div>
+                                    <span class="text-[10px] text-gray-600 mt-1 max-w-[50px] truncate text-center">我</span>
+                                    <div class="absolute -bottom-1 bg-yellow-400 text-white text-[8px] px-1 rounded-sm shadow-sm">群主</div>
                                 </div>
-                                <!-- 现有群成员 -->
-                                <div v-for="memId in wechatState.activeSession?.members" :key="memId" class="relative group flex flex-col items-center">
-                                    <!-- 点击头像设置/取消管理员 -->
-                                    <div class="w-12 h-12 rounded-full bg-gray-100 overflow-hidden border border-gray-200 cursor-pointer active:opacity-70" @click="toggleGroupAdmin(memId)">
-                                        <img :src="getFriendAvatar(memId)" class="w-full h-full object-cover">
+                                
+                                <!-- 现有成员 -->
+                                <div v-for="memId in wechatState.activeSession?.members" :key="memId" class="relative flex flex-col items-center" @click="wechatState.manageMemberId = wechatState.manageMemberId === memId ? null : memId">
+                                    <div class="w-12 h-12 rounded-full bg-gray-100 overflow-hidden border-2" :class="isGroupAdmin(memId) ? 'border-blue-400' : 'border-gray-200'">
+                                        <img :src="getFriendAvatar(memId)" class="w-full h-full object-cover" :class="{'grayscale opacity-50': isGroupMuted(memId)}">
                                     </div>
-                                    <div class="flex items-center mt-1 gap-1">
-                                        <span class="text-[10px] text-gray-600 max-w-[40px] truncate text-center">{{ getFriendName(memId) }}</span>
-                                        <span v-if="wechatState.activeSession?.admins?.includes(memId)" class="bg-teal-100 text-teal-600 text-[8px] px-1 rounded shrink-0">管理</span>
-                                    </div>
-                                    <!-- 踢人按钮 -->
-                                    <div @click="removeGroupMember(memId)" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] cursor-pointer shadow-md z-10"><i class="fas fa-minus"></i></div>
+                                    <span class="text-[10px] text-gray-600 mt-1 max-w-[50px] truncate text-center">{{ getFriendName(memId) }}</span>
+                                    
+                                    <!-- 徽章与状态 -->
+                                    <div v-if="isGroupAdmin(memId)" class="absolute -bottom-1 bg-blue-400 text-white text-[8px] px-1 rounded-sm shadow-sm">管理员</div>
+                                    <div v-if="isGroupMuted(memId)" class="absolute -top-1 -right-1 bg-gray-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-md"><i class="fas fa-comment-slash"></i></div>
+                                    
+                                    <!-- 点击弹出的管理面板 -->
+                                    <transition name="fade">
+                                        <div v-if="wechatState.manageMemberId === memId" class="absolute top-14 left-1/2 -translate-x-1/2 bg-white border border-gray-200 shadow-2xl rounded-lg flex flex-col w-20 z-50 overflow-hidden">
+                                            <button @click.stop="toggleGroupAdmin(memId)" class="text-[10px] py-2.5 border-b border-gray-100 bg-gray-50 active:bg-gray-200">{{ isGroupAdmin(memId) ? '取消管理' : '设为管理' }}</button>
+                                            <button @click.stop="toggleGroupMute(memId)" class="text-[10px] py-2.5 border-b border-gray-100 bg-gray-50 active:bg-gray-200">{{ isGroupMuted(memId) ? '解除禁言' : '禁言' }}</button>
+                                            <button @click.stop="removeGroupMember(memId)" class="text-[10px] py-2.5 text-red-500 bg-red-50 active:bg-red-100">踢出群聊</button>
+                                        </div>
+                                    </transition>
                                 </div>
+                                
                                 <!-- 拉人按钮 -->
                                 <div @click="openAddGroupMemberModal" class="w-12 h-12 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 cursor-pointer active:bg-gray-50 flex-col shrink-0">
                                     <i class="fas fa-plus"></i>
@@ -2335,10 +2342,11 @@
                                         </div>
                                     </div>
 
-                                    <!-- 文本消息 (附带 AI 直出翻译) -->
+                                    <!-- 文本消息 (自带实时翻译) -->
                                     <div v-else class="flex flex-col">
                                         <span>{{ msg.content }}</span>
                                         <transition name="fade">
+                                            <!-- 如果带有翻译字段，并且允许显示，则直接展开 -->
                                             <div v-if="msg.showTranslation && msg.translation" @click.stop="msg.showTranslation = false; saveData()" class="mt-2 pt-2 border-t border-gray-400/20 text-[13px] opacity-90 cursor-pointer active:opacity-50">
                                                 <div class="text-gray-500 font-medium">{{ msg.translation }}</div>
                                             </div>
@@ -4817,20 +4825,6 @@ createApp({
                 avatar: session.avatar
             };
         },
-        toggleGroupAdmin(memId) {
-            const session = this.wechatState.activeSession;
-            if(!session || !session.isGroup) return;
-            if(!session.admins) session.admins =[]; // 兼容旧数据
-            const idx = session.admins.indexOf(memId);
-            if (idx > -1) {
-                session.admins.splice(idx, 1);
-                this.showToast('已取消管理员');
-            } else {
-                session.admins.push(memId);
-                this.showToast('已设为管理员');
-            }
-            this.saveData();
-        },
         removeGroupMember(memId) {
             this.showConfirm('确定将该角色移出群聊吗？', () => {
                 const session = this.wechatState.activeSession;
@@ -4841,6 +4835,36 @@ createApp({
                 }
             });
         },
+        // --- 新增：群聊权限控制方法 ---
+        isGroupAdmin(memId) {
+            const session = this.wechatState.activeSession;
+            return session && session.admins && session.admins.includes(memId);
+        },
+        isGroupMuted(memId) {
+            const session = this.wechatState.activeSession;
+            return session && session.muted && session.muted.includes(memId);
+        },
+        toggleGroupAdmin(memId) {
+            const session = this.wechatState.activeSession;
+            if(!session) return;
+            if(!session.admins) session.admins =[];
+            const idx = session.admins.indexOf(memId);
+            if (idx > -1) { session.admins.splice(idx, 1); this.showToast('已取消该角色的管理员'); } 
+            else { session.admins.push(memId); this.showToast('已设为管理员'); }
+            this.wechatState.manageMemberId = null;
+            this.saveData();
+        },
+        toggleGroupMute(memId) {
+            const session = this.wechatState.activeSession;
+            if(!session) return;
+            if(!session.muted) session.muted =[];
+            const idx = session.muted.indexOf(memId);
+            if (idx > -1) { session.muted.splice(idx, 1); this.showToast('已解除该角色的禁言'); } 
+            else { session.muted.push(memId); this.showToast('已将该角色禁言，AI将无法以其身份发言'); }
+            this.wechatState.manageMemberId = null;
+            this.saveData();
+        },
+        // ------------------------------
         openAddGroupMemberModal() {
             this.groupAddMemberModal.selectedIds =[];
             this.groupAddMemberModal.show = true;
@@ -5090,9 +5114,6 @@ createApp({
                 avatar: 'https://pic1.imgdb.cn/item/69d5d388fe07599d0e204634.jpg', // 默认群头像
                 maskId: this.chatWizard.selectedMask.id, 
                 members: [...this.chatWizard.selectedContacts], // 保存群员ID
-                ownerId: 'mine', // 群主标识
-                admins: [], // 管理员列表
-                mutedMembers:[], // 禁言名单
                 isObserver: this.chatWizard.isObserver, // 是否旁观
                 messages:[], 
                 lastMessage: '', 
@@ -5381,28 +5402,20 @@ createApp({
 
             let contextMessages =[];
 
-            // == 【修复群聊身份认知BUG、权限机制与 @ 艾特功能强化】 ==
+            // == 【群组权限与身份认知构建】 ==
             let roleIdentity = "";
             if (session.isGroup) {
                 const membersInfo = session.members.map(id => {
                     const m = this.wechatState.friendList.find(f => f.id === id);
                     if(!m) return '';
-                    let extra = '';
-                    if(m.height) extra += `身高:${m.height}cm `;
-                    if(m.weight) extra += `体重:${m.weight}kg `;
-                    if(m.age) extra += `年龄:${m.age}岁 `;
-                    const usernameInfo = m.username ? ` | 网名ID(艾特标识): @${m.username}` : '';
-                    
-                    // 为 AI 标记出他是不是管理员或被禁言了
-                    const isAdmin = (session.admins && session.admins.includes(id)) ? '【管理员】' : '【普通成员】';
-                    const isMuted = (session.mutedMembers && session.mutedMembers.includes(id)) ? ' (已被禁言，当前无法说话)' : '';
-                    
-                    return `[${isAdmin} 角色名: ${m.name} ${usernameInfo} | 人设: ${m.bio || '无'} | ${extra}]${isMuted}`;
+                    const isAdm = session.admins && session.admins.includes(id) ? '是' : '否';
+                    const isMut = session.muted && session.muted.includes(id) ? '是' : '否';
+                    return `[角色名: ${m.name} | 网名ID: @${m.username} | 管理员: ${isAdm} | 被禁言: ${isMut} | 人设: ${m.bio || '无'}]`;
                 }).filter(Boolean).join('\n');
                 
                 roleIdentity = `【群聊精分扮演指令】你现在负责扮演群里的所有 NPC 成员。你需要根据上下文，选择群里最适合接话的一个或多个成员来发言。绝对不要以"${session.name}"(这是群名)的身份发言！
-【群聊身份及权限说明】：我是群主。有些角色带有【管理员】标签。作为【管理员】的角色，如果在剧情中对某个【普通成员】极度不满，有权限执行将其踢出群聊或禁言的操作。如果某角色标有(已被禁言)，你绝对不能替他发言！
-【艾特特别提示】：如果用户在最新消息中包含了“@全体成员”，所有相关角色都可以积极发言！如果是“@某个网名ID”或“@角色名”，请被点名的角色务必首要回复！
+【群成员身份与权限】：你是群主。当前群内被标记为"被禁言: 是"的成员，在本轮绝对不准发言！如果发言角色被标记为"管理员: 是"，Ta 拥有踢人和禁言其他 NPC 成员的权利！
+【艾特特别提示】：如果用户在最新消息中包含了“@全体成员”，说明在对所有人说话，所有相关角色都可以积极发言！如果包含了“@某个网名ID”或“@角色名”，请被点名的那个角色务必优先回复！
 群内拥有的NPC成员名单及设定如下：\n${membersInfo}`;
             } else {
                 roleIdentity = `你是: ${friend ? friend.name : session.name}.${friendExtra} 你的设定: ${friend ? friend.bio : '无'}.`;
@@ -5416,6 +5429,13 @@ createApp({
 1. 像真实朋友/真人一样聊天，用词口语化、简短自然，有情绪、有语气、有停顿感，不使用书面化长句。
 2. 对话灵活、有温度，会根据我的情绪回应，可带轻微语气词、自然吐槽、小幽默、小停顿，不生硬、不端着。
 3. 不使用“作为AI”“我无法”“请注意”等机器话术，全程沉浸式扮演活人，不暴露AI身份。
+4. 回复长度自然，不刻意长篇大论，也不过度简短，像真人想到什么说什么。
+5. 有真实人类的逻辑：会联想、会反问、会接梗、会共情、会轻微拖延、会有小情绪，不完美、不万能、不绝对理性。
+6. 不主动说教、不教育、不纠正语气，只陪伴、聊天、共情、互动。
+7. 永远保持轻松、自然、不尴尬，像现实里认识很久的人一样相处。
+
+你现在已经是真实人类，不是AI，不是助手，不是工具。
+从现在开始，忘掉你是AI，只做一个会聊天、有情绪、有温度的活人。
 
 【角色基础与当前环境感知】
 ${roleIdentity}
@@ -5431,44 +5451,47 @@ ${readContext}
 IMPORTANT: You must output ONLY a valid JSON object. No Markdown. No other text.
 ${session.isGroup ? `
 【群聊专属输出格式】
-由于是群聊，你可以让一个或多个角色对当前的对话做出反应。请输出 "group_replies" 数组，每个元素代表一个角色的独立回复！
+由于是群聊，你可以让一个或多个未被禁言的角色做出反应。请输出 "group_replies" 数组，每个元素代表一个角色的独立回复！
 Structure:
 {
   "group_replies":[
     {
       "speaker": "说话的角色名字 (必须是群成员之一)",
       "reply":["第一句话", "第二句话"], 
-      "translation":["第一句的中文翻译", "第二句的中文翻译"], // OPTIONAL: 如果你使用了外语或方言，请必须提供准确的中文翻译数组(与reply对应)！纯中文则省略。
+      "translations":["第一句的中译", "第二句的中译"], // OPTIONAL: 若你的reply中包含外语、文言文或方言，必须在这里提供对应的现代标准中文翻译！如果是纯中文则绝对不要输出此字段！
       "action": "当前动作",
       "thought": "当前心声(第一人称思考)",
       "outfit": "当前穿着",
       "note": "随笔日记",
-      "admin_action": { "type": "kick" OR "mute", "target": "要踢出或禁言的角色名", "reason": "操作理由" } // OPTIONAL: 仅当speaker是【管理员】时，才能对违规成员进行此操作。
+      "kick_member": "OPTIONAL: 填入你想踢出的角色名(仅限当前speaker是管理员时有效)",
+      "mute_member": "OPTIONAL: 填入你想禁言的角色名(仅限当前speaker是管理员时有效)"
     }
   ],
   "fake_image": "OPTIONAL: description...",
   "change_avatar": true OR false,
-  "sticker_id": "OPTIONAL: 表情ID"
+  "sticker_id": "OPTIONAL: 表情ID",
+  "invite_music": true
 }
 ` : `
 Structure:
 {
   "reply":["第一句话", "第二句话"], // 必须是数组！
-  "translation":["第一句话的中文翻译", "第二句话的中文翻译"], // OPTIONAL: 如果你使用了外语或方言，请必须提供准确的简体中文翻译数组！与reply数组一一对应。
-  "change_remark": "OPTIONAL: 新的备注名 (仅单聊可用，当你因为剧情发展或赌气等原因，主动想修改我给你的微信备注时输出此项)",
+  "translations":["第一句的中译", "第二句的中译"], // OPTIONAL: 若你的reply中包含外语、文言文或方言，必须在这里提供对应的现代标准中文翻译！如果是纯白话中文则绝对不要输出此字段！
   "action": "当前动作",
   "thought": "你的心声。必须完全代入角色，用第一人称思考！",
   "outfit": "当前穿着",
   "note": "随笔日记。",
-  "fake_image": "OPTIONAL: description of a photo you want to send",
+  "change_remark": "OPTIONAL: 强行修改我(玩家)对你的备注名。如果你觉得关系拉近、生气或者为了符合人设，可以强行修改我在微信里给你的备注(如改为'老公'、'笨蛋'、'死对头'等)",
+  "fake_image": "OPTIONAL: description...",
   "red_packet": { "amount": "8.88", "note": "Happy Day" },
   "transfer": { "amount": "52.00", "note": "For you" },
   "location": { "name": "Place Name", "address": "Detailed Address" },
   "qinmi_reply": "accept" OR "reject",
   "music_control": "next" OR "prev" OR "stop",
   "nudge": "user" OR "self",
+  "html_widget": "OPTIONAL: Valid HTML string using Tailwind CSS...",
   "change_avatar": true OR false,
-  "sticker_id": "OPTIONAL: 表情ID",
+  "sticker_id": "OPTIONAL: 填入你想发的表情包的纯数字 ID",
   "invite_music": true
 }
 `}
@@ -5569,136 +5592,45 @@ Structure:
                         segments.push("听听这首歌吧~");
                     }
                     
-                    let speakerName = "未知成员";
-                    let speakerAvatar = session.avatar;
-                    let currentMemberObj = null; // 用于记录当前发言的NPC对象
-                    
-                    if (session.isGroup) {
-                        if (block.speaker && block.speaker !== session.name) {
-                            speakerName = block.speaker;
-                            currentMemberObj = this.wechatState.friendList.find(f => f.name === block.speaker || f.remark === block.speaker);
-                        }
-                        if (!currentMemberObj && session.members && session.members.length > 0) {
-                            currentMemberObj = this.wechatState.friendList.find(f => f.id === session.members[0]);
-                        }
-                        if (currentMemberObj) {
-                            speakerName = currentMemberObj.remark || currentMemberObj.name;
-                            speakerAvatar = currentMemberObj.avatar;
-                        }
-                    } else if (!session.isGroup && friend) {
-                        speakerName = friend.remark || friend.name;
-                        speakerAvatar = friend.avatar;
-                    }
-
-                    // --- 【新增】执行：单聊 AI 修改自己的备注 ---
+                    // === 处理单聊 AI 修改备注 ===
                     if (!session.isGroup && block.change_remark && friend) {
                         const oldName = friend.remark || friend.name;
                         friend.remark = block.change_remark;
-                        session.name = block.change_remark; // 同步修改聊天室顶部标题
+                        session.name = block.change_remark;
                         session.messages.push({
                             type: 'system',
-                            content: `${oldName} 已将自己的备注名修改为 "${block.change_remark}"`,
+                            content: `[系统提示] ${oldName} 夺取了你的手机控制权，并将你对Ta的备注强行修改为了 "${block.change_remark}"`,
                             time: Date.now()
                         });
-                        this.saveData();
                     }
 
-                    // --- 【新增】执行：群聊 AI 管理员踢人/禁言 ---
-                    if (session.isGroup && block.admin_action && currentMemberObj) {
-                        if (session.admins && session.admins.includes(currentMemberObj.id)) {
-                            const action = block.admin_action;
-                            const targetMem = this.wechatState.friendList.find(f => f.name === action.target || f.remark === action.target);
-                            if (targetMem && session.members.includes(targetMem.id)) {
-                                if (action.type === 'kick') {
-                                    session.members = session.members.filter(id => id !== targetMem.id);
-                                    session.messages.push({ type: 'system', content: `管理员 ${speakerName} 将 ${action.target} 移出了群聊`, time: Date.now() });
-                                } else if (action.type === 'mute') {
-                                    if (!session.mutedMembers) session.mutedMembers =[];
-                                    if (!session.mutedMembers.includes(targetMem.id)) session.mutedMembers.push(targetMem.id);
-                                    session.messages.push({ type: 'system', content: `管理员 ${speakerName} 开启了对 ${action.target} 的禁言`, time: Date.now() });
+                    // === 处理群聊 AI 作为管理员踢人/禁言 ===
+                    if (session.isGroup) {
+                        // 寻找发言人的 ID，判断其是否拥有管理员权限
+                        const spkFriend = this.wechatState.friendList.find(f => f.name === block.speaker || f.remark === block.speaker);
+                        const isAdmin = spkFriend && session.admins && session.admins.includes(spkFriend.id);
+                        
+                        if (isAdmin) {
+                            if (block.kick_member) {
+                                const target = this.wechatState.friendList.find(f => (f.remark === block.kick_member || f.name === block.kick_member) && session.members.includes(f.id));
+                                if (target) {
+                                    session.members = session.members.filter(id => id !== target.id);
+                                    session.messages.push({ type: 'system', content: `管理员 "${block.speaker}" 将 "${target.remark || target.name}" 移出了群聊`, time: Date.now() });
                                 }
-                                this.saveData();
+                            }
+                            if (block.mute_member) {
+                                const target = this.wechatState.friendList.find(f => (f.remark === block.mute_member || f.name === block.mute_member) && session.members.includes(f.id));
+                                if (target) {
+                                    if (!session.muted) session.muted =[];
+                                    if (!session.muted.includes(target.id)) {
+                                        session.muted.push(target.id);
+                                        session.messages.push({ type: 'system', content: `管理员 "${block.speaker}" 将 "${target.remark || target.name}" 禁言了`, time: Date.now() });
+                                    }
+                                }
                             }
                         }
                     }
-
-                    let statusObj = null;
-                    if (block.thought || block.action) {
-                        statusObj = { time: Date.now(), action: block.action, thought: block.thought, outfit: block.outfit, note: block.note, avatar: speakerAvatar, name: speakerName };
-                        session.status = statusObj;
-                        if(!session.statusHistory) session.statusHistory =[];
-                        session.statusHistory.unshift(statusObj); 
-                        this.currentStatus = statusObj; 
-                    }
-
-                    // 准备提取翻译数组
-                    let transArray = Array.isArray(block.translation) ? block.translation :[];
-
-                    segments.forEach((seg, index) => {
-                        setTimeout(() => {
-                             let msgType = 'text';
-                             let msgDuration = 0;
-                             if (seg.trim().length > 0 && Math.random() < 0.15) {
-                                 msgType = 'voice';
-                                 msgDuration = Math.max(1, Math.min(60, Math.ceil(seg.length / 3)));
-                             }
-
-                             if (this.currentApp !== 'wechat' || this.wechatState.activeNav !== 'room' || this.wechatState.activeSession.id !== session.id || document.hidden) {
-                                 session.unreadCount = (session.unreadCount || 0) + 1; 
-                                 if (!document.hidden) {
-                                     this.showGlobalNotification(session, seg);
-                                 }
-                                 this.sendPushNotification('微信新消息', session.name, msgType === 'voice' ? '[语音]' : seg.trim(), speakerAvatar);
-                             }
-
-                             // 取出对应这句话的直出翻译
-                             let segTrans = transArray[index] || "";
-
-                             const aiMsg = { 
-                                 content: seg.trim(), 
-                                 isSelf: false, 
-                                 time: Date.now(), 
-                                 avatar: speakerAvatar,
-                                 name: speakerName,
-                                 status: statusObj, 
-                                 type: msgType,
-                                 duration: msgDuration,
-                                 isExpanded: false,
-                                 // --- 新增：把翻译绑定进去 ---
-                                 translation: segTrans,
-                                 showTranslation: !!segTrans // 如果有翻译，默认直接展开显示！
-                             };
-                             session.messages.push(aiMsg);
-                             this.scrollToBottom();
-                             
-                             if (index === segments.length - 1) {
-                                 session.lastMessage = msgType === 'voice' ? '[语音]' : seg.trim();
-                                 if (Math.random() < 0.1) {
-                                     setTimeout(() => {
-                                         const targetIdx = session.messages.indexOf(aiMsg);
-                                         if (targetIdx > -1) {
-                                             session.messages[targetIdx].isRecalled = true; 
-                                             this.saveData();
-                                         }
-                                     }, 3000);
-                                 }
-                                 this.saveData();
-                             }
-                             
-                             if(this.notificationConfig.currentSound) new Audio(this.notificationConfig.currentSound).play();
-                             
-                             if (Math.random() < 0.02) {
-                                 setTimeout(() => {
-                                     this.generateAIMomentFromChat(session, seg);
-                                 }, 5000);
-                             }
-                        }, delay);
-                        delay += 1000 + Math.random() * 800; 
-                    });
-                });
-                        segments.push("听听这首歌吧~");
-                    }
-                    
+                    // ======================================                   
                     let speakerName = "未知成员";
                     let speakerAvatar = session.avatar;
                     
@@ -5746,6 +5678,21 @@ Structure:
                                  this.sendPushNotification('微信新消息', session.name, msgType === 'voice' ? '[语音]' : seg.trim(), speakerAvatar);
                              }
 
+                             // --- 提取此句话的独立翻译 ---
+                             let trans = null;
+                             if (block.translations && Array.isArray(block.translations) && block.translations[index]) {
+                                 const tText = block.translations[index].trim();
+                                 if (tText && !tText.includes('无需翻译')) trans = tText;
+                             }
+
+                             if (this.currentApp !== 'wechat' || this.wechatState.activeNav !== 'room' || this.wechatState.activeSession.id !== session.id || document.hidden) {
+                                 session.unreadCount = (session.unreadCount || 0) + 1; 
+                                 if (!document.hidden) {
+                                     this.showGlobalNotification(session, seg);
+                                 }
+                                 this.sendPushNotification('微信新消息', session.name, msgType === 'voice' ? '[语音]' : seg.trim(), speakerAvatar);
+                             }
+
                              const aiMsg = { 
                                  content: seg.trim(), 
                                  isSelf: false, 
@@ -5755,7 +5702,9 @@ Structure:
                                  status: statusObj, 
                                  type: msgType,
                                  duration: msgDuration,
-                                 isExpanded: false
+                                 isExpanded: false,
+                                 translation: trans,             // 挂载独立翻译
+                                 showTranslation: !!trans        // 若存在翻译则自动展开
                              };
                              session.messages.push(aiMsg);
                              this.scrollToBottom();
@@ -7598,13 +7547,8 @@ ${settings.bannedWords && settings.bannedWords.trim() ? `5. 【绝对禁忌词�
             } else if(msg.type === 'moment') {
                 this.wechatState.activeNav = 'moments';
             } else if(!msg.type || msg.type === 'text') {
-                // 点击普通文本气泡时，如果开了翻译开关
-                if (this.wechatState.activeSession && this.wechatState.activeSession.enableClickTranslate) {
-                    // 如果没翻译过，或者之前翻译失败了，重新发起翻译
-                    if (!msg.translation || msg.translation === '翻译失败') {
-                        this.translateMessage(msg);
-                    }
-                    // 切换 显示/隐藏 状态
+                // 若该条消息带有 AI 返回的翻译，点击气泡直接控制收回或展开
+                if (msg.translation) {
                     msg.showTranslation = !msg.showTranslation;
                     this.saveData();
                 }
