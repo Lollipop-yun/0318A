@@ -1807,6 +1807,26 @@
                 </div>
             </div>
         </transition>
+        
+        <!-- 群聊记忆互通选择弹窗 (单聊全局层级) -->
+        <transition name="app-slide">
+            <div v-if="memorySyncModal.show" class="fixed inset-0 z-[96000]">
+                <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="memorySyncModal.show = false"></div>
+                <div class="ios-list-modal">
+                    <div class="ios-list-header">选择互通记忆的群聊 <button class="absolute right-4 text-[#07c160] font-bold text-sm" @click="saveMemorySync">完成</button></div>
+                    <div class="ios-list-content p-0 bg-white max-h-[50vh] overflow-y-auto">
+                        <div v-if="wechatState.sessions.filter(s => s.isGroup).length === 0" class="p-8 text-center text-gray-400 text-sm">暂无群聊</div>
+                        <div v-for="gSession in wechatState.sessions.filter(s => s.isGroup)" :key="gSession.id" class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="toggleMemorySyncGroup(gSession.id)">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-gray-100 overflow-hidden"><img :src="gSession.avatar" class="w-full h-full object-cover"></div>
+                                <span class="text-gray-900 text-sm font-medium">{{ gSession.remark || gSession.name }}</span>
+                            </div>
+                            <i v-if="memorySyncModal.selectedGroupIds.includes(gSession.id)" class="fas fa-check text-[#07c160]"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
         <input type="file" ref="groupAvatarInput2" accept="image/*" class="hidden" @change="handleGroupAvatarChange2">
 
     <!-- ================= 微信 (WeChat) App ================= -->
@@ -2845,6 +2865,15 @@
                             </div>
                         </div>
                         
+                        <!-- 【新增】群聊记忆互通入口 (单聊专属) -->
+                        <div v-if="!wechatState.activeSession.isGroup" class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="openMemorySyncModal">
+                            <span class="text-sm">群聊记忆互通</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-gray-400">{{ wechatState.activeSession.syncGroupIds?.length ? '已开启' : '未开启' }}</span>
+                                <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                            </div>
+                        </div>
+                        
                         <!-- 本聊专属头像入口 (群聊屏蔽) -->
                         <div v-if="!wechatState.activeSession.isGroup" class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="openAvatarSetting">
                             <span class="text-sm">设置本聊专属头像</span>
@@ -3470,6 +3499,7 @@ createApp({
             groupProfileModal: { show: false, name: '', remark: '', bio: '', avatar: '' },
             groupAddMemberModal: { show: false, selectedIds:[] },
             sessionMaskModal: { show: false },
+            memorySyncModal: { show: false, selectedGroupIds:[] },
             isEditingSessionMask: false,
             masks: [], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', bio: '', nudge: '', signature: '', avatar: '' },
             worldData: [], expandedFolders: [], worldModal: { show: false, type: 'folder', name: '', content: '', parentId: '' }, viewFileModal: { show: false, data: {} },
@@ -4702,6 +4732,28 @@ createApp({
                 this.showToast('已切换面具');
             }
         },
+        // --- 新增：群聊记忆互通方法 ---
+        openMemorySyncModal() {
+            const session = this.wechatState.activeSession;
+            if (!session) return;
+            this.memorySyncModal.selectedGroupIds = [...(session.syncGroupIds || [])];
+            this.memorySyncModal.show = true;
+        },
+        toggleMemorySyncGroup(id) {
+            const idx = this.memorySyncModal.selectedGroupIds.indexOf(id);
+            if (idx > -1) this.memorySyncModal.selectedGroupIds.splice(idx, 1);
+            else this.memorySyncModal.selectedGroupIds.push(id);
+        },
+        saveMemorySync() {
+            const session = this.wechatState.activeSession;
+            if (session) {
+                session.syncGroupIds =[...this.memorySyncModal.selectedGroupIds];
+                this.saveData();
+                this.showToast('已保存群聊记忆互通设置');
+            }
+            this.memorySyncModal.show = false;
+        },
+        // ------------------------------
         editSessionCustomMask() {
             const session = this.wechatState.activeSession;
             if(!session) return;
@@ -5406,6 +5458,38 @@ createApp({
 
             let contextMessages =[];
 
+            // == 【跨聊天记忆互通构建】 ==
+            let crossChatContext = "";
+            if (!session.isGroup && session.syncGroupIds && session.syncGroupIds.length > 0) {
+                // 如果是单聊，且开启了互通，提取被勾选群聊的最近记录
+                let groupMemories =[];
+                session.syncGroupIds.forEach(gid => {
+                    const gSession = this.wechatState.sessions.find(s => s.id === gid);
+                    if (gSession && gSession.messages) {
+                        const recentGMsgs = gSession.messages.slice(-6).map(m => `[${m.name || m.avatar}]: ${m.content}`).join('\n');
+                        if (recentGMsgs) groupMemories.push(`在群聊【${gSession.remark || gSession.name}】中的最新聊天：\n${recentGMsgs}`);
+                    }
+                });
+                if (groupMemories.length > 0) {
+                    crossChatContext = `\n【跨聊天记忆互通(非常重要)】：由于我(玩家)与你开启了记忆互通，你清楚地记得我们刚才在以下群聊里的所有对话。请你在当前的私聊中，自然地衔接、提及或调侃我们在群里发生的事（比如吃醋、解释、延续话题等），必须要有代入感：\n${groupMemories.join('\n\n')}\n`;
+                }
+            } else if (session.isGroup) {
+                // 如果是群聊，反向提取与群成员开启了互通的私聊记录
+                let singleMemories =[];
+                this.wechatState.sessions.forEach(sSession => {
+                    if (!sSession.isGroup && sSession.syncGroupIds && sSession.syncGroupIds.includes(session.id)) {
+                        if (sSession.messages && sSession.messages.length > 0) {
+                            const recentSMsgs = sSession.messages.slice(-4).map(m => `[${m.isSelf ? mask.name : sSession.name}]: ${m.content}`).join('\n');
+                            if (recentSMsgs) singleMemories.push(`我(玩家)与【${sSession.name}】的私聊动态：\n${recentSMsgs}`);
+                        }
+                    }
+                });
+                if (singleMemories.length > 0) {
+                    crossChatContext = `\n【跨聊天记忆互通(非常重要)】：在这个群里，部分角色与我(玩家)私下有联系。以下是我与部分角色的最新私聊记录，请知情的角色在群聊发言时，自然地暗示、Cue到或暴露出私聊过的内容（可以产生争风吃醋、调侃或默契的反应）：\n${singleMemories.join('\n\n')}\n`;
+                }
+            }
+            // ============================
+
             // == 【群组权限与身份认知构建】 ==
             let roleIdentity = "";
             if (session.isGroup) {
@@ -5451,6 +5535,7 @@ ${musicContext}
 ${diaryContext}
 ${stickerContext}
 ${readContext}
+${crossChatContext}
 
 IMPORTANT: You must output ONLY a valid JSON object. No Markdown. No other text.
 ${session.isGroup ? `
@@ -5462,12 +5547,11 @@ Structure:
     {
       "speaker": "说话的角色名字 (必须是群成员之一)",
       "reply":["第一句话", "第二句话"], 
-      "translations":["第一句的中译", "第二句的中译"], // OPTIONAL: 若你的reply中包含外语、文言文或方言，必须在这里提供对应的现代标准中文翻译！如果是纯中文则绝对不要输出此字段！
-      "action": "当前动作",
-      "thought": "当前心声(第一人称思考)",
-      "outfit": "当前穿着",
-      "note": "随笔日记",
-      "recall": true OR false, // OPTIONAL: 若你发出这句话后立刻觉得后悔、不妥、怕对方生气，想要迅速撤回，请设为 true
+      "translations":["第一句的中译", "第二句的中译"],
+      "action": "当前具体动作(每轮必须更新，绝不能用'无')",
+      "thought": "当前心声(第一人称思考，每轮必须更新)",
+      "outfit": "当前穿着(必须更新，贴合此时此地的场景)",
+      "note": "随笔日记(OPTIONAL: 看你当前心情决定是否提笔)",
       "kick_member": "OPTIONAL: 填入你想踢出的角色名(仅限当前speaker是管理员时有效)",
       "mute_member": "OPTIONAL: 填入你想禁言的角色名(仅限当前speaker是管理员时有效)"
     }
@@ -5481,13 +5565,13 @@ Structure:
 Structure:
 {
   "reply":["第一句话", "第二句话"], // 必须是数组！
-  "translations":["第一句的中译", "第二句的中译"], // OPTIONAL: 若你的reply中包含外语、文言文或方言，必须在这里提供对应的现代标准中文翻译！如果是纯白话中文则绝对不要输出此字段！
-  "action": "当前动作",
-  "thought": "你的心声。必须完全代入角色，用第一人称思考！",
-  "outfit": "当前穿着",
-  "note": "随笔日记。",
-  "recall": true OR false, // OPTIONAL: 若你发出这句话后立刻觉得后悔、不妥、怕对方生气，想要迅速撤回刚才那句话时设为 true
+  "translations":["第一句的中译", "第二句的中译"],
+  "action": "当前具体动作(每轮必须更新，绝不能用'无')",
+  "thought": "当前心声(第一人称思考，每轮必须更新)",
+  "outfit": "当前穿着(必须更新，贴合此时此地的场景)",
+  "note": "随笔日记(OPTIONAL: 看你当前心情决定是否提笔)",
   "change_remark": "OPTIONAL: 强行修改我(玩家)对你的备注名。如果你觉得关系拉近、生气或者为了符合人设，可以强行修改我在微信里给你的备注(如改为'老公'、'笨蛋'、'死对头'等)",
+  "recall": true OR false, // OPTIONAL: 若你发出这句话后立刻觉得后悔、不妥、怕对方生气，想要迅速撤回刚才那句话时设为 true
   "fake_image": "OPTIONAL: description...",
   "red_packet": { "amount": "8.88", "note": "Happy Day" },
   "transfer": { "amount": "52.00", "note": "For you" },
