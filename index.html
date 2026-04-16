@@ -2237,14 +2237,13 @@
                                 <!-- 群聊专属：显示发消息人的名字 -->
                                 <span v-if="wechatState.activeSession?.isGroup && !msg.isSelf" class="text-[10px] text-gray-500 ml-1.5 mb-1">{{ msg.name }}</span>
                                 
-                                <!-- 气泡核心与拉黑拒收提示 -->
-                                <div class="flex items-center gap-2" :class="msg.isSelf ? 'flex-row-reverse' : 'flex-row'">
-                                    <div class="chat-bubble" :class="[msg.isSelf ? 'chat-bubble-user' : 'chat-bubble-ai', msg.type === 'voice' ? 'chat-bubble-voice' : '', msg.type === 'image' || msg.type === 'fake_image' || msg.type === 'sticker' ? 'chat-bubble-image' : '', msg.type === 'red_packet' || msg.type === 'transfer' ? 'chat-bubble-finance' : '', msg.type === 'transfer' ? 'chat-bubble-transfer' : '', msg.type === 'red_packet' ? 'chat-bubble-redpacket' : '', msg.type === 'qinmi_invite' ? 'chat-bubble-qinmi' : '', msg.type === 'moment' ? 'chat-bubble-moment' : '', msg.type === 'location' ? 'chat-bubble-location' : '', msg.isReceived ? 'received' : '']" 
-                                         :style="msg.type === 'voice' ? { width: (60 + Math.min(msg.duration, 60) * 4) + 'px' } : {}"
-                                         @click="handleChatBubbleClick(msg)"
-                                         @contextmenu.prevent="showChatContextMenu($event, msg, i)">
-                                         
-                                        <div v-if="msg.quote" class="quote-block"><span class="font-bold mr-1">{{ msg.quote.name }}:</span>{{ msg.quote.content }}</div>
+                                <!-- 气泡核心 -->
+                                <div class="chat-bubble" :class="[msg.isSelf ? 'chat-bubble-user' : 'chat-bubble-ai', msg.type === 'voice' ? 'chat-bubble-voice' : '', msg.type === 'image' || msg.type === 'fake_image' || msg.type === 'sticker' ? 'chat-bubble-image' : '', msg.type === 'red_packet' || msg.type === 'transfer' ? 'chat-bubble-finance' : '', msg.type === 'transfer' ? 'chat-bubble-transfer' : '', msg.type === 'red_packet' ? 'chat-bubble-redpacket' : '', msg.type === 'qinmi_invite' ? 'chat-bubble-qinmi' : '', msg.type === 'moment' ? 'chat-bubble-moment' : '', msg.type === 'location' ? 'chat-bubble-location' : '', msg.isReceived ? 'received' : '']" 
+                                     :style="msg.type === 'voice' ? { width: (60 + Math.min(msg.duration, 60) * 4) + 'px' } : {}"
+                                     @click="handleChatBubbleClick(msg)"
+                                     @contextmenu.prevent="showChatContextMenu($event, msg, i)">
+                                     
+                                    <div v-if="msg.quote" class="quote-block"><span class="font-bold mr-1">{{ msg.quote.name }}:</span>{{ msg.quote.content }}</div>
                                     
                                     <!-- 语音消息 -->
                                     <div v-if="msg.type === 'voice'" class="flex items-center justify-between w-full">
@@ -2376,11 +2375,6 @@
                                         </transition>
                                     </div>
                                 </div>
-                                
-                                <!-- 【新增】拉黑时的红色感叹号 -->
-                                <i v-if="msg.isBlockedMsg && !msg.isSelf" class="fas fa-exclamation-circle text-red-500 text-lg shrink-0 drop-shadow-sm"></i>
-                                </div>
-                                
                                 <!-- 语音转文字展开 -->
                                 <div v-if="msg.type === 'voice' && msg.isExpanded" class="voice-transcription">{{ msg.content }}</div>
                                 <span class="chat-timestamp-small" :class="wechatState.activeSession.wallpaper ? 'text-white/60 drop-shadow-sm' : 'text-gray-300'">{{ formatChatTime(msg.time) }} Read</span>
@@ -2400,11 +2394,6 @@
                 <!-- 聊天输入区域 -->
                 <div class="bg-white border-t border-gray-100 pb-safe relative chat-input-area">
                     
-                    <!-- 【新增】单聊黑名单横幅 -->
-                    <div v-if="wechatState.activeSession && wechatState.activeSession.isBlocked && !wechatState.activeSession.isGroup" class="w-full bg-gray-100 py-2.5 text-center border-b border-gray-200 relative z-10">
-                        <span class="text-xs text-gray-500 font-bold tracking-wide">我已将 "{{ wechatState.activeSession.name }}" 加入黑名单</span>
-                    </div>
-
                     <!-- 【新增】群聊 @ 弹窗面板 -->
                     <transition name="app-slide">
                         <div v-if="wechatState.showGroupMentionPanel && wechatState.activeSession?.isGroup" class="absolute bottom-full left-0 w-full bg-white z-[60] shadow-[0_-10px_25px_rgba(0,0,0,0.1)] rounded-t-2xl overflow-hidden max-h-72 flex flex-col">
@@ -3035,7 +3024,7 @@
                             </div>
                             <div class="flex gap-2 shrink-0">
                                 <button @click="acceptNewFriend(req, idx)" class="px-3 py-1.5 bg-[#07c160] text-white text-xs font-bold rounded">接受</button>
-                                <button @click="rejectNewFriend(req, idx)" class="px-3 py-1.5 bg-gray-100 text-gray-500 text-xs font-bold rounded">拒绝</button>
+                                <button @click="wechatState.newFriends.splice(idx, 1); saveData();" class="px-3 py-1.5 bg-gray-100 text-gray-500 text-xs font-bold rounded">拒绝</button>
                             </div>
                         </div>
                     </div>
@@ -3150,30 +3139,9 @@
             <main v-if="wechatState.activeNav === 'me'" class="flex-1 overflow-y-auto bg-white">
                 <div class="pt-20 px-6 pb-6">
                     <div class="flex items-center gap-4 mb-8"><div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-100"><img v-if="homeProfile.avatar" :src="homeProfile.avatar" class="w-full h-full object-cover"></div><div><h2 class="text-xl font-bold">{{ homeProfile.name }}</h2><p class="text-xs text-gray-400 mt-1">微信号: {{ homeProfile.id }}</p></div><i class="fas fa-qrcode ml-auto text-gray-400"></i><i class="fas fa-chevron-right ml-4 text-gray-300 text-xs"></i></div>
-                    <div class="space-y-1 border-t border-gray-100"><div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="openMaskManager"><div class="flex items-center gap-3"><i class="fas fa-mask text-purple-500 w-6"></i><span>面具</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="wechatState.activeNav='wallet'"><div class="flex items-center gap-3"><i class="fas fa-wallet text-green-600 w-6"></i><span>钱包</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="openFavorites"><div class="flex items-center gap-3"><i class="fas fa-cube text-orange-500 w-6"></i><span>收藏</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="openStickerManager"><div class="flex items-center gap-3"><i class="fas fa-smile text-yellow-500 w-6"></i><span>表情</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="blacklistModal.show = true"><div class="flex items-center gap-3"><i class="fas fa-user-slash text-red-500 w-6"></i><span>黑名单管理</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50"><div class="flex items-center gap-3"><i class="fas fa-cog text-blue-600 w-6"></i><span>设置</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div></div>
+                    <div class="space-y-1 border-t border-gray-100"><div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="openMaskManager"><div class="flex items-center gap-3"><i class="fas fa-mask text-purple-500 w-6"></i><span>面具</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="wechatState.activeNav='wallet'"><div class="flex items-center gap-3"><i class="fas fa-wallet text-green-600 w-6"></i><span>钱包</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="openFavorites"><div class="flex items-center gap-3"><i class="fas fa-cube text-orange-500 w-6"></i><span>收藏</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="openStickerManager"><div class="flex items-center gap-3"><i class="fas fa-smile text-yellow-500 w-6"></i><span>表情</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50"><div class="flex items-center gap-3"><i class="fas fa-cog text-blue-600 w-6"></i><span>设置</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div></div>
                 </div>
             </main>
-            
-            <!-- 黑名单管理弹窗 -->
-            <transition name="app-slide">
-                <div v-if="blacklistModal.show" class="fixed inset-0 z-[50000] bg-gray-50 flex flex-col">
-                    <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-100 sticky top-0 z-10">
-                        <button @click="blacklistModal.show = false" class="w-8 h-8 flex items-center justify-center text-black"><i class="fas fa-chevron-left text-lg"></i></button>
-                        <h1 class="text-[17px] font-bold">黑名单</h1>
-                        <div class="w-8"></div>
-                    </header>
-                    <div class="flex-1 overflow-y-auto p-4">
-                        <div v-if="wechatState.sessions.filter(s => s.isBlocked && !s.isGroup).length === 0" class="text-center text-gray-400 mt-20 text-sm">暂无黑名单联系人</div>
-                        <div v-for="session in wechatState.sessions.filter(s => s.isBlocked && !s.isGroup)" :key="session.id" class="bg-white p-3 rounded-xl flex items-center justify-between shadow-sm mb-3">
-                            <div class="flex items-center gap-3">
-                                <div class="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden"><img :src="session.avatar" class="w-full h-full object-cover"></div>
-                                <span class="font-bold text-gray-900 text-[15px]">{{ session.name }}</span>
-                            </div>
-                            <button @click="session.isBlocked = false; saveData(); showToast('已移出黑名单')" class="px-4 py-1.5 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg active:bg-gray-200 transition">解除</button>
-                        </div>
-                    </div>
-                </div>
-            </transition>
 
             <!-- 底部悬浮导航 (聊天房间和聊天详情不显示) -->
             <div v-if="wechatState.activeNav !== 'room' && wechatState.activeNav !== 'chat-details' && wechatState.activeNav !== 'chat-bg-settings' && wechatState.activeNav !== 'red-packet-detail' && wechatState.activeNav !== 'wallet' && wechatState.activeNav !== 'qinmi-manage' && wechatState.activeNav !== 'qinmi-specific-detail' && wechatState.activeNav !== 'moments' && wechatState.activeNav !== 'diary' && wechatState.activeNav !== 'diary-detail' && wechatState.activeNav !== 'new-friends' && wechatState.activeNav !== 'bookshelf'" class="absolute bottom-6 left-1/2 -translate-x-1/2 wechat-bottom-nav flex items-center justify-around px-4 z-20">
@@ -3525,7 +3493,6 @@ createApp({
             wechatState: { activeFilter: 'Chats', activeNav: 'chat', contacts: [], searchQuery: '', friendList:[], sessions:[], activeSession: null, showPlusMenu: false, showChatFunctions: false, showAttachMenu: false, groups: [], newFriends:[], showGroupMentionPanel: false },
             expandedGroups: ['all'],
             groupSelectModal: { show: false },
-            blacklistModal: { show: false },
             addContactModal: { show: false }, chatWizard: { show: false, step: 1, type: 'single', selectedContacts:[], selectedMask: null, isObserver: false },
             newContact: { name: '', remark: '', username: '', gender: '男', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: 'https://pic1.imgdb.cn/item/69d5d388fe07599d0e204634.jpg' },
             masks:[], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', bio: '', nudge: '', signature: '', avatar: 'https://pic1.imgdb.cn/item/69d5d388fe07599d0e204634.jpg' },
@@ -5324,24 +5291,57 @@ createApp({
         },
         triggerReceive() {
             if (!this.apiConfig.apiKey) { this.showToast('请先配置 API Key'); return; }
+            
+            // Blocking Logic
+            if (this.wechatState.activeSession.isBlocked) {
+                // If blocked, AI won't reply normally. 30% chance to trigger "Friend Request"
+                if (Math.random() < 0.3) {
+                     this.triggerReAddRequest(this.wechatState.activeSession);
+                }
+                return; 
+            }
+            
             this.isTyping = true; 
             this.generateAiReply();
         },
-        triggerReAddRequest(session, reason) {
+        async triggerReAddRequest(session) {
              const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
              if(!friend) return;
              
-             // 如果已经在申请列表中，先移除旧的，换成新的理由
-             const existingIdx = this.wechatState.newFriends.findIndex(nf => nf.id === friend.id);
-             if(existingIdx > -1) this.wechatState.newFriends.splice(existingIdx, 1);
+             // Check if already in new friends
+             const exists = this.wechatState.newFriends && this.wechatState.newFriends.find(nf => nf.id === friend.id);
+             if(exists) return;
 
-             if(!this.wechatState.newFriends) this.wechatState.newFriends =[];
+             // AI Generates the request message
+             let requestMsg = "请求添加你为好友";
+             try {
+                let url = this.apiConfig.baseUrl.trim().replace(/\/+$/, '');
+                if (!url.endsWith('/v1')) url += '/v1';
+                const res = await fetch(`${url}/chat/completions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiConfig.apiKey.trim()}` },
+                    body: JSON.stringify({ 
+                        model: this.apiConfig.selectedModel, 
+                        messages: [
+                            { role: 'system', content: `You are ${friend.name}. You realized you have been blocked/deleted by the user. You want to add them back. Write a very short friend request message (max 15 words). It could be angry, sad, humble, or cold depending on your persona (${friend.bio}). Output ONLY the message.` },
+                            { role: 'user', content: 'Generate friend request message.' }
+                        ],
+                        temperature: 1.0
+                    })
+                });
+                if(res.ok) {
+                    const data = await res.json();
+                    requestMsg = data.choices[0].message.content.trim();
+                }
+             } catch(e) {}
+
+             if(!this.wechatState.newFriends) this.wechatState.newFriends = [];
              this.wechatState.newFriends.unshift({
                  id: friend.id,
                  name: friend.remark || friend.name,
                  avatar: friend.avatar,
                  time: Date.now(),
-                 msg: reason || "请求添加你为好友"
+                 msg: requestMsg
              });
              this.saveData();
              this.showToast('收到新的好友申请');
@@ -5349,7 +5349,8 @@ createApp({
         acceptNewFriend(req, idx) {
              const session = this.wechatState.sessions.find(s => s.targetId === req.id);
              if(session) {
-                 session.isBlocked = false; // 同意后自动解除拉黑
+                 session.isBlocked = false;
+                 // Send the request message as the first message
                  session.messages.push({
                      content: req.msg || "我们已经是好友了，现在可以开始聊天了。",
                      isSelf: false,
@@ -5360,40 +5361,9 @@ createApp({
              }
              this.wechatState.newFriends.splice(idx, 1);
              this.saveData();
-             this.showToast('已添加并解除拉黑');
-        },
-        rejectNewFriend(req, idx) {
-            this.wechatState.newFriends.splice(idx, 1);
-            this.showToast('已无情拒绝');
-
-            // 触发角色被拒绝后的二次反应 (注入系统旁白刺激AI)
-            const session = this.wechatState.sessions.find(s => s.targetId === req.id);
-            if (session && session.isBlocked) {
-                session.messages.push({
-                    type: 'system',
-                    content: `[上帝视角提示]：你刚刚残忍地拒绝了 ${req.name} 的好友申请。`,
-                    time: Date.now()
-                });
-                this.saveData();
-                
-                // 延迟2秒后自动触发AI对被拒绝的反应
-                setTimeout(() => {
-                    this.wechatState.activeSession = session;
-                    this.isTyping = true;
-                    this.generateAiReply();
-                }, 2000);
-            }
+             this.showToast('已添加');
         },
         
-        // == 【单聊黑名单上帝视角构建】 ==
-            let blockContext = "";
-            if (!session.isGroup && session.isBlocked) {
-                blockContext = `\n【极其重要的状态警告：你被拉黑了！】\n你已经被我(玩家)加入黑名单了！在微信里被拉黑后，你发出的消息我这边会显示拒收，所以你默认以为我看不见你的消息。
-但是因为我是“上帝视角”，其实我不仅能看见，我还能继续毫无阻碍地给你发消息！
-请在回复中表现出你发现自己被拉黑，或者我拒收了好友申请后的震惊、愤怒、委屈、质问或无力感（你可以自言自语、无能狂怒）。
-如果你实在受不了想加回我，你可以在返回的 JSON 中使用 "friend_request" 字段，附带你的申请理由！`;
-            }
-            // ============================
         async generateAiReply() {
             const session = this.wechatState.activeSession;
             const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
@@ -5566,7 +5536,6 @@ ${diaryContext}
 ${stickerContext}
 ${readContext}
 ${crossChatContext}
-${blockContext}
 
 IMPORTANT: You must output ONLY a valid JSON object. No Markdown. No other text.
 ${session.isGroup ? `
@@ -5601,7 +5570,6 @@ Structure:
   "thought": "当前心声(第一人称思考，每轮必须更新)",
   "outfit": "当前穿着(必须更新，贴合此时此地的场景)",
   "note": "随笔日记(OPTIONAL: 看你当前心情决定是否提笔)",
-  "friend_request": "OPTIONAL: 如果你发现自己被拉黑了，且实在忍不住想加回我，请在这里填入验证申请理由(如'把我加回来好不好')。填入此项后，将直接转为好友申请发送，不再产生聊天气泡！",
   "change_remark": "OPTIONAL: 强行修改我(玩家)对你的备注名。如果你觉得关系拉近、生气或者为了符合人设，可以强行修改我在微信里给你的备注(如改为'老公'、'笨蛋'、'死对头'等)",
   "recall": true OR false, // OPTIONAL: 若你发出这句话后立刻觉得后悔、不妥、怕对方生气，想要迅速撤回刚才那句话时设为 true
   "fake_image": "OPTIONAL: description...",
@@ -5752,13 +5720,7 @@ Structure:
                             }
                         }
                     }
-                    // ======================================
-                    // === 处理黑名单发出好友申请 ===
-                    if (!session.isGroup && session.isBlocked && block.friend_request) {
-                        this.triggerReAddRequest(session, block.friend_request);
-                        this.isTyping = false;
-                        return; // 拦截执行，直接结束这一轮
-                    }                   
+                    // ======================================                   
                     let speakerName = "未知成员";
                     let speakerAvatar = session.avatar;
                     
@@ -5831,9 +5793,8 @@ Structure:
                                  type: msgType,
                                  duration: msgDuration,
                                  isExpanded: false,
-                                 translation: trans,
-                                 showTranslation: !!trans,
-                                 isBlockedMsg: session.isBlocked && !session.isGroup // 【新增】如果是黑名单期间发的消息，打上标记用于显示红色感叹号
+                                 translation: trans,             // 挂载独立翻译
+                                 showTranslation: !!trans        // 若存在翻译则自动展开
                              };
                              session.messages.push(aiMsg);
                              this.scrollToBottom();
