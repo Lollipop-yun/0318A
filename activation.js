@@ -112,12 +112,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 点击激活
     activateBtn.addEventListener('click', async () => {
-        const acc = document.getElementById('acc-input').value.trim();
-        const pwd = document.getElementById('pwd-input').value.trim();
         const code = document.getElementById('code-input').value.trim().toUpperCase();
 
-        if (!acc || !pwd || !code) {
-            alert("账号、密码和激活码不能为空！");
+        if (!code) {
+            alert("激活码不能为空！");
             return;
         }
 
@@ -136,10 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 检测激活码
         if (code === validActCode) {
-            // 绑定账号密码
+            // 只记录设备已激活状态，不再存储账号密码
             localStorage.setItem('aovein_activated', 'true');
-            localStorage.setItem('aovein_account', acc);
-            localStorage.setItem('aovein_pwd', pwd);
             
             const screen = document.getElementById('activation-screen');
             screen.style.transform = 'scale(1.1)'; 
@@ -151,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             document.getElementById('code-input').classList.add('error');
             setTimeout(() => document.getElementById('code-input').classList.remove('error'), 1000);
-            alert("激活码无效，请联系管理员获取！");
+            alert("激活码无效，请检查后重试！");
         }
     });
 });
