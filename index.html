@@ -1725,24 +1725,26 @@
                             <label class="text-xs font-bold text-gray-800 ml-1 mb-3 block">群成员管理 ({{ wechatState.activeSession?.members?.length || 0 }}人)</label>
                             <div class="flex flex-wrap gap-4 pb-12">
                                 <!-- 群主(我) -->
-                                <div class="relative group flex flex-col items-center">
-                                    <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-yellow-400 shadow-sm">
-                                        <img :src="getMaskById(wechatState.activeSession?.maskId).avatar" class="w-full h-full object-cover">
+                                <div class="group flex flex-col items-center">
+                                    <div class="relative">
+                                        <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-yellow-400 shadow-sm">
+                                            <img :src="getMaskById(wechatState.activeSession?.maskId).avatar" class="w-full h-full object-cover">
+                                        </div>
+                                        <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-yellow-400 text-white text-[8px] px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap z-10">群主</div>
                                     </div>
-                                    <span class="text-[10px] text-gray-600 mt-1 max-w-[50px] truncate text-center">我</span>
-                                    <div class="absolute -bottom-1 bg-yellow-400 text-white text-[8px] px-1 rounded-sm shadow-sm">群主</div>
+                                    <span class="text-[10px] text-gray-600 mt-3 max-w-[50px] truncate text-center">我</span>
                                 </div>
                                 
                                 <!-- 现有成员 -->
-                                <div v-for="memId in wechatState.activeSession?.members" :key="memId" class="relative flex flex-col items-center" @click="wechatState.manageMemberId = wechatState.manageMemberId === memId ? null : memId">
-                                    <div class="w-12 h-12 rounded-full bg-gray-100 overflow-hidden border-2" :class="isGroupAdmin(memId) ? 'border-blue-400' : 'border-gray-200'">
-                                        <img :src="getFriendAvatar(memId)" class="w-full h-full object-cover" :class="{'grayscale opacity-50': isGroupMuted(memId)}">
+                                <div v-for="memId in wechatState.activeSession?.members" :key="memId" class="flex flex-col items-center relative" @click="wechatState.manageMemberId = wechatState.manageMemberId === memId ? null : memId">
+                                    <div class="relative">
+                                        <div class="w-12 h-12 rounded-full bg-gray-100 overflow-hidden border-2" :class="isGroupAdmin(memId) ? 'border-blue-400' : 'border-gray-200'">
+                                            <img :src="getFriendAvatar(memId)" class="w-full h-full object-cover" :class="{'grayscale opacity-50': isGroupMuted(memId)}">
+                                        </div>
+                                        <div v-if="isGroupAdmin(memId)" class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-blue-400 text-white text-[8px] px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap z-10">管理员</div>
+                                        <div v-if="isGroupMuted(memId)" class="absolute -top-1 -right-1 bg-gray-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-md z-10"><i class="fas fa-comment-slash"></i></div>
                                     </div>
-                                    <span class="text-[10px] text-gray-600 mt-1 max-w-[50px] truncate text-center">{{ getFriendName(memId) }}</span>
-                                    
-                                    <!-- 徽章与状态 -->
-                                    <div v-if="isGroupAdmin(memId)" class="absolute -bottom-1 bg-blue-400 text-white text-[8px] px-1 rounded-sm shadow-sm">管理员</div>
-                                    <div v-if="isGroupMuted(memId)" class="absolute -top-1 -right-1 bg-gray-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-md"><i class="fas fa-comment-slash"></i></div>
+                                    <span class="text-[10px] text-gray-600 mt-3 max-w-[50px] truncate text-center">{{ getFriendName(memId) }}</span>
                                     
                                     <!-- 点击弹出的管理面板 -->
                                     <transition name="fade">
@@ -2359,10 +2361,10 @@
                             </div>
                         </div>
                         
-                        <!-- 撤回提示 -->
+                        <!-- 撤回提示 (修复群聊具体人名显示) -->
                         <div v-else class="system-recall-tip">
                             <div class="bg-gray-100/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs text-gray-500 shadow-sm flex items-center gap-2">
-                                <span>{{ msg.isSelf ? '你' : wechatState.activeSession.name }} 撤回了一条消息</span>
+                                <span>{{ msg.isSelf ? '你' : (msg.name || wechatState.activeSession.name) }} 撤回了一条消息</span>
                                 <span v-if="!msg.isSelf" class="text-blue-600 font-bold cursor-pointer hover:underline" @click="viewRecalled(msg)">查看</span>
                             </div>
                         </div>
@@ -5345,8 +5347,9 @@ createApp({
             const weekDays =['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
             const weekDay = weekDays[now.getDay()];
             
-            // 直接将精准的系统时间写入上下文，AI 100% 能感应到具体日期
-            let timeContext = `\n[系统提示-当前真实时间]: 今天是 ${year}年${month}月${day}日，${weekDay}，当前具体时间是 ${hour}:${minute}。请在对话中准确认知现在的具体日期和时间。`;
+            // 加入世界时差计算法则
+            let timeContext = `\n[系统提示-当前真实时间]: 中国北京时间(UTC+8)现在是 ${year}年${month}月${day}日，${weekDay}，${hour}:${minute}。
+【时差感知提醒】：如果你的人设目前位于国外，请根据北京时间自行推算你的当地时间（如：日本/韩国+1小时；英国-8小时；美国东部-13小时，美国西部-16小时；澳洲东部+2小时等），请务必在对话中符合你所在地的作息时间（如北京时间中午时，美国可能是深夜）！`;
             
             // Music Sense Logic (NEW)
             // --- 强化音乐感知与 AI 主动切歌 ---
@@ -5464,6 +5467,7 @@ Structure:
       "thought": "当前心声(第一人称思考)",
       "outfit": "当前穿着",
       "note": "随笔日记",
+      "recall": true OR false, // OPTIONAL: 若你发出这句话后立刻觉得后悔、不妥、怕对方生气，想要迅速撤回，请设为 true
       "kick_member": "OPTIONAL: 填入你想踢出的角色名(仅限当前speaker是管理员时有效)",
       "mute_member": "OPTIONAL: 填入你想禁言的角色名(仅限当前speaker是管理员时有效)"
     }
@@ -5482,6 +5486,7 @@ Structure:
   "thought": "你的心声。必须完全代入角色，用第一人称思考！",
   "outfit": "当前穿着",
   "note": "随笔日记。",
+  "recall": true OR false, // OPTIONAL: 若你发出这句话后立刻觉得后悔、不妥、怕对方生气，想要迅速撤回刚才那句话时设为 true
   "change_remark": "OPTIONAL: 强行修改我(玩家)对你的备注名。如果你觉得关系拉近、生气或者为了符合人设，可以强行修改我在微信里给你的备注(如改为'老公'、'笨蛋'、'死对头'等)",
   "fake_image": "OPTIONAL: description...",
   "red_packet": { "amount": "8.88", "note": "Happy Day" },
@@ -5712,14 +5717,20 @@ Structure:
                              
                              if (index === segments.length - 1) {
                                  session.lastMessage = msgType === 'voice' ? '[语音]' : seg.trim();
-                                 if (Math.random() < 0.1) {
+                                 
+                                 // AI 撤回逻辑：根据 AI 主观意愿 (block.recall) 或者强烈的后悔情绪触发，而不是纯随机
+                                 const aiWantsRecall = block.recall === true || block.recall === "true";
+                                 const regretThought = block.thought && block.thought.match(/(后悔|不妥|生气|太冲动|不该说|撤回|撤掉|收回)/);
+                                 
+                                 // 当AI主动要求撤回，或者心声里流露出强烈的后悔/怕生气时(30%触发概率)，才会执行撤回
+                                 if (aiWantsRecall || (regretThought && Math.random() < 0.3)) {
                                      setTimeout(() => {
                                          const targetIdx = session.messages.indexOf(aiMsg);
                                          if (targetIdx > -1) {
                                              session.messages[targetIdx].isRecalled = true; 
                                              this.saveData();
                                          }
-                                     }, 3000);
+                                     }, 3000 + Math.random() * 2000); // 3-5秒后撤回
                                  }
                                  this.saveData();
                              }
