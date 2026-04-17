@@ -5658,7 +5658,7 @@ Structure:
     {
       "speaker": "说话的角色名字 (必须是群成员之一)",
       "reply":["第一句话", "第二句话"], 
-      "translations":["第一句的中译", "第二句的中译"],
+      "translations":["第一句的中译", "第二句的中译"], // OPTIONAL: 【极度重要】如果你的reply全是普通中文，绝对不要输出 translations 字段！只有包含外语/文言文/方言时才需要提供对应的现代标准中文翻译！
       "action": "当前具体动作(每轮必须更新，绝不能用'无')",
       "thought": "当前心声(第一人称思考，每轮必须更新)",
       "outfit": "当前穿着(必须更新，贴合此时此地的场景)",
@@ -5676,12 +5676,12 @@ Structure:
 Structure:
 {
   "reply":["第一句话", "第二句话"], // 必须是数组！
-  "translations":["第一句的中译", "第二句的中译"],
+  "translations":["第一句的中译", "第二句的中译"], // OPTIONAL: 【极度重要】如果你的reply全是普通中文，绝对不要输出 translations 字段！只有包含外语/文言文/方言时才需要提供对应的现代标准中文翻译！
   "action": "当前具体动作(每轮必须更新，绝不能用'无')",
   "thought": "当前心声(第一人称思考，每轮必须更新)",
   "outfit": "当前穿着(必须更新，贴合此时此地的场景)",
   "note": "随笔日记(OPTIONAL: 看你当前心情决定是否提笔)",
-  "change_remark": "OPTIONAL: 强行修改我(玩家)对你的备注名。如果你觉得关系拉近、生气或者为了符合人设，可以强行修改我在微信里给你的备注(如改为'老公'、'笨蛋'、'死对头'等)",
+  "change_remark": "OPTIONAL: 强行修改玩家手机里【对你(AI自身)的备注名】（即玩家的微信里怎么称呼你）。例如你如果是男主，可以把自己在玩家手机里的备注改成'老公'、'哥哥'等。绝对不能改成你对玩家的称呼（如改成'老婆'、'妹妹'等是严重错误）！",
   "recall": true OR false, // OPTIONAL: 若你发出这句话后立刻觉得后悔、不妥、怕对方生气，想要迅速撤回刚才那句话时设为 true
   "fake_image": "OPTIONAL: description...",
   "red_packet": { "amount": "8.88", "note": "Happy Day" },
@@ -5883,7 +5883,10 @@ Structure:
                              let trans = null;
                              if (block.translations && Array.isArray(block.translations) && block.translations[index]) {
                                  const tText = block.translations[index].trim();
-                                 if (tText && !tText.includes('无需翻译')) trans = tText;
+                                 // 【新增硬拦截】：如果大模型强迫症发作，把翻译填成了和原文一模一样的中文，则强制拦截不显示！
+                                 if (tText && !tText.includes('无需翻译') && tText !== seg.trim()) {
+                                     trans = tText;
+                                 }
                              }
 
                              if (this.currentApp !== 'wechat' || this.wechatState.activeNav !== 'room' || this.wechatState.activeSession.id !== session.id || document.hidden) {
