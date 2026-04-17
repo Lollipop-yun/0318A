@@ -540,6 +540,116 @@
             </div>
         </div>
     </transition>
+    
+    <!-- 【新增】高级感低饱和 INS 风语音通话界面 & 悬浮小窗 -->
+    <transition name="fade">
+        <!-- 全屏界面 -->
+        <div v-if="voiceCallState.show && !voiceCallState.isMinimized" class="fixed inset-0 z-[105000] flex flex-col bg-[#e6e4df] overflow-hidden" style="font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;">
+            
+            <!-- 背景：低饱和度的高级感模糊遮罩 -->
+            <div class="absolute inset-0 z-0 pointer-events-none">
+                <img :src="wechatState.activeSession?.isGroup ? wechatState.activeSession?.avatar : getChatAvatar({isSelf: false, targetId: wechatState.activeSession?.targetId})" class="w-full h-full object-cover blur-[100px] opacity-40 saturate-[0.3]">
+                <div class="absolute inset-0 bg-gradient-to-b from-[#e6e4df]/90 via-[#e6e4df]/70 to-[#dcd9d1]/90 mix-blend-overlay"></div>
+            </div>
+
+            <!-- 顶部导航条 -->
+            <div class="relative z-10 flex justify-between items-center px-6 pt-12 pb-2 shrink-0">
+                <button @click="minimizeVoiceCall" class="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-800 transition active:scale-90"><i class="fas fa-compress-alt text-xl"></i></button>
+                <button class="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-800 transition active:scale-90"><i class="fas fa-bars text-xl"></i></button>
+            </div>
+
+            <!-- 头像与名字信息区域 -->
+            <div class="relative z-10 flex flex-col items-center mt-2 shrink-0">
+                <!-- 单聊显示 -->
+                <div v-if="!wechatState.activeSession?.isGroup" class="flex flex-col items-center">
+                    <div class="w-[100px] h-[100px] rounded-full overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.1)] border-4 border-white/60 mb-5 relative">
+                        <img :src="getChatAvatar({isSelf: false, targetId: wechatState.activeSession?.targetId})" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 rounded-full border border-black/5 mix-blend-overlay"></div>
+                    </div>
+                    <h2 class="text-[22px] font-bold text-[#333] tracking-wider">{{ wechatState.activeSession?.name }}</h2>
+                </div>
+                <!-- 群聊显示 -->
+                <div v-else class="flex flex-col items-center w-full px-6">
+                    <div class="flex flex-wrap justify-center gap-4 mb-5">
+                        <div v-for="memId in wechatState.activeSession?.members.slice(0, 4)" :key="memId" class="flex flex-col items-center">
+                            <div class="w-14 h-14 rounded-full overflow-hidden shadow-md border-2 border-white/60 mb-2">
+                                <img :src="getFriendAvatar(memId)" class="w-full h-full object-cover">
+                            </div>
+                            <span class="text-[10px] text-gray-500 max-w-[56px] truncate font-medium">{{ getFriendName(memId) }}</span>
+                        </div>
+                        <!-- 超过4人显示折叠 -->
+                        <div v-if="wechatState.activeSession?.members.length > 4" class="w-14 h-14 rounded-full bg-white/50 flex items-center justify-center border-2 border-white/60 shadow-md text-gray-500 font-bold text-sm">
+                            +{{ wechatState.activeSession?.members.length - 4 }}
+                        </div>
+                    </div>
+                    <h2 class="text-[18px] font-bold text-[#333] tracking-wide">{{ wechatState.activeSession?.remark || wechatState.activeSession?.name }}</h2>
+                </div>
+                <!-- 通话时长计时器 -->
+                <div class="text-[13px] font-mono text-gray-400 mt-2 tracking-widest">{{ formatVoiceCallTime(voiceCallState.duration) }}</div>
+            </div>
+
+            <!-- 对话气泡滚动区 (无边框清爽感) -->
+            <div class="relative z-10 flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-5 mt-4" style="mask-image: linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%);">
+                
+                <div class="text-center text-[11px] text-gray-400/80 tracking-widest mb-2">通话已接通</div>
+                
+                <div v-for="(msg, idx) in voiceCallState.messages" :key="idx" class="w-full flex" :class="msg.isSelf ? 'justify-end' : 'justify-start'">
+                    <div class="flex items-end gap-2.5 max-w-[85%]">
+                        <!-- 群聊：非自己发言时，显示发言人头像 -->
+                        <div v-if="wechatState.activeSession?.isGroup && !msg.isSelf" class="w-8 h-8 rounded-full overflow-hidden shrink-0 shadow-sm border border-white/60 mb-1">
+                            <img :src="msg.avatar" class="w-full h-full object-cover">
+                        </div>
+                        
+                        <div class="flex flex-col" :class="msg.isSelf ? 'items-end' : 'items-start'">
+                            <!-- 群聊：非自己发言时，显示名字 -->
+                            <span v-if="wechatState.activeSession?.isGroup && !msg.isSelf" class="text-[10px] text-gray-400 ml-1.5 mb-1 tracking-wide">{{ msg.name }}</span>
+                            
+                            <!-- 独立高级感气泡 -->
+                            <div class="px-4 py-3 rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.04)] backdrop-blur-xl text-[15px] leading-relaxed tracking-wide"
+                                 :class="msg.isSelf ? 'bg-white/90 text-[#333] rounded-br-[4px]' : 'bg-[#2c2b29]/80 text-[#f5f5f5] rounded-bl-[4px]'">
+                                {{ msg.content }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部控制按键 -->
+            <div class="relative z-10 pb-safe pt-6 px-12 mb-10 shrink-0 flex justify-between items-end">
+                <!-- 麦克风 (左) -->
+                <button @click="voiceCallState.isMuted = !voiceCallState.isMuted" class="flex flex-col items-center gap-2.5 group active:scale-95 transition">
+                    <div class="w-[52px] h-[52px] rounded-full flex items-center justify-center shadow-sm border border-white/40 backdrop-blur-md transition-colors" :class="voiceCallState.isMuted ? 'bg-white text-[#333]' : 'bg-white/30 text-gray-500'">
+                        <i class="fas text-lg" :class="voiceCallState.isMuted ? 'fa-microphone-slash' : 'fa-microphone'"></i>
+                    </div>
+                </button>
+                
+                <!-- 红色挂断按钮 (中) -->
+                <button @click="endVoiceCall" class="flex flex-col items-center gap-3 active:scale-90 transition mb-2">
+                    <div class="w-16 h-16 rounded-full bg-[#e34d4d] text-white flex items-center justify-center shadow-[0_10px_25px_rgba(227,77,77,0.3)] border-2 border-white/20">
+                        <i class="fas fa-phone-slash text-2xl" style="transform: scaleX(-1);"></i>
+                    </div>
+                </button>
+                
+                <!-- 扬声器 (右) -->
+                <button @click="voiceCallState.isSpeaker = !voiceCallState.isSpeaker" class="flex flex-col items-center gap-2.5 active:scale-95 transition">
+                    <div class="w-[52px] h-[52px] rounded-full flex items-center justify-center shadow-sm border border-white/40 backdrop-blur-md transition-colors" :class="voiceCallState.isSpeaker ? 'bg-white text-[#333]' : 'bg-white/30 text-gray-500'">
+                        <i class="fas fa-volume-up text-lg"></i>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </transition>
+
+    <!-- 悬浮可拖拽小窗 -->
+    <transition name="scale">
+        <div v-if="voiceCallState.show && voiceCallState.isMinimized" 
+             class="fixed z-[105000] w-[70px] h-[85px] bg-[#1ac15b]/90 backdrop-blur-md rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.15)] flex flex-col items-center justify-center gap-1.5 cursor-move text-white border border-white/20"
+             :style="{ top: voiceCallState.drag.y + 'px', left: voiceCallState.drag.x + 'px', transitionDuration: voiceCallState.drag.isDragging ? '0s' : '0.2s' }"
+             @touchstart="startDragVoice" @mousedown="startDragVoice" @click="restoreVoiceCall">
+            <i class="fas fa-phone-volume animate-pulse text-xl drop-shadow-sm"></i>
+            <span class="text-[11px] font-mono font-bold tracking-widest drop-shadow-sm">{{ formatVoiceCallTime(voiceCallState.duration) }}</span>
+        </div>
+    </transition>
 
     <!-- 语音输入弹窗 -->
     <transition name="scale">
@@ -2438,7 +2548,8 @@
                             <div class="attach-item" @click="openFakeImageInput"><div class="attach-icon-box"><i class="fas fa-camera text-gray-600"></i></div><span class="attach-label">拍摄</span></div>
                             <div class="attach-item" @click="showToast('功能开发中')"><div class="attach-icon-box"><i class="fas fa-video text-gray-600"></i></div><span class="attach-label">视频通话</span></div>
                             <div class="attach-item" @click="openLocationModal"><div class="attach-icon-box"><i class="fas fa-map-marker-alt text-gray-600"></i></div><span class="attach-label">位置</span></div>
-                            <div class="attach-item" @click="showToast('功能开发中')"><div class="attach-icon-box"><i class="fas fa-phone text-gray-600"></i></div><span class="attach-label">语音通话</span></div>
+                            <!-- 语音通话 (接入高级UI) -->
+                            <div class="attach-item" @click="startVoiceCall"><div class="attach-icon-box"><i class="fas fa-phone text-gray-600"></i></div><span class="attach-label">语音通话</span></div>
                             <!-- 自定义灰色红包图标 (Cute Rounded - Swapped Colors) -->
                             <div class="attach-item" @click="openRedPacketModal"><div class="attach-icon-box !bg-white border border-gray-200 text-gray-600 !rounded-2xl">
                                 <i class="fas fa-wallet text-lg"></i>
@@ -3557,6 +3668,9 @@ createApp({
             
             // Voice Input
             voiceInputModal: { show: false, content: '' },
+            
+            // Voice Call System
+            voiceCallState: { show: false, isMinimized: false, duration: 0, timer: null, isMuted: false, isSpeaker: true, drag: { x: 20, y: 80, isDragging: false, startX: 0, startY: 0 }, messages:[] },
 
             // Location Feature
             locationInputModal: { show: false, name: '', address: '' },
@@ -7492,6 +7606,81 @@ ${settings.bannedWords && settings.bannedWords.trim() ? `5. 【绝对禁忌词�
             this.saveData();
             this.showToast('已恢复默认背景');
         },
+
+        // --- 语音通话 (高级感界面) 功能核心逻辑 ---
+        startVoiceCall() {
+            if (!this.wechatState.activeSession) return;
+            this.wechatState.showAttachMenu = false;
+            this.voiceCallState.show = true;
+            this.voiceCallState.isMinimized = false;
+            this.voiceCallState.duration = 0;
+            this.voiceCallState.messages =[];
+            
+            // 【UI预览测试用：以后对接AI时删除这里即可】
+            this.voiceCallState.messages.push({
+                isSelf: false,
+                avatar: this.getChatAvatar({isSelf: false}),
+                name: this.wechatState.activeSession.name,
+                content: "喂？能听见吗？"
+            });
+
+            if (this.voiceCallState.timer) clearInterval(this.voiceCallState.timer);
+            this.voiceCallState.timer = setInterval(() => { 
+                this.voiceCallState.duration++; 
+            }, 1000);
+        },
+        minimizeVoiceCall() {
+            this.voiceCallState.isMinimized = true;
+        },
+        restoreVoiceCall() {
+            // 防止拖拽结束时误触点击事件
+            if (this.voiceCallState.drag.isDragging) return; 
+            this.voiceCallState.isMinimized = false;
+        },
+        endVoiceCall() {
+            this.voiceCallState.show = false;
+            this.voiceCallState.isMinimized = false;
+            if (this.voiceCallState.timer) {
+                clearInterval(this.voiceCallState.timer);
+                this.voiceCallState.timer = null;
+            }
+            this.showToast('通话已结束');
+            this.saveData();
+        },
+        formatVoiceCallTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        },
+        // 小窗拖拽逻辑
+        startDragVoice(e) {
+            this.voiceCallState.drag.isDragging = false; 
+            const touch = e.touches ? e.touches[0] : e;
+            this.voiceCallState.drag.startX = touch.clientX - this.voiceCallState.drag.x;
+            this.voiceCallState.drag.startY = touch.clientY - this.voiceCallState.drag.y;
+            document.addEventListener('mousemove', this.doDragVoice);
+            document.addEventListener('touchmove', this.doDragVoice, {passive: false});
+            document.addEventListener('mouseup', this.stopDragVoice);
+            document.addEventListener('touchend', this.stopDragVoice);
+        },
+        doDragVoice(e) {
+            this.voiceCallState.drag.isDragging = true;
+            e.preventDefault();
+            const touch = e.touches ? e.touches[0] : e;
+            let newX = touch.clientX - this.voiceCallState.drag.startX;
+            let newY = touch.clientY - this.voiceCallState.drag.startY;
+            // 边界吸附限制，防止拖出屏幕外
+            this.voiceCallState.drag.x = Math.max(0, Math.min(window.innerWidth - 70, newX));
+            this.voiceCallState.drag.y = Math.max(0, Math.min(window.innerHeight - 85, newY));
+        },
+        stopDragVoice() {
+            document.removeEventListener('mousemove', this.doDragVoice);
+            document.removeEventListener('touchmove', this.doDragVoice);
+            document.removeEventListener('mouseup', this.stopDragVoice);
+            document.removeEventListener('touchend', this.stopDragVoice);
+            setTimeout(() => { this.voiceCallState.drag.isDragging = false; }, 50);
+        },
+        // ------------------------------------------
 
         openVoiceInput() { this.voiceInputModal.show = true; this.voiceInputModal.content = ''; },
         sendVoiceMessage() {
