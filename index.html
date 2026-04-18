@@ -3277,11 +3277,11 @@
                         
                         <div class="flex items-center pb-1 pr-1 gap-2 shrink-0">
                             <!-- 接收按钮 (放大镜) -->
-                            <button v-if="!voiceCallState.inputText.trim()" @click="receiveVoiceCallReply" class="w-9 h-9 rounded-full bg-gray-700 text-gray-300 flex items-center justify-center shrink-0 active:scale-90 transition hover:bg-gray-600 hover:text-white" :class="{'animate-pulse text-white bg-gray-600': voiceCallState.isAiTyping}">
+                            <button v-if="!(voiceCallState.inputText || '').trim()" @click="receiveVoiceCallReply" class="w-9 h-9 rounded-full bg-gray-700 text-gray-300 flex items-center justify-center shrink-0 active:scale-90 transition hover:bg-gray-600 hover:text-white" :class="{'animate-pulse text-white bg-gray-600': voiceCallState.isAiTyping}">
                                 <i class="fas" :class="voiceCallState.isAiTyping ? 'fa-spinner fa-spin' : 'fa-search'"></i>
                             </button>
                             <!-- 发送按钮 (纸飞机) -->
-                            <button v-if="voiceCallState.inputText.trim()" @click="sendVoiceCallText" class="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center shrink-0 active:scale-90 transition shadow-md">
+                            <button v-if="(voiceCallState.inputText || '').trim()" @click="sendVoiceCallText" class="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center shrink-0 active:scale-90 transition shadow-md">
                                 <i class="fas fa-paper-plane text-sm"></i>
                             </button>
                         </div>
@@ -5851,7 +5851,11 @@ Structure:
   "invite_music": true
 }
 `}
-注意！！！"reply" 必须是一个字符串数组！如果你想发多条消息，务必把每一句话拆分为数组里的独立元素！`;
+【极度严格的作答纪律！！！】
+"reply" 必须是一个字符串数组！严禁把一大段长篇大论挤在一个句子里发出来！
+你必须模拟真人说话的真实节奏，按句号、叹号或呼吸停顿，把长段落切分成多个短句，填入数组！
+❌ 错误示范：["怎么了？你怎么不说话，别生闷气了行不行，我真的很担心你。"]
+✅ 正确示范：["怎么了？", "你怎么不说话", "别生闷气了行不行", "我真的很担心你。"]`;
 
             contextMessages.push({ role: 'system', content: systemPrompt });
             // --- 读取线下约会相处的记忆 ---
@@ -5939,8 +5943,26 @@ Structure:
                 let delay = 0;
                 
                 replyBlocks.forEach((block) => {
-                    let rawSegments = Array.isArray(block.reply) ? block.reply :[block.reply || ""];
-                    const segments = rawSegments
+                    let rawSegments = Array.isArray(block.reply) ? block.reply : [block.reply || ""];
+                    
+                    // 【新增】：JS 底层强制切分长句子，防止大模型偷懒发一整坨长气泡
+                    let smartSegments =[];
+                    rawSegments.forEach(seg => {
+                        // 如果一句话超过 15 个字，并且包含了标点符号，强行切碎！
+                        if (typeof seg === 'string' && seg.length > 15 && /[。！？.!?~～]/.test(seg)) {
+                            // 按照句号、叹号、问号、波浪号进行切割，但保留该标点符号
+                            let parts = seg.match(/[^。！？.!?~～]+[。！？.!?~～]*/g);
+                            if (parts) {
+                                smartSegments.push(...parts.map(p => p.trim()).filter(Boolean));
+                            } else {
+                                smartSegments.push(seg);
+                            }
+                        } else {
+                            smartSegments.push(seg);
+                        }
+                    });
+
+                    const segments = smartSegments
                         .map(s => s.trim())
                         .filter(s => s && !s.includes('系统提示') && !s.includes('系统通知') && !s.includes('邀请你一起听歌'));
 
