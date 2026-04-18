@@ -3212,9 +3212,11 @@
                      <span class="text-xs text-gray-500 font-mono">{{ formatVoiceCallTime(voiceCallState.duration) }}</span>
                  </div>
             </div>
+        </transition>
 
+        <transition name="fade">
             <!-- 全屏模式 (黑白灰 ins 极简风) -->
-            <div v-else-if="voiceCallState.isActive && !voiceCallState.isMinimized" class="fixed inset-0 z-[105000] bg-[#1c1c1e] text-white flex flex-col font-sans">
+            <div v-if="voiceCallState.isActive && !voiceCallState.isMinimized" class="fixed inset-0 z-[105000] bg-[#1c1c1e] text-white flex flex-col font-sans">
                 <!-- 顶部操作栏 -->
                 <div class="pt-12 px-6 flex justify-between items-center shrink-0">
                     <button @click="minimizeVoiceCall" class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-white transition active:scale-90"><i class="fas fa-compress-alt text-xl"></i></button>
@@ -3279,7 +3281,7 @@
                                 <i class="fas" :class="voiceCallState.isAiTyping ? 'fa-spinner fa-spin' : 'fa-search'"></i>
                             </button>
                             <!-- 发送按钮 (纸飞机) -->
-                            <button v-else @click="sendVoiceCallText" class="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center shrink-0 active:scale-90 transition shadow-md">
+                            <button v-if="voiceCallState.inputText.trim()" @click="sendVoiceCallText" class="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center shrink-0 active:scale-90 transition shadow-md">
                                 <i class="fas fa-paper-plane text-sm"></i>
                             </button>
                         </div>
