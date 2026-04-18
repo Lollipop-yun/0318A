@@ -2363,7 +2363,7 @@
                                     </div>
 
                                     <!-- 【新增】语音通话记录气泡 (点击回顾) -->
-                                    <div v-else-if="msg.type === 'voice_call_record'" class="flex items-center gap-2.5 cursor-pointer active:opacity-70 px-1 py-0.5" @click="reviewVoiceCall(msg.callData)">
+                                    <div v-else-if="msg.type === 'voice_call_record'" class="flex items-center gap-2.5 cursor-pointer active:opacity-70 px-1 py-0.5" @click.stop="reviewVoiceCall(msg.callData)">
                                         <i class="fas fa-phone-volume text-lg" :class="msg.isSelf ? 'text-gray-400' : 'text-green-500'"></i>
                                         <span class="font-medium tracking-wide text-[15px]">{{ msg.content }}</span>
                                     </div>
@@ -3339,8 +3339,8 @@
                 <!-- 顶部操作栏 -->
                 <div class="pt-12 px-6 flex justify-between items-center shrink-0">
                     <button @click="minimizeVoiceCall" class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-white transition active:scale-90"><i class="fas fa-compress-alt text-xl"></i></button>
-                    <!-- 点击打开气泡装饰面板 -->
-                    <button @click="voiceCallTheme.showModal = true" class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-white transition active:scale-90"><i class="fas fa-bars text-xl"></i></button>
+                    <!-- 点击打开气泡装饰面板 (图标改为纯白色) -->
+                    <button @click="voiceCallTheme.showModal = true" class="w-10 h-10 flex items-center justify-center text-white hover:text-gray-200 transition active:scale-90"><i class="fas fa-bars text-xl"></i></button>
                 </div>
 
                 <!-- 头像区域 (单聊/群聊自适应) -->
@@ -3374,9 +3374,9 @@
                             <img :src="trans.avatar" class="w-4 h-4 rounded-full object-cover border border-gray-700">
                             <span class="text-[10px] text-gray-500">{{ trans.name }}</span>
                         </div>
-                        <!-- 应用自定义形状、颜色 -->
+                        <!-- 应用自定义形状、颜色 (若是圆形则去掉尖角小尾巴) -->
                         <div class="px-4 py-2.5 shadow-md text-[15px] leading-relaxed tracking-wide voice-call-bubble-custom"
-                             :class="[voiceCallTheme.shape, trans.isSelf ? 'rounded-tr-sm' : 'rounded-tl-sm']"
+                             :class="[voiceCallTheme.shape, voiceCallTheme.shape === 'rounded-full' ? '' : (trans.isSelf ? 'rounded-tr-sm' : 'rounded-tl-sm')]"
                              :style="trans.isSelf ? { backgroundColor: voiceCallTheme.myBg, color: voiceCallTheme.myText, border: voiceCallTheme.myBg === '#ffffff' ? 'none' : '1px solid rgba(255,255,255,0.1)' } : { backgroundColor: voiceCallTheme.aiBg, color: voiceCallTheme.aiText, border: voiceCallTheme.aiBg === '#2c2c2e' ? '1px solid rgba(255,255,255,0.1)' : 'none' }">
                             {{ trans.text }}
                         </div>
@@ -3384,14 +3384,14 @@
                     
                     <!-- 【新增】打字/思考动态加载中... -->
                     <div v-if="voiceCallState.isAiTyping" class="flex self-start items-start max-w-[85%] mb-2">
-                        <div class="px-4 py-3 bg-[#2c2c2e] border border-gray-700/50 shadow-md flex items-center gap-1.5 h-[42px] rounded-tl-sm" :class="voiceCallTheme.shape" :style="{ backgroundColor: voiceCallTheme.aiBg, border: voiceCallTheme.aiBg === '#2c2c2e' ? '1px solid rgba(255,255,255,0.1)' : 'none' }">
+                        <!-- 若是圆形则去掉尖角小尾巴 -->
+                        <div class="px-4 py-3 bg-[#2c2c2e] border border-gray-700/50 shadow-md flex items-center gap-1.5 h-[42px]" :class="[voiceCallTheme.shape, voiceCallTheme.shape === 'rounded-full' ? '' : 'rounded-tl-sm']" :style="{ backgroundColor: voiceCallTheme.aiBg, border: voiceCallTheme.aiBg === '#2c2c2e' ? '1px solid rgba(255,255,255,0.1)' : 'none' }">
                             <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0s"></div>
                             <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.15s"></div>
                             <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.3s"></div>
                         </div>
                     </div>
                 </div>
-
                 <!-- 【修改】打字输入区 (变窄、放大镜去掉圆底) -->
                 <div class="px-6 pb-4 shrink-0">
                     <div class="flex items-end gap-3 bg-[#2c2c2e]/80 backdrop-blur-xl rounded-[20px] p-1.5 border border-gray-700/50 shadow-lg transition-all">
@@ -3502,13 +3502,8 @@
                             <div class="flex items-center gap-2"><span class="text-[10px] text-gray-500">文字</span><input v-model="voiceCallTheme.aiText" class="w-full bg-transparent outline-none text-xs text-white" placeholder="#f3f4f6"></div>
                         </div>
                     </div>
-                    
-                    <div class="bg-[#2c2c2e] p-3 rounded-xl flex flex-col gap-2">
-                        <span class="text-xs text-gray-400 font-bold">高级 CSS 自定义 (.voice-call-bubble-custom)</span>
-                        <textarea v-model="voiceCallTheme.customCss" placeholder="输入 CSS 代码覆盖默认样式..." class="w-full h-16 bg-gray-800 p-2 rounded-lg text-[10px] font-mono outline-none resize-none text-gray-300 border border-gray-700"></textarea>
-                    </div>
 
-                    <button @click="saveVoiceCallTheme" class="w-full mt-2 bg-white text-black py-3 rounded-xl font-bold text-sm shadow-lg active:scale-95 transition">保存并应用</button>
+                    <button @click="saveVoiceCallTheme" class="w-full mt-4 bg-white text-black py-3 rounded-xl font-bold text-sm shadow-lg active:scale-95 transition">保存并应用</button>
                 </div>
             </div>
         </transition>
@@ -3527,11 +3522,12 @@
                             <img :src="trans.avatar" class="w-4 h-4 rounded-full object-cover border border-gray-700">
                             <span class="text-[10px] text-gray-500">{{ trans.name }}</span>
                         </div>
-                        <div class="px-4 py-2.5 rounded-2xl text-[15px] leading-relaxed tracking-wide shadow-md cursor-pointer active:opacity-70"
-                             :class="trans.isSelf ? 'bg-white text-black rounded-tr-sm' : 'bg-[#2c2c2e] text-gray-100 rounded-tl-sm border border-gray-700/50'"
-                             @click="(!trans.isSelf && voiceCallState.isSpeaker) ? playVoiceCallTTS(trans.text) : null">
+                        <div class="px-4 py-2.5 rounded-2xl text-[15px] leading-relaxed tracking-wide shadow-md"
+                             :class="trans.isSelf ? 'bg-white text-black rounded-tr-sm' : 'bg-[#2c2c2e] text-gray-100 rounded-tl-sm border border-gray-700/50 ' + (!trans.isSelf && minimaxConfig.enabled ? 'cursor-pointer active:opacity-70' : '')"
+                             @click="(!trans.isSelf && minimaxConfig.enabled) ? playVoiceCallTTS(trans.text) : null">
                             {{ trans.text }}
-                            <i v-if="!trans.isSelf && voiceCallState.isSpeaker" class="fas fa-volume-up ml-2 text-gray-500 text-[11px]"></i>
+                            <!-- 只要配了 MiniMax 就会显示小麦克风，方便随时重听 -->
+                            <i v-if="!trans.isSelf && minimaxConfig.enabled" class="fas fa-microphone ml-2 text-gray-400 text-[11px]"></i>
                         </div>
                     </div>
                 </div>
@@ -8150,6 +8146,9 @@ ${settings.bannedWords && settings.bannedWords.trim() ? `5. 【绝对禁忌词�
                     // 如果没开启配置或点击自己发的，维持原样展开文字
                     this.toggleVoiceText(msg);
                 }
+            } else if(msg.type === 'voice_call_record') {
+                // 如果外层捕获了点击，强制跳转
+                this.reviewVoiceCall(msg.callData);
             } else if(msg.type === 'fake_image') {
                 msg.isRevealed = !msg.isRevealed;
             } else if(msg.type === 'moment') {
