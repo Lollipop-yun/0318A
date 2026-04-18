@@ -3200,9 +3200,9 @@
     <!-- ================= 语音通话 (全屏 & 悬浮小窗) ================= -->
         <transition name="fade">
             <!-- 悬浮小窗模式 -->
-            <div v-if="voiceCallState.isActive && voiceCallState.isMinimized" 
+            <div v-if="voiceCallState && voiceCallState.isActive && voiceCallState.isMinimized" 
                  class="fixed z-[105000] bg-white border border-gray-200 shadow-xl rounded-2xl flex items-center gap-3 p-3 cursor-move cursor-pointer active:scale-95 transition-transform"
-                 :style="{ top: voiceCallState.drag.y + 'px', left: voiceCallState.drag.x + 'px', transitionDuration: voiceCallState.drag.isDragging ? '0s' : '0.2s' }"
+                 :style="{ top: (voiceCallState.drag?.y || 80) + 'px', left: (voiceCallState.drag?.x || 20) + 'px', transitionDuration: voiceCallState.drag?.isDragging ? '0s' : '0.2s' }"
                  @touchstart="startDragVoice" @mousedown="startDragVoice" @click="maximizeVoiceCall">
                  <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-100 shrink-0">
                      <img :src="wechatState.activeSession?.isGroup ? getMaskById(wechatState.activeSession?.maskId).avatar : getCurrentSessionAvatar()" class="w-full h-full object-cover">
@@ -3216,7 +3216,7 @@
 
         <transition name="fade">
             <!-- 全屏模式 (黑白灰 ins 极简风) -->
-            <div v-if="voiceCallState.isActive && !voiceCallState.isMinimized" class="fixed inset-0 z-[105000] bg-[#1c1c1e] text-white flex flex-col font-sans">
+            <div v-if="voiceCallState && voiceCallState.isActive && !voiceCallState.isMinimized" class="fixed inset-0 z-[105000] bg-[#1c1c1e] text-white flex flex-col font-sans">
                 <!-- 顶部操作栏 -->
                 <div class="pt-12 px-6 flex justify-between items-center shrink-0">
                     <button @click="minimizeVoiceCall" class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-white transition active:scale-90"><i class="fas fa-compress-alt text-xl"></i></button>
@@ -3228,7 +3228,6 @@
                     <div v-if="!wechatState.activeSession?.isGroup" class="flex flex-col items-center">
                         <div class="w-24 h-24 rounded-3xl overflow-hidden shadow-lg border border-gray-700/50 relative">
                             <img :src="getCurrentSessionAvatar()" class="w-full h-full object-cover">
-                            <!-- 模拟语音波动动画光晕 -->
                             <div class="absolute inset-0 bg-white/10 animate-pulse pointer-events-none"></div>
                         </div>
                         <span class="mt-4 text-xl font-bold tracking-wider">{{ wechatState.activeSession?.name }}</span>
@@ -3251,10 +3250,10 @@
 
                 <!-- 实时对话字幕显示区 -->
                 <div class="flex-1 overflow-y-auto mt-8 mb-4 px-6 flex flex-col gap-4" ref="voiceTranscriptContainer">
-                    <div v-if="voiceCallState.transcripts.length === 0" class="flex-1 flex items-center justify-center text-gray-500 text-sm opacity-50">
+                    <div v-if="!voiceCallState.transcripts || voiceCallState.transcripts.length === 0" class="flex-1 flex items-center justify-center text-gray-500 text-sm opacity-50">
                         等待说话...
                     </div>
-                    <div v-for="(trans, idx) in voiceCallState.transcripts" :key="idx" class="flex flex-col max-w-[85%]" :class="trans.isSelf ? 'self-end items-end' : 'self-start items-start'">
+                    <div v-for="(trans, idx) in (voiceCallState.transcripts || [])" :key="idx" class="flex flex-col max-w-[85%]" :class="trans.isSelf ? 'self-end items-end' : 'self-start items-start'">
                         <div v-if="wechatState.activeSession?.isGroup && !trans.isSelf" class="flex items-center gap-2 mb-1.5 ml-1">
                             <img :src="trans.avatar" class="w-4 h-4 rounded-full object-cover border border-gray-700">
                             <span class="text-[10px] text-gray-500">{{ trans.name }}</span>
@@ -3288,7 +3287,7 @@
                     </div>
                 </div>
 
-                <!-- 底部控制栏 (重构开关逻辑) -->
+                <!-- 底部控制栏 -->
                 <div class="h-32 shrink-0 flex items-center justify-center gap-8 pb-8">
                     <!-- 麦克风开关 -->
                     <div @click="toggleMicrophone" class="flex flex-col items-center gap-2 cursor-pointer active:scale-90 transition">
@@ -3319,14 +3318,14 @@
 
         <!-- 【新增】语音通话回顾弹窗 -->
         <transition name="app-slide">
-            <div v-if="voiceCallReview.show" class="fixed inset-0 z-[106000] bg-[#1c1c1e] text-white flex flex-col font-sans">
+            <div v-if="voiceCallReview && voiceCallReview.show" class="fixed inset-0 z-[106000] bg-[#1c1c1e] text-white flex flex-col font-sans">
                 <header class="h-[90px] pt-10 px-4 flex items-center justify-between border-b border-gray-800 bg-[#1c1c1e] sticky top-0 z-10">
                     <button @click="voiceCallReview.show = false" class="w-8 h-8 flex items-center justify-center text-gray-300 active:scale-90"><i class="fas fa-chevron-left text-lg"></i></button>
                     <h1 class="font-bold text-[17px] tracking-wider">通话记录回顾</h1>
                     <div class="w-8"></div>
                 </header>
                 <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
-                    <div v-for="(trans, idx) in voiceCallReview.data" :key="idx" class="flex flex-col max-w-[85%]" :class="trans.isSelf ? 'self-end items-end' : 'self-start items-start'">
+                    <div v-for="(trans, idx) in (voiceCallReview.data ||[])" :key="idx" class="flex flex-col max-w-[85%]" :class="trans.isSelf ? 'self-end items-end' : 'self-start items-start'">
                         <div v-if="!trans.isSelf" class="flex items-center gap-2 mb-1.5 ml-1">
                             <img :src="trans.avatar" class="w-4 h-4 rounded-full object-cover border border-gray-700">
                             <span class="text-[10px] text-gray-500">{{ trans.name }}</span>
@@ -3335,7 +3334,6 @@
                              :class="trans.isSelf ? 'bg-white text-black rounded-tr-sm' : 'bg-[#2c2c2e] text-gray-100 rounded-tl-sm border border-gray-700/50 cursor-pointer active:opacity-70'"
                              @click="(!trans.isSelf && voiceCallState.isSpeaker) ? playVoiceCallTTS(trans.text) : null">
                             {{ trans.text }}
-                            <!-- 若开启免提，提示可点击重听 -->
                             <i v-if="!trans.isSelf && voiceCallState.isSpeaker" class="fas fa-volume-up ml-2 text-gray-500 text-[11px]"></i>
                         </div>
                     </div>
@@ -3935,6 +3933,12 @@ createApp({
             if(!this.wechatState.activeSession) return '';
             const friend = this.wechatState.friendList.find(f => f.id === this.wechatState.activeSession.targetId);
             return friend ? (friend.remark || friend.name) : this.wechatState.activeSession.name;
+        },
+        formatVoiceCallTime(seconds) {
+            if (!seconds || isNaN(seconds)) return '00:00';
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         },
         shouldShowTime(msg, index) {
             if (index === 0) return true;
@@ -5943,15 +5947,15 @@ Structure:
                 let delay = 0;
                 
                 replyBlocks.forEach((block) => {
-                    let rawSegments = Array.isArray(block.reply) ? block.reply : [block.reply || ""];
+                    let rawSegments = Array.isArray(block.reply) ? block.reply :[block.reply || ""];
                     
-                    // 【新增】：JS 底层强制切分长句子，防止大模型偷懒发一整坨长气泡
+                    // 【终极解决】：底层 JS 强制暴力切分长句子！防止大模型偷懒发长篇大论！
                     let smartSegments =[];
                     rawSegments.forEach(seg => {
-                        // 如果一句话超过 15 个字，并且包含了标点符号，强行切碎！
-                        if (typeof seg === 'string' && seg.length > 15 && /[。！？.!?~～]/.test(seg)) {
-                            // 按照句号、叹号、问号、波浪号进行切割，但保留该标点符号
-                            let parts = seg.match(/[^。！？.!?~～]+[。！？.!?~～]*/g);
+                        // 如果这段话超过 20 个字，强制进行标点切分
+                        if (typeof seg === 'string' && seg.length > 20) {
+                            // 连同逗号、句号、问号、叹号一起作为切分依据（保留标点本身）
+                            let parts = seg.match(/[^。！？.!?~～，,]+[。！？.!?~～，,]*/g);
                             if (parts) {
                                 smartSegments.push(...parts.map(p => p.trim()).filter(Boolean));
                             } else {
@@ -5962,13 +5966,10 @@ Structure:
                         }
                     });
 
+                    // 清理过滤多余垃圾字符
                     const segments = smartSegments
                         .map(s => s.trim())
                         .filter(s => s && !s.includes('系统提示') && !s.includes('系统通知') && !s.includes('邀请你一起听歌'));
-
-                    if (segments.length === 0 && (parsed.invite_music === true || parsed.invite_music === "true")) {
-                        segments.push("听听这首歌吧~");
-                    }
                     
                     // === 处理单聊 AI 修改备注 ===
                     if (!session.isGroup && block.change_remark && friend) {
