@@ -2347,12 +2347,6 @@
                                     <!-- 动态交互卡片 (HTML UI) -->
                                     <div v-else-if="msg.type === 'html'" class="w-full min-w-[220px] rounded-lg overflow-hidden" v-html="msg.content"></div>
                                     
-                                    <!-- 语音通话记录气泡 -->
-                                    <div v-else-if="msg.type === 'voice_call_record'" class="flex items-center gap-2 px-4 py-2 cursor-pointer">
-                                        <i class="fas fa-phone-alt" :class="msg.isSelf ? 'text-gray-500' : 'text-green-500'"></i>
-                                        <span class="font-bold text-[15px]">{{ msg.content }}</span>
-                                    </div>
-                                    
                                     <!-- 音乐邀请卡片 -->
                                     <div v-else-if="msg.type === 'music_invite'" class="bg-white border border-gray-100 rounded-xl p-3 shadow-sm w-[220px]">
                                         <div class="flex items-center gap-3 mb-3">
@@ -2366,6 +2360,12 @@
                                             <button @click.stop="acceptMusicInvite(msg)" class="flex-1 bg-black text-white text-xs font-bold py-2 rounded-lg active:scale-95" :disabled="msg.isAccepted">{{ msg.isAccepted ? '已加入' : '加入' }}</button>
                                             <button v-if="!msg.isAccepted" @click.stop="msg.isAccepted=true; showToast('已拒绝')" class="flex-1 bg-gray-100 text-gray-500 text-xs font-bold py-2 rounded-lg active:scale-95">拒绝</button>
                                         </div>
+                                    </div>
+
+                                    <!-- 【新增】语音通话记录气泡 (点击回顾) -->
+                                    <div v-else-if="msg.type === 'voice_call_record'" class="flex items-center gap-2 cursor-pointer active:opacity-70 px-1 py-0.5" @click="reviewVoiceCall(msg.callData)">
+                                        <i class="fas fa-phone-alt" :class="msg.isSelf ? 'text-gray-400' : 'text-green-500'"></i>
+                                        <span class="font-medium tracking-wide text-[15px]">{{ msg.content }}</span>
                                     </div>
 
                                     <!-- 文本消息 (自带实时翻译) -->
@@ -3248,64 +3248,95 @@
                 </div>
 
                 <!-- 实时对话字幕显示区 -->
-                <div class="flex-1 overflow-y-auto mt-6 mb-2 px-6 flex flex-col gap-4" ref="voiceTranscriptContainer">
+                <div class="flex-1 overflow-y-auto mt-8 mb-4 px-6 flex flex-col gap-4" ref="voiceTranscriptContainer">
                     <div v-if="voiceCallState.transcripts.length === 0" class="flex-1 flex items-center justify-center text-gray-500 text-sm opacity-50">
-                        {{ voiceCallState.isReviewing ? '无通话内容' : '等待对方说话...' }}
+                        等待说话...
                     </div>
                     <div v-for="(trans, idx) in voiceCallState.transcripts" :key="idx" class="flex flex-col max-w-[85%]" :class="trans.isSelf ? 'self-end items-end' : 'self-start items-start'">
                         <div v-if="wechatState.activeSession?.isGroup && !trans.isSelf" class="flex items-center gap-2 mb-1.5 ml-1">
-                            <img :src="trans.avatar" class="w-4 h-4 rounded-full object-cover">
+                            <img :src="trans.avatar" class="w-4 h-4 rounded-full object-cover border border-gray-700">
                             <span class="text-[10px] text-gray-500">{{ trans.name }}</span>
                         </div>
-                        <div @click="playTransVoice(trans)" class="px-4 py-2.5 rounded-2xl text-[15px] leading-relaxed tracking-wide shadow-sm transition"
-                             :class="[trans.isSelf ? 'bg-white text-black rounded-tr-sm' : 'bg-gray-800 text-gray-100 rounded-tl-sm border border-gray-700', (!trans.isSelf && voiceCallState.isSpeakerOn) ? 'cursor-pointer active:scale-95' : '']">
+                        <div class="px-4 py-2.5 rounded-2xl text-[15px] leading-relaxed tracking-wide shadow-md"
+                             :class="trans.isSelf ? 'bg-white text-black rounded-tr-sm' : 'bg-[#2c2c2e] text-gray-100 rounded-tl-sm border border-gray-700/50'">
                             {{ trans.text }}
-                            <i v-if="trans.isPlaying" class="fas fa-volume-up ml-2 text-xs animate-pulse text-green-400"></i>
                         </div>
                     </div>
                 </div>
 
-                <!-- 底部控制栏 (回顾模式隐藏) -->
-                <div v-if="!voiceCallState.isReviewing" class="shrink-0 flex flex-col px-6 pb-8 gap-6">
-                    <!-- 黑白灰 ins 风输入栏 -->
-                    <div class="bg-[#2c2c2e] rounded-full flex items-center px-4 py-2 border border-gray-700/50 shadow-inner">
-                        <input v-model="voiceCallState.input" @keydown.enter.prevent="sendVoiceCallMessage" type="text" placeholder="输入你想说的话..." class="flex-1 bg-transparent text-white placeholder-gray-500 outline-none text-[15px]">
-                        <!-- 接收消息按钮 -->
-                        <button @click="triggerVoiceCallReceive" class="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center ml-2 shrink-0 active:scale-90 transition">
-                            <i class="fas fa-robot text-sm"></i>
-                        </button>
-                    </div>
-
-                    <div class="flex items-center justify-center gap-10">
-                        <!-- 麦克风开关 -->
-                        <div @click="voiceCallState.isMicOn = !voiceCallState.isMicOn" class="flex flex-col items-center gap-2 cursor-pointer active:scale-90 transition">
-                            <div class="w-14 h-14 rounded-full flex items-center justify-center text-xl transition-colors" :class="voiceCallState.isMicOn ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]' : 'bg-gray-800 text-white'">
-                                <i class="fas" :class="voiceCallState.isMicOn ? 'fa-microphone' : 'fa-microphone-slash'"></i>
-                            </div>
-                            <span class="text-[10px] text-gray-400">麦克风</span>
-                        </div>
+                <!-- 【新增】打字输入区 -->
+                <div class="px-6 pb-4 shrink-0">
+                    <div class="flex items-end gap-3 bg-[#2c2c2e]/80 backdrop-blur-xl rounded-3xl p-1.5 border border-gray-700/50 shadow-lg transition-all">
+                        <textarea v-model="voiceCallState.inputText" 
+                                  @keydown.enter.prevent="sendVoiceCallText"
+                                  class="flex-1 bg-transparent text-[15px] text-gray-100 px-4 py-2.5 outline-none resize-none max-h-24 scrollbar-hide placeholder-gray-500 font-medium" 
+                                  rows="1" 
+                                  placeholder="打字回复..."></textarea>
                         
-                        <!-- 挂断按钮 -->
-                        <div @click="endVoiceCall('me')" class="flex flex-col items-center gap-2 cursor-pointer active:scale-90 transition">
-                            <div class="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-red-500/20">
-                                <i class="fas fa-phone-slash"></i>
-                            </div>
-                            <span class="text-[10px] text-gray-400">挂断</span>
-                        </div>
-
-                        <!-- 扬声器开关 -->
-                        <div @click="voiceCallState.isSpeakerOn = !voiceCallState.isSpeakerOn" class="flex flex-col items-center gap-2 cursor-pointer active:scale-90 transition">
-                            <div class="w-14 h-14 rounded-full flex items-center justify-center text-xl transition-colors" :class="voiceCallState.isSpeakerOn ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]' : 'bg-gray-800 text-white'">
-                                <i class="fas fa-volume-up"></i>
-                            </div>
-                            <span class="text-[10px] text-gray-400">免提</span>
+                        <div class="flex items-center pb-1 pr-1 gap-2 shrink-0">
+                            <!-- 接收按钮 (放大镜) -->
+                            <button v-if="!voiceCallState.inputText.trim()" @click="receiveVoiceCallReply" class="w-9 h-9 rounded-full bg-gray-700 text-gray-300 flex items-center justify-center shrink-0 active:scale-90 transition hover:bg-gray-600 hover:text-white" :class="{'animate-pulse text-white bg-gray-600': voiceCallState.isAiTyping}">
+                                <i class="fas" :class="voiceCallState.isAiTyping ? 'fa-spinner fa-spin' : 'fa-search'"></i>
+                            </button>
+                            <!-- 发送按钮 (纸飞机) -->
+                            <button v-else @click="sendVoiceCallText" class="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center shrink-0 active:scale-90 transition shadow-md">
+                                <i class="fas fa-paper-plane text-sm"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- 回顾模式底栏 -->
-                <div v-else class="shrink-0 flex items-center justify-center pb-8 pt-4">
-                    <button @click="voiceCallState.isActive = false" class="px-8 py-3 bg-white text-black rounded-full font-bold shadow-lg active:scale-95 transition">关闭记录</button>
+                <!-- 底部控制栏 (重构开关逻辑) -->
+                <div class="h-32 shrink-0 flex items-center justify-center gap-8 pb-8">
+                    <!-- 麦克风开关 -->
+                    <div @click="toggleMicrophone" class="flex flex-col items-center gap-2 cursor-pointer active:scale-90 transition">
+                        <div class="w-16 h-16 rounded-full flex items-center justify-center text-2xl transition-colors shadow-lg" :class="!voiceCallState.isMuted ? 'bg-white text-black' : 'bg-[#2c2c2e] text-gray-400'">
+                            <i class="fas" :class="!voiceCallState.isMuted ? 'fa-microphone' : 'fa-microphone-slash'"></i>
+                        </div>
+                        <span class="text-[11px] text-gray-400 font-medium">麦克风</span>
+                    </div>
+                    
+                    <!-- 挂断按钮 -->
+                    <div @click="endVoiceCall(true)" class="flex flex-col items-center gap-2 cursor-pointer active:scale-90 transition mx-2">
+                        <div class="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-red-500/30">
+                            <i class="fas fa-phone-slash"></i>
+                        </div>
+                        <span class="text-[11px] text-gray-400 font-medium">挂断</span>
+                    </div>
+
+                    <!-- 扬声器开关 -->
+                    <div @click="voiceCallState.isSpeaker = !voiceCallState.isSpeaker" class="flex flex-col items-center gap-2 cursor-pointer active:scale-90 transition">
+                        <div class="w-16 h-16 rounded-full flex items-center justify-center text-2xl transition-colors shadow-lg" :class="voiceCallState.isSpeaker ? 'bg-white text-black' : 'bg-[#2c2c2e] text-gray-400'">
+                            <i class="fas fa-volume-up"></i>
+                        </div>
+                        <span class="text-[11px] text-gray-400 font-medium">免提</span>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- 【新增】语音通话回顾弹窗 -->
+        <transition name="app-slide">
+            <div v-if="voiceCallReview.show" class="fixed inset-0 z-[106000] bg-[#1c1c1e] text-white flex flex-col font-sans">
+                <header class="h-[90px] pt-10 px-4 flex items-center justify-between border-b border-gray-800 bg-[#1c1c1e] sticky top-0 z-10">
+                    <button @click="voiceCallReview.show = false" class="w-8 h-8 flex items-center justify-center text-gray-300 active:scale-90"><i class="fas fa-chevron-left text-lg"></i></button>
+                    <h1 class="font-bold text-[17px] tracking-wider">通话记录回顾</h1>
+                    <div class="w-8"></div>
+                </header>
+                <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+                    <div v-for="(trans, idx) in voiceCallReview.data" :key="idx" class="flex flex-col max-w-[85%]" :class="trans.isSelf ? 'self-end items-end' : 'self-start items-start'">
+                        <div v-if="!trans.isSelf" class="flex items-center gap-2 mb-1.5 ml-1">
+                            <img :src="trans.avatar" class="w-4 h-4 rounded-full object-cover border border-gray-700">
+                            <span class="text-[10px] text-gray-500">{{ trans.name }}</span>
+                        </div>
+                        <div class="px-4 py-2.5 rounded-2xl text-[15px] leading-relaxed tracking-wide shadow-md"
+                             :class="trans.isSelf ? 'bg-white text-black rounded-tr-sm' : 'bg-[#2c2c2e] text-gray-100 rounded-tl-sm border border-gray-700/50 cursor-pointer active:opacity-70'"
+                             @click="(!trans.isSelf && voiceCallState.isSpeaker) ? playVoiceCallTTS(trans.text) : null">
+                            {{ trans.text }}
+                            <!-- 若开启免提，提示可点击重听 -->
+                            <i v-if="!trans.isSelf && voiceCallState.isSpeaker" class="fas fa-volume-up ml-2 text-gray-500 text-[11px]"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </transition>
@@ -3726,9 +3757,9 @@ createApp({
             bookshelfState: { isMulti: false, selectedIds:[], showEdit: false, editingBook: null },
             readTogetherSelectModal: { show: false },
             readTogetherState: { show: false, isMinimized: true, activeBookId: null, currentPage: 0, pageSize: 600, drag: { x: 20, y: 100, isDragging: false, startX: 0, startY: 0 } },
-            // 【新增】语音通话状态机 (已全面升级)
-            voiceCallState: { isActive: false, isMinimized: false, isReviewing: false, isMicOn: false, isSpeakerOn: false, duration: 0, timer: null, speakingId: null, transcripts:[], input: '', drag: { x: 20, y: 80, isDragging: false, startX: 0, startY: 0 } },
-            speechRecognition: null, speechTimeout: null,
+            // 【新增】语音通话状态机 (含输入与语音识别)
+            voiceCallState: { isActive: false, isMinimized: false, isMuted: true, isSpeaker: false, duration: 0, timer: null, speakingId: null, transcripts:[], drag: { x: 20, y: 80, isDragging: false, startX: 0, startY: 0 }, inputText: '', recognition: null, isAiTyping: false },
+            voiceCallReview: { show: false, data:[] },
             addMusicModal: { show: false, mode: 'add', id: null, title: '', artist: '', url: '', lyricType: 'file', lrcText: '', lrcFile: null, cover: '' },            
             tempEditingSong: null, 
 
@@ -3857,11 +3888,6 @@ createApp({
     },
     unmounted() { clearInterval(this.timer); },
     watch: {
-        // 【新增】监听语音通话麦克风状态
-        'voiceCallState.isMicOn'(newVal) {
-            if (newVal) this.startSpeechRecognition();
-            else this.stopSpeechRecognition();
-        },
         // 【新增】监听输入框，如果输入了 @ 则弹出群聊人员选择框
         inputMsg(newVal) {
             if (this.wechatState.activeSession && this.wechatState.activeSession.isGroup) {
@@ -7869,12 +7895,6 @@ ${settings.bannedWords && settings.bannedWords.trim() ? `5. 【绝对禁忌词�
                     this.addToWallet('income', parseFloat(msg.amount), this.wechatState.activeSession.name, '转账收款');
                     this.saveData();
                     this.showToast(`已收款 ￥${msg.amount}`);
-             } else if (msg.type === 'voice_call_record') {
-                this.voiceCallState.isReviewing = true;
-                this.voiceCallState.isActive = true;
-                this.voiceCallState.isMinimized = false;
-                this.voiceCallState.transcripts = msg.transcripts ||[];
-                this.voiceCallState.duration = msg.duration || 0;       
                 } else if(msg.isSelf) {
                     this.showToast('等待对方收款');
                 }
@@ -9174,241 +9194,292 @@ ${settings.bannedWords && settings.bannedWords.trim() ? `5. 【绝对禁忌词�
             if (!this.wechatState.activeSession) return;
             this.wechatState.showAttachMenu = false;
             
+            // 初始化状态
             this.voiceCallState.isActive = true;
             this.voiceCallState.isMinimized = false;
-            this.voiceCallState.isReviewing = false;
-            this.voiceCallState.isMicOn = false;
-            this.voiceCallState.isSpeakerOn = false;
             this.voiceCallState.duration = 0;
-            this.voiceCallState.transcripts =[]; 
+            this.voiceCallState.transcripts =[]; // 清空字幕
             this.voiceCallState.speakingId = null;
-            this.voiceCallState.input = '';
             
+            // 启动计时器
             if(this.voiceCallState.timer) clearInterval(this.voiceCallState.timer);
-            this.voiceCallState.timer = setInterval(() => { this.voiceCallState.duration++; }, 1000);
+            this.voiceCallState.timer = setInterval(() => {
+                this.voiceCallState.duration++;
+            }, 1000);
+            
+            this.showToast('正在接通中...');
+            
+            // 为了下一回合准备：压入一条默认文本作为测试展示
+            setTimeout(() => {
+                this.addVoiceTranscript('喂？能听见吗？', false);
+            }, 2000);
         },
-        endVoiceCall(endedBy = 'me') {
+        endVoiceCall(isSelf = true, aiAvatar = '', aiName = '') {
             this.voiceCallState.isActive = false;
             this.voiceCallState.isMinimized = false;
-            this.voiceCallState.isMicOn = false; // 自动关麦
             if(this.voiceCallState.timer) clearInterval(this.voiceCallState.timer);
+            this.stopSpeechRecognition();
             
+            // 在聊天界面压入一条通话记录气泡
             const session = this.wechatState.activeSession;
             if (session) {
-                // 谁挂的电话，气泡就由谁发出
-                const isSelf = (endedBy === 'me');
-                let avatar = isSelf ? this.getMaskById(session.maskId).avatar : session.avatar;
-                if (!isSelf && session.isGroup) avatar = session.avatar; // 群聊时若AI挂断暂用群头像
-                
+                const callData = [...this.voiceCallState.transcripts];
                 session.messages.push({
-                    type: 'voice_call_record',
                     content: `通话时长 ${this.formatVoiceCallTime(this.voiceCallState.duration)}`,
-                    duration: this.voiceCallState.duration,
-                    transcripts: JSON.parse(JSON.stringify(this.voiceCallState.transcripts)), // 保存字幕记录
-                    isSelf: isSelf,
+                    isSelf: isSelf, // 谁挂断，气泡就在哪边
                     time: Date.now(),
-                    avatar: avatar
+                    avatar: isSelf ? this.getMaskById(session.maskId).avatar : (aiAvatar || session.avatar),
+                    name: isSelf ? '我' : (aiName || session.name),
+                    type: 'voice_call_record', 
+                    callData: callData // 挂载字幕记录，用于后续回顾
                 });
                 this.scrollToBottom();
                 this.saveData();
             }
         },
-        sendVoiceCallMessage() {
-            if(!this.voiceCallState.input.trim()) return;
-            this.addVoiceTranscript(this.voiceCallState.input.trim(), true);
-            this.voiceCallState.input = '';
+        reviewVoiceCall(data) {
+            if(!data || data.length === 0) return this.showToast('该通话没有留下记录');
+            this.voiceCallReview.data = data;
+            this.voiceCallReview.show = true;
         },
-        async triggerVoiceCallReceive() {
+        
+        // --- 通话输入与大模型逻辑 ---
+        sendVoiceCallText() {
+            const txt = this.voiceCallState.inputText.trim();
+            if(!txt) return;
+            this.addVoiceTranscript(txt, true);
+            this.voiceCallState.inputText = '';
+        },
+        async receiveVoiceCallReply() {
             if (!this.apiConfig.apiKey) return this.showToast('请先配置 API Key');
             const session = this.wechatState.activeSession;
-            const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
-            const mask = this.getMaskById(session.maskId);
+            if (!session) return;
             
-            this.showToast('对方正在回应...');
+            this.voiceCallState.isAiTyping = true;
             
-            // 构建通话上下文
-            const recentCallText = this.voiceCallState.transcripts.slice(-10).map(t => `[${t.isSelf ? '我' : t.name}]: ${t.text}`).join('\n');
+            // 提取最近通话字幕作为上下文
+            const recentTranscripts = this.voiceCallState.transcripts.slice(-12).map(t => `[${t.isSelf ? '我' : t.name}]: ${t.text}`).join('\n');
             
-            let systemPrompt = `你正在与我(玩家)进行实时【语音通话】。
-你扮演的角色是: ${friend ? friend.name : session.name} (人设: ${friend ? friend.bio : '无'})。
-我是: ${mask.name} (人设: ${mask.bio})。
-【注意】：这是语音通话，只能输出你嘴里说出来的话，严禁输出任何动作、心声、表情符号、心理描写！口语化、简短自然！
-最近的通话内容如下：\n${recentCallText}`;
+            let systemPrompt = `【沉浸式电话通话模式】
+你现在正在和玩家通电话。请完全代入你的角色设定，输出你在这通电话里想说的话。
+要求：
+1. 语言必须极其口语化，就像真人打电话一样，可以有语气词(呃、嗯、啊、喂)、停顿(…)等。
+2. 绝对只输出你说出口的话，不要输出任何动作描写、表情符号或旁白！
+3. 如果你们在群聊，请根据上下文决定哪个成员说话。
+4. 返回合法的 JSON 格式。
 
-            let structure = `
-IMPORTANT: You must output ONLY a valid JSON object. No Markdown. No other text.
-Structure:
-{
-  ${session.isGroup ? '"speaker": "说话的角色名字 (必须是群成员)",' : ''}
-  "reply": ["第一句话", "第二句话"], // 必须是数组，拆分你想说的话
-  "hang_up": true OR false // 若你要主动挂断电话(如吵架、有急事、说晚安后)，设为 true
+你们刚才的电话内容记录：\n${recentTranscripts || '（刚接通，还没人说话）'}`;
+
+            let structure = session.isGroup ? `{
+  "group_replies":[
+    {
+      "speaker": "说话的角色名字(必须是群成员)",
+      "reply": "你要说的一段话",
+      "hang_up": true OR false // 如果你想主动挂断电话，设为true
+    }
+  ]
+}` : `{
+  "reply": "你要说的一段话",
+  "hang_up": true OR false // 如果你想主动挂断电话，设为true
 }`;
 
             try {
                 let url = this.apiConfig.baseUrl.trim().replace(/\/+$/, '');
                 if (!url.endsWith('/v1')) url += '/v1';
+                
                 const res = await fetch(`${url}/chat/completions`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiConfig.apiKey.trim()}` },
                     body: JSON.stringify({ 
                         model: this.apiConfig.selectedModel, 
-                        messages:[{ role: 'system', content: systemPrompt + structure }, { role: 'user', content: '请回复。' }],
-                        temperature: 0.7 
+                        messages:[
+                            { role: 'system', content: systemPrompt + '\n\nOutput JSON structure:\n' + structure },
+                            { role: 'user', content: '轮到你说话了，请回复。' }
+                        ],
+                        temperature: 0.8
                     })
                 });
 
-                if(!res.ok) throw new Error('API Request Failed');
+                if (!res.ok) throw new Error('API Error');
                 const data = await res.json();
-                let rawContent = data.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '').trim();
+                let rawContent = data.choices[0].message.content.trim().replace(/```json/g, '').replace(/```/g, '').trim();
                 let parsed = JSON.parse(rawContent);
 
-                const replies = Array.isArray(parsed.reply) ? parsed.reply : [parsed.reply || ""];
-                let speakerName = session.isGroup ? (parsed.speaker || '未知成员') : (friend ? friend.name : session.name);
-                let speakerId = session.isGroup ? (this.wechatState.friendList.find(f => f.name === parsed.speaker || f.remark === parsed.speaker)?.id) : null;
-
-                let delay = 0;
-                replies.forEach((rep, index) => {
-                    if (!rep.trim()) return;
-                    setTimeout(() => {
-                        this.addVoiceTranscript(rep.trim(), false, speakerId, speakerName);
-                        // 若开启了免提，自动触发大模型语音朗读
-                        if (this.voiceCallState.isSpeakerOn) {
-                            const currentTrans = this.voiceCallState.transcripts[this.voiceCallState.transcripts.length - 1];
-                            this.playTransVoice(currentTrans);
+                let replies = session.isGroup ? (parsed.group_replies || []) : [parsed];
+                
+                for (let r of replies) {
+                    if (r.reply) {
+                        let speakerId = null;
+                        let speakerName = session.name;
+                        let speakerAvatar = session.avatar;
+                        
+                        if (session.isGroup) {
+                            const friend = this.wechatState.friendList.find(f => f.name === r.speaker || f.remark === r.speaker);
+                            if (friend) {
+                                speakerId = friend.id;
+                                speakerName = friend.remark || friend.name;
+                                speakerAvatar = friend.avatar;
+                            }
                         }
-                    }, delay);
-                    delay += 1000 + Math.random() * 800;
-                });
 
-                // 处理 AI 主动挂断
-                if (parsed.hang_up === true || parsed.hang_up === "true") {
-                    setTimeout(() => {
-                        this.endVoiceCall('ai');
-                        this.showToast('对方已挂断');
-                    }, delay + 1000);
+                        this.addVoiceTranscript(r.reply, false, speakerId);
+                        
+                        // 若开启免提，触发 MiniMax 语音合成
+                        if (this.voiceCallState.isSpeaker) {
+                            this.playVoiceCallTTS(r.reply, speakerId);
+                        }
+                        
+                        // AI 主动挂断逻辑
+                        if (r.hang_up) {
+                            setTimeout(() => {
+                                this.showToast(`${speakerName} 挂断了电话`);
+                                this.endVoiceCall(false, speakerAvatar, speakerName);
+                            }, 2000);
+                            break;
+                        }
+                    }
                 }
             } catch(e) {
-                this.showToast('回应失败: ' + e.message);
+                this.showToast('语音请求失败: ' + e.message);
+            } finally {
+                this.voiceCallState.isAiTyping = false;
             }
         },
-        
-        // --- 原生 Web Speech API 语音捕获 ---
-        startSpeechRecognition() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                this.showToast('当前浏览器环境不支持网页录音');
-                this.voiceCallState.isMicOn = false;
-                return;
-            }
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            this.speechRecognition = new SpeechRecognition();
-            this.speechRecognition.continuous = true;
-            this.speechRecognition.interimResults = true;
-            this.speechRecognition.lang = 'zh-CN';
-
-            this.speechRecognition.onresult = (event) => {
-                let interimTranscript = '';
-                let finalTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
-                    else interimTranscript += event.results[i][0].transcript;
-                }
-                
-                // 将捕获到的字实时写入输入框
-                this.voiceCallState.input = finalTranscript + interimTranscript;
-
-                // 停顿 1.5s 后自动发送
-                clearTimeout(this.speechTimeout);
-                this.speechTimeout = setTimeout(() => {
-                    if (this.voiceCallState.input.trim()) {
-                        this.sendVoiceCallMessage();
-                    }
-                }, 1500);
-            };
-            this.speechRecognition.onend = () => {
-                // 若麦克风没关，因静音断开则自动重启
-                if (this.voiceCallState.isMicOn) this.speechRecognition.start();
-            };
-            this.speechRecognition.start();
-        },
-        stopSpeechRecognition() {
-            if (this.speechRecognition) {
-                this.speechRecognition.onend = null;
-                this.speechRecognition.stop();
-            }
-            clearTimeout(this.speechTimeout);
-        },
-
-        // --- TTS 语音播报 ---
-        async playTransVoice(trans) {
-            // 在回顾模式下，必须开了免提且是 AI 发的消息才能重听
-            if (this.voiceCallState.isReviewing) {
-                if (!this.voiceCallState.isSpeakerOn) return this.showToast('请先点击右下角打开免提功能');
-                if (trans.isSelf) return;
-            }
-            if (trans.isSelf || !this.minimaxConfig.enabled || !this.minimaxConfig.apiKey) return;
-            if (trans.isPlaying) return; // 防抖
-
-            trans.isPlaying = true;
+        async playVoiceCallTTS(text, memberId = null) {
+            if (!this.minimaxConfig.enabled || !this.minimaxConfig.groupId || !this.minimaxConfig.apiKey) return;
             try {
                 const baseUrl = this.minimaxConfig.region === 'intl' ? 'https://api.minimaxi.chat/v1' : 'https://api.minimax.chat/v1';
                 const requestBody = {
                     model: this.minimaxConfig.selectedModel || "speech-01-turbo",
-                    text: trans.text,
+                    text: text,
                     stream: false,
                     voice_setting: { voice_id: this.minimaxConfig.voiceId || "male-qn-qingse", speed: 1.0, vol: 1.0, pitch: 0 },
                     audio_setting: { sample_rate: 32000, bitrate: 128000, format: "mp3", channel: 1 }
                 };
-
                 const res = await fetch(`${baseUrl}/t2a_v2?GroupId=${this.minimaxConfig.groupId.trim()}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.minimaxConfig.apiKey.trim()}` },
                     body: JSON.stringify(requestBody)
                 });
-                if (!res.ok) throw new Error('TTS 请求失败');
-                
+                if (!res.ok) return;
                 const data = await res.json();
-                if (data.baseStatus && data.baseStatus.statusCode !== 0) throw new Error(data.baseStatus.statusMsg);
-
-                const bytes = new Uint8Array(data.data.audio.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-                const blob = new Blob([bytes], { type: 'audio/mp3' });
-                const audioUrl = URL.createObjectURL(blob);
-                
-                const audio = new Audio(audioUrl);
-                audio.onended = () => { trans.isPlaying = false; URL.revokeObjectURL(audioUrl); };
-                audio.onerror = () => { trans.isPlaying = false; };
-                audio.play();
-            } catch(e) {
-                console.error(e);
-                trans.isPlaying = false;
-                this.showToast('语音朗读失败');
-            }
-        },
-
-        minimizeVoiceCall() { this.voiceCallState.isMinimized = true; },
-        maximizeVoiceCall(e) { if (this.voiceCallState.drag.isDragging) return; this.voiceCallState.isMinimized = false; this.$nextTick(() => { this.scrollVoiceTranscriptToBottom(); }); },
-        formatVoiceCallTime(seconds) { const m = Math.floor(seconds / 60); const s = seconds % 60; return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`; },
-        addVoiceTranscript(text, isSelf, memberId = null, explicitName = null) {
-            let avatar = ''; let name = explicitName;
-            if (isSelf) {
-                avatar = this.getMaskById(this.wechatState.activeSession?.maskId).avatar;
-                name = '我';
-            } else {
-                if (this.wechatState.activeSession?.isGroup && memberId) {
-                    avatar = this.getFriendAvatar(memberId);
-                    this.voiceCallState.speakingId = memberId; 
-                } else {
-                    avatar = this.getCurrentSessionAvatar();
-                    if(!name) name = this.wechatState.activeSession?.name;
+                if (data.data && data.data.audio) {
+                    const bytes = new Uint8Array(data.data.audio.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                    const blob = new Blob([bytes], { type: 'audio/mp3' });
+                    const audioUrl = URL.createObjectURL(blob);
+                    new Audio(audioUrl).play();
                 }
-            }
-            this.voiceCallState.transcripts.push({ text, isSelf, avatar, name, isPlaying: false });
-            this.$nextTick(() => { this.scrollVoiceTranscriptToBottom(); });
-            setTimeout(() => { if (this.voiceCallState.speakingId === memberId) this.voiceCallState.speakingId = null; }, 2000);
+            } catch(e) {}
         },
-        scrollVoiceTranscriptToBottom() { const c = this.$refs.voiceTranscriptContainer; if (c) c.scrollTop = c.scrollHeight; },
-        startDragVoice(e) { if(!this.voiceCallState.isMinimized) return; this.voiceCallState.drag.isDragging = false; const touch = e.touches ? e.touches[0] : e; this.voiceCallState.drag.startX = touch.clientX - this.voiceCallState.drag.x; this.voiceCallState.drag.startY = touch.clientY - this.voiceCallState.drag.y; document.addEventListener('mousemove', this.doDragVoice); document.addEventListener('touchmove', this.doDragVoice, {passive: false}); document.addEventListener('mouseup', this.stopDragVoice); document.addEventListener('touchend', this.stopDragVoice); },
-        doDragVoice(e) { e.preventDefault(); this.voiceCallState.drag.isDragging = true; const touch = e.touches ? e.touches[0] : e; let newX = touch.clientX - this.voiceCallState.drag.startX; let newY = touch.clientY - this.voiceCallState.drag.startY; newX = Math.max(0, Math.min(window.innerWidth - 120, newX)); newY = Math.max(0, Math.min(window.innerHeight - 60, newY)); this.voiceCallState.drag.x = newX; this.voiceCallState.drag.y = newY; },
-        stopDragVoice() { setTimeout(() => { this.voiceCallState.drag.isDragging = false; }, 50); document.removeEventListener('mousemove', this.doDragVoice); document.removeEventListener('touchmove', this.doDragVoice); document.removeEventListener('mouseup', this.stopDragVoice); document.removeEventListener('touchend', this.stopDragVoice); },
+
+        // --- 麦克风真实语音识别转文字逻辑 ---
+        toggleMicrophone() {
+            this.voiceCallState.isMuted = !this.voiceCallState.isMuted;
+            if (!this.voiceCallState.isMuted) {
+                this.startSpeechRecognition();
+            } else {
+                this.stopSpeechRecognition();
+            }
+        },
+        startSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                this.showToast('当前浏览器不支持语音识别，请手动打字');
+                this.voiceCallState.isMuted = true;
+                return;
+            }
+            
+            if (!this.voiceCallState.recognition) {
+                this.voiceCallState.recognition = new SpeechRecognition();
+                this.voiceCallState.recognition.continuous = true;
+                this.voiceCallState.recognition.interimResults = true;
+                this.voiceCallState.recognition.lang = 'zh-CN';
+                
+                let silenceTimer = null;
+                let currentTranscriptObj = null;
+
+                this.voiceCallState.recognition.onresult = (event) => {
+                    let interimTranscript = '';
+                    let finalTranscript = '';
+
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+                        else interimTranscript += event.results[i][0].transcript;
+                    }
+
+                    const activeText = finalTranscript || interimTranscript;
+                    
+                    if (activeText) {
+                        if (!currentTranscriptObj) {
+                            // 第一次开口，创建新气泡
+                            currentTranscriptObj = { text: activeText, isSelf: true, avatar: this.getMaskById(this.wechatState.activeSession?.maskId).avatar, name: '我' };
+                            this.voiceCallState.transcripts.push(currentTranscriptObj);
+                        } else {
+                            // 持续说话，覆盖更新气泡文字
+                            currentTranscriptObj.text = activeText;
+                        }
+                        this.scrollVoiceTranscriptToBottom();
+                    }
+
+                    // 如果停顿超过 1.5 秒，截断当前气泡，下次说话产生新气泡
+                    clearTimeout(silenceTimer);
+                    silenceTimer = setTimeout(() => {
+                        if (currentTranscriptObj) {
+                            currentTranscriptObj = null;
+                            try { this.voiceCallState.recognition.stop(); } catch(e){}
+                        }
+                    }, 1500);
+                };
+
+                this.voiceCallState.recognition.onend = () => {
+                    // 如果没关麦，静音截断后自动重启收音
+                    if (!this.voiceCallState.isMuted && this.voiceCallState.isActive) {
+                        try { this.voiceCallState.recognition.start(); } catch(e){}
+                    }
+                };
+            }
+            try { this.voiceCallState.recognition.start(); } catch(e) {}
+        },
+        stopSpeechRecognition() {
+            if (this.voiceCallState.recognition) {
+                try { this.voiceCallState.recognition.stop(); } catch(e) {}
+            }
+        },
+        
+        // --- 悬浮小窗拖拽逻辑 ---
+        startDragVoice(e) {
+            if(!this.voiceCallState.isMinimized) return;
+            this.voiceCallState.drag.isDragging = false; // 初始设为 false，区分点击和拖拽
+            const touch = e.touches ? e.touches[0] : e;
+            this.voiceCallState.drag.startX = touch.clientX - this.voiceCallState.drag.x;
+            this.voiceCallState.drag.startY = touch.clientY - this.voiceCallState.drag.y;
+            document.addEventListener('mousemove', this.doDragVoice);
+            document.addEventListener('touchmove', this.doDragVoice, {passive: false});
+            document.addEventListener('mouseup', this.stopDragVoice);
+            document.addEventListener('touchend', this.stopDragVoice);
+        },
+        doDragVoice(e) {
+            e.preventDefault(); 
+            this.voiceCallState.drag.isDragging = true; // 只要动了就标记为拖拽中
+            const touch = e.touches ? e.touches[0] : e;
+            
+            // 限制拖拽边界防止移出屏幕
+            let newX = touch.clientX - this.voiceCallState.drag.startX;
+            let newY = touch.clientY - this.voiceCallState.drag.startY;
+            newX = Math.max(0, Math.min(window.innerWidth - 120, newX));
+            newY = Math.max(0, Math.min(window.innerHeight - 60, newY));
+            
+            this.voiceCallState.drag.x = newX;
+            this.voiceCallState.drag.y = newY;
+        },
+        stopDragVoice() {
+            // 延迟清除 Dragging 状态，防止触发 click 事件 (maximize)
+            setTimeout(() => { this.voiceCallState.drag.isDragging = false; }, 50);
+            document.removeEventListener('mousemove', this.doDragVoice);
+            document.removeEventListener('touchmove', this.doDragVoice);
+            document.removeEventListener('mouseup', this.stopDragVoice);
+            document.removeEventListener('touchend', this.stopDragVoice);
+        },
         
         // --- 接受 AI 听歌邀请 ---
         acceptMusicInvite(msg) {
