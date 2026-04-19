@@ -2367,6 +2367,18 @@
                                         <i class="fas fa-phone-volume text-lg" :class="msg.isSelf ? 'text-gray-400' : 'text-green-500'"></i>
                                         <span class="font-medium tracking-wide text-[15px]">{{ msg.content }}</span>
                                     </div>
+                                    
+                                    <!-- 【新增】语音通话记录气泡 (点击回顾) -->
+                                    <div v-else-if="msg.type === 'voice_call_record'" class="flex items-center gap-2.5 cursor-pointer active:opacity-70 px-1 py-0.5" @click.stop="reviewVoiceCall(msg.callData)">
+                                        <i class="fas fa-phone-volume text-lg" :class="msg.isSelf ? 'text-gray-400' : 'text-green-500'"></i>
+                                        <span class="font-medium tracking-wide text-[15px]">{{ msg.content }}</span>
+                                    </div>
+
+                                    <!-- 【新增】视频通话记录气泡 (点击回顾) -->
+                                    <div v-else-if="msg.type === 'video_call_record'" class="flex items-center gap-2.5 cursor-pointer active:opacity-70 px-1 py-0.5" @click.stop="reviewVideoCall(msg.callData)">
+                                        <i class="fas fa-video text-lg" :class="msg.isSelf ? 'text-gray-400' : 'text-green-500'"></i>
+                                        <span class="font-medium tracking-wide text-[15px]">{{ msg.content }}</span>
+                                    </div>
 
                                     <!-- 文本消息 (自带实时翻译) -->
                                     <div v-else class="flex flex-col">
@@ -2442,7 +2454,7 @@
                             <div class="attach-item" @click="triggerImageUpload"><div class="attach-icon-box"><i class="fas fa-images text-gray-600"></i></div><span class="attach-label">相册</span></div>
                             <!-- 拍摄 (文字转灰色图) -->
                             <div class="attach-item" @click="openFakeImageInput"><div class="attach-icon-box"><i class="fas fa-camera text-gray-600"></i></div><span class="attach-label">拍摄</span></div>
-                            <div class="attach-item" @click="showToast('功能开发中')"><div class="attach-icon-box"><i class="fas fa-video text-gray-600"></i></div><span class="attach-label">视频通话</span></div>
+                            <div class="attach-item" @click="startVideoCall"><div class="attach-icon-box"><i class="fas fa-video text-gray-600"></i></div><span class="attach-label">视频通话</span></div>
                             <div class="attach-item" @click="openLocationModal"><div class="attach-icon-box"><i class="fas fa-map-marker-alt text-gray-600"></i></div><span class="attach-label">位置</span></div>
                             <div class="attach-item" @click="startVoiceCall"><div class="attach-icon-box"><i class="fas fa-phone text-gray-600"></i></div><span class="attach-label">语音通话</span></div>
                             <!-- 自定义灰色红包图标 (Cute Rounded - Swapped Colors) -->
@@ -3540,6 +3552,229 @@
                 </div>
             </div>
         </transition>
+        
+        <!-- ================= 视频通话 (全屏、小窗、来电、设置) ================= -->
+        <transition name="fade">
+            <!-- 悬浮小窗模式 -->
+            <div v-if="videoCallState && videoCallState.isActive && videoCallState.isMinimized" 
+                 class="fixed z-[105000] bg-[#1c1c1e] border border-gray-700 shadow-2xl rounded-2xl flex items-center gap-3 p-3 cursor-move cursor-pointer active:scale-95 transition-transform"
+                 :style="{ top: (videoCallState.drag?.y || 160) + 'px', left: (videoCallState.drag?.x || 20) + 'px', transitionDuration: videoCallState.drag?.isDragging ? '0s' : '0.2s' }"
+                 @touchstart="startDragVideo" @mousedown="startDragVideo" @click="maximizeVideoCall">
+                 <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-100 shrink-0">
+                     <img :src="wechatState.activeSession?.isGroup ? wechatState.activeSession.avatar : getCurrentSessionAvatar()" class="w-full h-full object-cover">
+                 </div>
+                 <div class="flex flex-col pr-2">
+                     <span class="text-sm font-bold text-blue-400 animate-pulse"><i class="fas fa-video text-[10px] mr-1"></i>视频中</span>
+                     <span class="text-xs text-gray-400 font-mono">{{ formatVoiceCallTime(videoCallState.duration) }}</span>
+                 </div>
+            </div>
+        </transition>
+
+        <transition name="fade">
+            <!-- 全屏视频模式 (黑白灰 ins 极简风) -->
+            <div v-show="videoCallState && videoCallState.isActive && !videoCallState.isMinimized" class="fixed inset-0 z-[105000] bg-[#121212] text-white flex flex-col font-sans">
+                
+                <!-- 【摄像头真实捕获小窗】(固定在右上角) -->
+                <transition name="scale">
+                    <div v-show="videoCallState.isCameraOn" class="absolute top-20 right-6 w-28 h-40 bg-black rounded-2xl overflow-hidden border-2 border-gray-600 shadow-2xl z-20">
+                        <!-- 这个 video 标签用于绑定你真实的摄像头画面 -->
+                        <video ref="localVideo" autoplay muted playsinline class="w-full h-full object-cover transform scale-x-[-1]"></video>
+                    </div>
+                </transition>
+
+                <!-- 顶部操作栏 -->
+                <div class="pt-12 px-6 flex justify-between items-center shrink-0 z-20">
+                    <button @click="minimizeVideoCall" class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-white transition active:scale-90 bg-black/40 rounded-full backdrop-blur-md"><i class="fas fa-compress-alt text-lg"></i></button>
+                    <button @click="videoCallSettings.showModal = true" class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-white transition active:scale-90 bg-black/40 rounded-full backdrop-blur-md"><i class="fas fa-bars text-lg"></i></button>
+                </div>
+
+                <!-- 对方头像区域/全屏模拟占位 -->
+                <div class="absolute inset-0 flex flex-col items-center justify-center z-0 pointer-events-none opacity-40 blur-sm">
+                     <img :src="wechatState.activeSession?.isGroup ? wechatState.activeSession.avatar : getCurrentSessionAvatar()" class="w-[120%] h-[120%] object-cover">
+                </div>
+
+                <div class="mt-2 flex flex-col items-center shrink-0 px-6 z-10">
+                    <div v-if="!wechatState.activeSession?.isGroup" class="flex flex-col items-center">
+                        <div class="w-20 h-20 rounded-full overflow-hidden shadow-lg border border-gray-700/50">
+                            <img :src="getCurrentSessionAvatar()" class="w-full h-full object-cover">
+                        </div>
+                        <span class="mt-3 text-lg font-bold tracking-wider drop-shadow-md">{{ wechatState.activeSession?.name }}</span>
+                        <span class="text-xs text-gray-400 mt-1 drop-shadow-md">{{ formatVoiceCallTime(videoCallState.duration) }}</span>
+                    </div>
+                    
+                    <div v-else class="w-full flex flex-col items-center">
+                        <div class="flex flex-wrap justify-center gap-4 max-w-[80%]">
+                            <div v-for="memId in wechatState.activeSession?.members" :key="memId" class="flex flex-col items-center gap-1.5">
+                                <div class="w-12 h-12 rounded-full overflow-hidden border border-gray-700/50 shadow-sm" :class="{'ring-2 ring-blue-400': videoCallState.speakingId === memId}">
+                                    <img :src="getFriendAvatar(memId)" class="w-full h-full object-cover">
+                                </div>
+                                <span class="text-[10px] text-gray-300 max-w-[56px] truncate text-center drop-shadow-md">{{ getFriendName(memId) }}</span>
+                            </div>
+                        </div>
+                        <span class="mt-4 text-sm text-gray-300 font-mono drop-shadow-md">{{ formatVoiceCallTime(videoCallState.duration) }}</span>
+                    </div>
+                </div>
+
+                <!-- 视频实时对话字幕显示区 (区分动作和语言) -->
+                <div class="flex-1 overflow-y-auto mt-6 mb-4 px-6 flex flex-col gap-4 z-10" ref="videoTranscriptContainer">
+                    <div v-if="!videoCallState.transcripts || videoCallState.transcripts.length === 0" class="flex-1 flex items-center justify-center text-gray-400 text-sm opacity-50">
+                        等待对方动作或说话...
+                    </div>
+                    <div v-for="(trans, idx) in (videoCallState.transcripts ||[])" :key="idx" class="flex flex-col max-w-[90%]" :class="trans.isSelf ? 'self-end items-end' : 'self-start items-start'">
+                        <div v-if="wechatState.activeSession?.isGroup && !trans.isSelf" class="flex items-center gap-2 mb-1.5 ml-1">
+                            <img :src="trans.avatar" class="w-4 h-4 rounded-full object-cover border border-gray-700">
+                            <span class="text-[10px] text-gray-400">{{ trans.name }}</span>
+                        </div>
+                        <div class="px-4 py-3 shadow-lg text-[14px] leading-relaxed tracking-wide bg-black/60 backdrop-blur-xl border border-gray-600/30"
+                             :class="trans.isSelf ? 'rounded-2xl rounded-tr-sm text-gray-100' : 'rounded-2xl rounded-tl-sm text-gray-100'">
+                            <!-- 动作部分：灰色斜体 -->
+                            <div v-if="trans.action && trans.action !== '无'" class="text-gray-400 italic mb-1.5 text-[13px] font-serif">
+                                *{{ trans.action }}*
+                            </div>
+                            <!-- 语言部分：带双引号 -->
+                            <div v-if="trans.text" class="text-[15px]">
+                                "{{ trans.text }}"
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div v-if="videoCallState.isAiTyping" class="flex self-start items-start max-w-[85%] mb-2">
+                        <div class="px-4 py-3 bg-black/60 backdrop-blur-xl border border-gray-600/30 shadow-md flex items-center gap-1.5 h-[42px] rounded-2xl rounded-tl-sm">
+                            <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0s"></div>
+                            <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.15s"></div>
+                            <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.3s"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 打字输入区 -->
+                <div class="px-6 pb-4 shrink-0 z-10">
+                    <div class="flex items-end gap-3 bg-[#2c2c2e]/80 backdrop-blur-xl rounded-[20px] p-1.5 border border-gray-700/50 shadow-lg transition-all">
+                        <textarea v-model="videoCallState.inputText" 
+                                  @keydown.enter.prevent="sendVideoCallText"
+                                  class="flex-1 bg-transparent text-[15px] text-gray-100 px-3 py-1.5 outline-none resize-none max-h-20 scrollbar-hide placeholder-gray-500 font-medium" 
+                                  rows="1" 
+                                  placeholder="你的动作或语言..."></textarea>
+                        
+                        <div class="flex items-center pb-0.5 pr-1 gap-2 shrink-0">
+                            <button v-if="!(videoCallState.inputText || '').trim()" @click="receiveVideoCallReply('normal')" class="text-gray-400 hover:text-white px-2 py-1 flex items-center justify-center shrink-0 active:scale-90 transition" :class="{'animate-pulse text-white': videoCallState.isAiTyping}">
+                                <i class="fas text-xl" :class="videoCallState.isAiTyping ? 'fa-spinner fa-spin' : 'fa-search'"></i>
+                            </button>
+                            <button v-if="(videoCallState.inputText || '').trim()" @click="sendVideoCallText" class="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center shrink-0 active:scale-90 transition shadow-md">
+                                <i class="fas fa-paper-plane text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 底部控制栏 -->
+                <div class="h-32 shrink-0 flex items-center justify-center gap-8 pb-8 z-10">
+                    <div @click="toggleVideoMicrophone" class="flex flex-col items-center gap-2 cursor-pointer active:scale-90 transition">
+                        <div class="w-16 h-16 rounded-full flex items-center justify-center text-2xl transition-colors shadow-lg" :class="!videoCallState.isMuted ? 'bg-white text-black' : 'bg-[#2c2c2e] text-gray-400'">
+                            <i class="fas" :class="!videoCallState.isMuted ? 'fa-microphone' : 'fa-microphone-slash'"></i>
+                        </div>
+                        <span class="text-[11px] text-gray-400 font-medium">麦克风</span>
+                    </div>
+                    
+                    <div @click="endVideoCall(true)" class="flex flex-col items-center gap-2 cursor-pointer active:scale-90 transition mx-2">
+                        <div class="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-red-500/30">
+                            <i class="fas fa-phone-slash"></i>
+                        </div>
+                        <span class="text-[11px] text-gray-400 font-medium">挂断</span>
+                    </div>
+
+                    <div @click="videoCallState.isSpeaker = !videoCallState.isSpeaker" class="flex flex-col items-center gap-2 cursor-pointer active:scale-90 transition">
+                        <div class="w-16 h-16 rounded-full flex items-center justify-center text-2xl transition-colors shadow-lg" :class="videoCallState.isSpeaker ? 'bg-white text-black' : 'bg-[#2c2c2e] text-gray-400'">
+                            <i class="fas fa-volume-up"></i>
+                        </div>
+                        <span class="text-[11px] text-gray-400 font-medium">免提</span>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- 视频通话右上角菜单：开启摄像头 -->
+        <transition name="scale">
+            <div v-if="videoCallSettings.showModal" class="fixed inset-0 z-[107000] flex items-center justify-center bg-black/60 backdrop-blur-sm" @click="videoCallSettings.showModal = false">
+                <div class="bg-[#1c1c1e] w-[75%] rounded-[20px] overflow-hidden shadow-2xl p-6 flex flex-col gap-4 text-white border border-gray-700" @click.stop>
+                    <h3 class="text-base font-bold text-center mb-2">视频通话设置</h3>
+                    
+                    <div class="flex items-center justify-between bg-[#2c2c2e] p-4 rounded-xl">
+                        <div>
+                            <span class="text-sm text-gray-100 font-bold block">开启我的前置摄像头</span>
+                            <span class="text-[10px] text-gray-500 mt-1 block">开启后角色能够看到你做出的真实动作和神态，并在对话中做出反应。</span>
+                        </div>
+                        <input type="checkbox" id="cam-toggle" class="switch-checkbox" v-model="videoCallState.isCameraOn" @change="toggleRealCamera">
+                        <label for="cam-toggle" class="switch-label shrink-0 ml-4"><div class="switch-button"></div></label>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- 视频通话回顾弹窗 -->
+        <transition name="app-slide">
+            <div v-if="videoCallReview && videoCallReview.show" class="fixed inset-0 z-[106000] bg-[#1c1c1e] text-white flex flex-col font-sans">
+                <header class="h-[90px] pt-10 px-4 flex items-center justify-between border-b border-gray-800 bg-[#1c1c1e] sticky top-0 z-10">
+                    <button @click="videoCallReview.show = false" class="w-8 h-8 flex items-center justify-center text-gray-300 active:scale-90"><i class="fas fa-chevron-left text-lg"></i></button>
+                    <h1 class="font-bold text-[17px] tracking-wider">视频录像回顾</h1>
+                    <div class="w-8"></div>
+                </header>
+                <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+                    <div v-if="!videoCallReview.data || videoCallReview.data.length === 0" class="text-center text-gray-500 mt-32 text-sm tracking-wide">
+                        <i class="fas fa-video-slash text-4xl mb-4 opacity-50 block"></i>
+                        本次视频没有产生任何记录
+                    </div>
+                    <div v-for="(trans, idx) in (videoCallReview.data ||[])" :key="idx" class="flex flex-col max-w-[90%]" :class="trans.isSelf ? 'self-end items-end' : 'self-start items-start'">
+                        <div v-if="!trans.isSelf" class="flex items-center gap-2 mb-1.5 ml-1">
+                            <img :src="trans.avatar" class="w-4 h-4 rounded-full object-cover border border-gray-700">
+                            <span class="text-[10px] text-gray-500">{{ trans.name }}</span>
+                        </div>
+                        <div class="px-4 py-3 shadow-md text-[14px] leading-relaxed tracking-wide border border-gray-600/30"
+                             :class="trans.isSelf ? 'bg-white text-black rounded-2xl rounded-tr-sm' : 'bg-[#2c2c2e] text-gray-100 rounded-2xl rounded-tl-sm ' + (!trans.isSelf && minimaxConfig.enabled ? 'cursor-pointer active:opacity-70' : '')"
+                             @click="(!trans.isSelf && minimaxConfig.enabled) ? playVoiceCallTTS(trans.text) : null">
+                            <div v-if="trans.action && trans.action !== '无'" class="italic mb-1 text-[13px] font-serif" :class="trans.isSelf ? 'text-gray-500' : 'text-gray-400'">
+                                *{{ trans.action }}*
+                            </div>
+                            <div v-if="trans.text" class="text-[15px]">
+                                "{{ trans.text }}"
+                            </div>
+                            <i v-if="!trans.isSelf && minimaxConfig.enabled" class="fas fa-microphone ml-2 text-gray-400 text-[11px] float-right mt-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- AI 主动来电全屏界面 (视频通话版) -->
+        <transition name="fade">
+            <div v-if="incomingVideoCall.show" class="fixed inset-0 z-[106000] bg-black/90 text-white flex flex-col items-center justify-between py-24 font-sans backdrop-blur-xl">
+                <div class="flex flex-col items-center gap-4 mt-10">
+                    <div class="relative flex items-center justify-center">
+                        <div class="absolute w-32 h-32 bg-blue-500/20 rounded-full animate-ping"></div>
+                        <div class="w-28 h-28 rounded-full overflow-hidden border-2 border-white/20 shadow-xl relative z-10">
+                            <img :src="incomingVideoCall.avatar" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold tracking-widest mt-4">{{ incomingVideoCall.name }}</div>
+                    <div class="text-sm text-gray-400">邀请你进行视频通话...</div>
+                </div>
+                
+                <div class="flex gap-24 w-full justify-center pb-10">
+                    <div @click="declineIncomingVideoCall" class="flex flex-col items-center gap-3 cursor-pointer active:scale-90 transition">
+                        <div class="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-red-500/40">
+                            <i class="fas fa-phone-slash"></i>
+                        </div>
+                        <span class="text-[12px] text-gray-300 tracking-wider">拒绝</span>
+                    </div>
+                    <div @click="acceptIncomingVideoCall" class="flex flex-col items-center gap-3 cursor-pointer active:scale-90 transition">
+                        <div class="w-16 h-16 rounded-full bg-blue-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-blue-500/40 animate-bounce">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <span class="text-[12px] text-gray-300 tracking-wider">接听</span>
+                    </div>
+                </div>
+            </div>
+        </transition>
 
     <!-- 设置 App -->
     <transition name="app-slide"><div v-if="currentApp === 'settings'" class="absolute inset-0 z-[1000] bg-gray-50 flex flex-col overflow-hidden"><header class="bg-white/80 backdrop-blur h-[90px] pt-10 flex items-center justify-between px-4 border-b border-gray-200 sticky top-0 z-10"><button @click="navigateSettings('back')" class="w-8 h-8 flex items-center justify-center text-gray-800 bg-gray-100 rounded-full active:bg-gray-200 transition"><i v-if="settingsPage !== 'main'" class="fas fa-chevron-left text-sm"></i><i v-else class="fas fa-times text-sm"></i></button><h1 class="font-bold text-gray-900 text-[17px]">{{ settingsTitle }}</h1><div class="w-8"></div></header><main class="flex-1 overflow-y-auto relative"><transition name="page-slide"><div v-if="settingsPage === 'main'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-4 flex items-center gap-4 shadow-sm border border-gray-100"><div class="w-14 h-14 rounded-full bg-gray-100 overflow-hidden"><img v-if="homeProfile.avatar" :src="homeProfile.avatar" class="w-full h-full object-cover"></div><div><div class="font-bold text-lg">{{ homeProfile.name }}</div><div class="text-xs text-gray-400">@{{ homeProfile.id }}</div></div></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 divide-y divide-gray-50"><div @click="navigateSettings('api-config')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-blue-500 text-white flex items-center justify-center"><i class="fas fa-robot"></i></div><span class="font-medium text-gray-800">API 配置</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div @click="navigateSettings('notification')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-green-500 text-white flex items-center justify-center"><i class="fas fa-bell"></i></div><span class="font-medium text-gray-800">消息提示音</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div @click="navigateSettings('push-config')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-teal-500 text-white flex items-center justify-center"><i class="fas fa-comment-alt"></i></div><span class="font-medium text-gray-800">系统推送通知</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div @click="navigateSettings('data-manage')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-orange-500 text-white flex items-center justify-center"><i class="fas fa-database"></i></div><span class="font-medium text-gray-800">数据管理</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div class="p-4 flex items-center justify-between active:bg-gray-50"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-purple-500 text-white flex items-center justify-center"><i class="fas fa-expand"></i></div><span class="font-medium text-gray-800">全屏模式</span></div><input type="checkbox" id="toggle-fs" class="switch-checkbox" v-model="isFullScreen" @change="toggleFullScreen"><label for="toggle-fs" class="switch-label"><div class="switch-button"></div></label></div><div class="p-4 flex items-center justify-between active:bg-gray-50"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-gray-500 text-white flex items-center justify-center"><i class="fas fa-eye-slash"></i></div><span class="font-medium text-gray-800">隐藏状态栏</span></div><input type="checkbox" id="toggle-sb" class="switch-checkbox" v-model="hideStatusBar" @change="saveData"><label for="toggle-sb" class="switch-label"><div class="switch-button"></div></label></div></div></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'api-config'" class="absolute inset-0 p-4"><div class="space-y-5 pb-10"><div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4"><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">反代地址</label><input v-model="apiConfig.baseUrl" placeholder="https://..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">API 密钥</label><input v-model="apiConfig.apiKey" type="password" placeholder="sk-..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div class="flex items-center gap-2"><button @click="fetchModels" :disabled="isLoading" class="flex-1 bg-gray-900 text-white py-2.5 rounded-xl text-sm font-bold active:scale-95 transition flex items-center justify-center gap-2"><i v-if="isLoading" class="fas fa-spinner fa-spin"></i><span v-else>拉取模型</span></button></div><div v-if="availableModels.length > 0" class="animate-fade-in"><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">选择模型</label><div @click="modelSelectModal.show = true" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-medium border border-gray-200 flex justify-between items-center cursor-pointer"><span>{{ apiConfig.selectedModel || '点击选择' }}</span><i class="fas fa-chevron-down text-gray-400 text-xs"></i></div></div><div><div class="flex justify-between mb-1"><label class="text-xs font-bold text-gray-500 ml-1">温度 (创造性): {{ apiConfig.temperature }}</label></div><input type="range" min="0" max="2" step="0.1" v-model.number="apiConfig.temperature" class="w-full h-2 bg-gray-200 rounded-lg cursor-pointer"></div></div>
@@ -3962,6 +4197,12 @@ createApp({
             voiceCallReview: { show: false, data:[] },
             incomingCall: { show: false, sessionId: null, name: '', avatar: '' }, // AI主动来电状态
             voiceCallTheme: { showModal: false, shape: 'rounded-2xl', myBg: '#ffffff', myText: '#000000', aiBg: '#2c2c2e', aiText: '#f3f4f6', customCss: '' }, // 通话气泡主题
+            
+            // 【新增】视频通话状态机与视觉变量
+            videoCallState: { isActive: false, isMinimized: false, isMuted: true, isSpeaker: true, duration: 0, timer: null, speakingId: null, transcripts:[], drag: { x: 20, y: 160, isDragging: false, startX: 0, startY: 0 }, inputText: '', isAiTyping: false, isCameraOn: false, localStream: null },
+            videoCallReview: { show: false, data:[] },
+            incomingVideoCall: { show: false, sessionId: null, name: '', avatar: '' },
+            videoCallSettings: { showModal: false },
             addMusicModal: { show: false, mode: 'add', id: null, title: '', artist: '', url: '', lyricType: 'file', lrcText: '', lrcFile: null, cover: '' },            
             tempEditingSong: null, 
 
@@ -6025,7 +6266,8 @@ Structure:
       "thought": "当前心声(第一人称思考，每轮必须更新)",
       "outfit": "当前穿着(必须更新，贴合此时此地的场景)",
       "note": "随笔日记(OPTIONAL: 看你当前心情决定是否提笔)",
-      "call_user": true OR false, // OPTIONAL: 如果你想主动给玩家打语音电话，请设为 true！
+      "call_user": true OR false, // OPTIONAL: 如果你想主动打【语音电话】，请设为 true！
+  "call_video_user": true OR false, // OPTIONAL: 如果你想主动打【视频通话】，请设为 true！
       "kick_member": "OPTIONAL: 填入你想踢出的角色名(仅限当前speaker是管理员时有效)",
       "mute_member": "OPTIONAL: 填入你想禁言的角色名(仅限当前speaker是管理员时有效)"
     }
@@ -6045,7 +6287,8 @@ Structure:
   "outfit": "当前穿着(必须更新，贴合此时此地的场景)",
   "note": "随笔日记(OPTIONAL: 看你当前心情决定是否提笔)",
   "change_remark": "OPTIONAL: 强行修改玩家手机里【对你(AI自身)的备注名】（即玩家的微信里怎么称呼你）。例如你如果是男主，可以把自己在玩家手机里的备注改成'老公'、'哥哥'等。绝对不能改成你对玩家的称呼（如改成'老婆'、'妹妹'等是严重错误）！",
-  "call_user": true OR false, // OPTIONAL: 如果你想主动给玩家打语音电话，请设为 true！
+  "call_user": true OR false, // OPTIONAL: 如果你想主动打【语音电话】，请设为 true！
+  "call_video_user": true OR false, // OPTIONAL: 如果你想主动打【视频通话】，请设为 true！
   "recall": true OR false, // OPTIONAL: 若你发出这句话后立刻觉得后悔、不妥、怕对方生气，想要迅速撤回刚才那句话时设为 true
   "fake_image": "OPTIONAL: description...",
   "red_packet": { "amount": "8.88", "note": "Happy Day" },
@@ -6105,9 +6348,11 @@ Structure:
                     } else if (m.type === 'location') {
                         contextMessages.push({ role: m.isSelf ? 'user' : 'assistant', content: `[Location Shared: ${m.name} - ${m.address}]` });
                         } else if (m.type === 'voice_call_record') {
-                        // 【记忆植入】提取语音通话里的全部字幕喂给大模型
                         const callLog = (m.callData || []).map(t => `[${t.isSelf ? '我(语音中)' : t.name}]: ${t.text}`).join('\n');
                         contextMessages.push({ role: m.isSelf ? 'user' : 'assistant', content: `[语音通话历史录音]:\n${callLog}` });
+                    } else if (m.type === 'video_call_record') {
+                        const callLog = (m.callData || []).map(t => `[${t.isSelf ? '我(视频中)' : t.name}]: 动作：*${t.action||'无'}* 说道："${t.text}"`).join('\n');
+                        contextMessages.push({ role: m.isSelf ? 'user' : 'assistant', content: `[视频通话历史录像]:\n${callLog}` });
                     } else {
                         contextMessages.push({ role: m.isSelf ? 'user' : 'assistant', content: m.content });
                     }
@@ -6141,7 +6386,18 @@ Structure:
                     parsed = { reply: [rawContent], action: '', thought: '', outfit: '', note: '' };
                 }
                 
-                // === 【新增】解析 AI 主动打语音电话 ===
+                // === 【新增】解析 AI 主动打语音或视频电话 ===
+                if (parsed.call_video_user === true || parsed.call_video_user === "true") {
+                    this.incomingVideoCall = {
+                        show: true,
+                        sessionId: session.id,
+                        name: speakerName,
+                        avatar: speakerAvatar
+                    };
+                    this.saveData();
+                    this.showToast(`${speakerName} 向你发起了视频通话`);
+                    return; 
+                }
                 if (parsed.call_user === true || parsed.call_user === "true") {
                     this.incomingCall = {
                         show: true,
@@ -6151,7 +6407,7 @@ Structure:
                     };
                     this.saveData();
                     this.showToast(`${speakerName} 向你发起了语音通话`);
-                    return; // 拦截后面的文本发送，直到接通
+                    return; 
                 }
 
                 // === 多人回复支持逻辑 ===
@@ -8154,8 +8410,9 @@ ${settings.bannedWords && settings.bannedWords.trim() ? `5. 【绝对禁忌词�
                     this.toggleVoiceText(msg);
                 }
             } else if(msg.type === 'voice_call_record') {
-                // 如果外层捕获了点击，强制跳转
                 this.reviewVoiceCall(msg.callData);
+            } else if(msg.type === 'video_call_record') {
+                this.reviewVideoCall(msg.callData); // 新增视频回顾点击
             } else if(msg.type === 'fake_image') {
                 msg.isRevealed = !msg.isRevealed;
             } else if(msg.type === 'moment') {
@@ -9601,12 +9858,12 @@ ${greetingInstruction}
   "group_replies":[
     {
       "speaker": "说话的角色名字(必须是群成员)",
-      "reply": "你要说的一段话",
+      "reply": ["你要说的第一句话", "第二句话"], // 必须是数组！可以说多句
       "hang_up": true OR false // 如果你想主动挂断电话，设为true
     }
   ]
 }` : `{
-  "reply": "你要说的一段话",
+  "reply": ["你要说的第一句话", "第二句话"], // 必须是数组！可以说多句
   "hang_up": true OR false // 如果你想主动挂断电话，设为true
 }`;
 
@@ -9649,17 +9906,24 @@ ${greetingInstruction}
                             }
                         }
 
-                        this.addVoiceTranscript(r.reply, false, speakerId);
-                        
-                        if (this.voiceCallState.isSpeaker) {
-                            this.playVoiceCallTTS(r.reply, speakerId);
-                        }
+                        // 【修复】：将一整段话切割/遍历，支持多句连发
+                        let sentences = Array.isArray(r.reply) ? r.reply : [r.reply];
+                        let tDelay = 0;
+                        sentences.forEach(sentence => {
+                            setTimeout(() => {
+                                this.addVoiceTranscript(sentence, false, speakerId);
+                                if (this.voiceCallState.isSpeaker) {
+                                    this.playVoiceCallTTS(sentence, speakerId);
+                                }
+                            }, tDelay);
+                            tDelay += 1500 + Math.random() * 1000; // 每句话间隔 1.5~2.5秒
+                        });
                         
                         if (r.hang_up) {
                             setTimeout(() => {
                                 this.showToast(`${speakerName} 挂断了电话`);
                                 this.endVoiceCall(false, speakerAvatar, speakerName);
-                            }, 2000);
+                            }, tDelay + 2000);
                             break;
                         }
                     }
@@ -9765,6 +10029,317 @@ ${greetingInstruction}
             if (this.voiceCallState.recognition) {
                 try { this.voiceCallState.recognition.stop(); } catch(e) {}
             }
+        },
+        // ================= 视频通话与多模态视觉捕捉功能逻辑 =================
+        startVideoCall() {
+            if (!this.wechatState.activeSession) return;
+            this.wechatState.showAttachMenu = false;
+            
+            this.videoCallState.isActive = true;
+            this.videoCallState.isMinimized = false;
+            this.videoCallState.duration = 0;
+            this.videoCallState.transcripts =[]; 
+            this.videoCallState.speakingId = null;
+            this.videoCallState.inputText = '';
+            this.videoCallState.isAiTyping = false;
+            this.videoCallState.isCameraOn = false;
+            this.videoCallState.localStream = null;
+            
+            if(this.videoCallState.timer) clearInterval(this.videoCallState.timer);
+            this.videoCallState.timer = setInterval(() => {
+                this.videoCallState.duration++;
+            }, 1000);
+            
+            this.receiveVideoCallReply('outbound');
+        },
+        acceptIncomingVideoCall() {
+            this.incomingVideoCall.show = false;
+            this.startVideoCall();
+            this.receiveVideoCallReply('inbound');
+        },
+        declineIncomingVideoCall() {
+            this.incomingVideoCall.show = false;
+            this.showToast('已挂断');
+            const session = this.wechatState.sessions.find(s => s.id === this.incomingVideoCall.sessionId);
+            if (session) {
+                session.messages.push({
+                    content: `已拒绝视频通话`,
+                    isSelf: true,
+                    time: Date.now(),
+                    avatar: this.getMaskById(session.maskId).avatar,
+                    name: '我',
+                    type: 'video_call_record',
+                    callData:[]
+                });
+                this.saveData();
+            }
+        },
+        endVideoCall(isSelf = true, aiAvatar = '', aiName = '') {
+            this.videoCallState.isActive = false;
+            this.videoCallState.isMinimized = false;
+            if(this.videoCallState.timer) clearInterval(this.videoCallState.timer);
+            
+            // 彻底关闭摄像头
+            this.videoCallState.isCameraOn = false;
+            if (this.videoCallState.localStream) {
+                this.videoCallState.localStream.getTracks().forEach(track => track.stop());
+                this.videoCallState.localStream = null;
+            }
+            
+            const session = this.wechatState.activeSession;
+            if (session) {
+                const callData =[...this.videoCallState.transcripts];
+                session.messages.push({
+                    content: `视频通话时长 ${this.formatVoiceCallTime(this.videoCallState.duration)}`,
+                    isSelf: isSelf, 
+                    time: Date.now(),
+                    avatar: isSelf ? this.getMaskById(session.maskId).avatar : (aiAvatar || session.avatar),
+                    name: isSelf ? '我' : (aiName || session.name),
+                    type: 'video_call_record', 
+                    callData: callData 
+                });
+                this.scrollToBottom();
+                this.saveData();
+            }
+        },
+        reviewVideoCall(data) {
+            if (!this.videoCallReview) this.videoCallReview = { show: false, data:[] };
+            this.videoCallReview.data = data ||[];
+            this.videoCallReview.show = true;
+        },
+        minimizeVideoCall() { this.videoCallState.isMinimized = true; },
+        maximizeVideoCall(e) {
+            if (this.videoCallState.drag.isDragging) return;
+            this.videoCallState.isMinimized = false;
+            this.$nextTick(() => { 
+                const c = this.$refs.videoTranscriptContainer;
+                if (c) c.scrollTop = c.scrollHeight;
+                // 如果摄像头是开着的，恢复视频流绑定
+                if (this.videoCallState.isCameraOn && this.videoCallState.localStream) {
+                    if (this.$refs.localVideo) this.$refs.localVideo.srcObject = this.videoCallState.localStream;
+                }
+            });
+        },
+        addVideoTranscript(text, action, isSelf, memberId = null) {
+            let avatar = '';
+            let name = '';
+            if (isSelf) {
+                avatar = this.getMaskById(this.wechatState.activeSession?.maskId).avatar;
+                name = '我';
+            } else {
+                if (this.wechatState.activeSession?.isGroup && memberId) {
+                    avatar = this.getFriendAvatar(memberId);
+                    name = this.getFriendName(memberId);
+                    this.videoCallState.speakingId = memberId; 
+                } else {
+                    avatar = this.getCurrentSessionAvatar();
+                    name = this.wechatState.activeSession?.name;
+                }
+            }
+            this.videoCallState.transcripts.push({ text, action, isSelf, avatar, name });
+            this.$nextTick(() => { 
+                const c = this.$refs.videoTranscriptContainer;
+                if (c) c.scrollTop = c.scrollHeight;
+            });
+            setTimeout(() => { if (this.videoCallState.speakingId === memberId) this.videoCallState.speakingId = null; }, 2000);
+        },
+        sendVideoCallText() {
+            const txt = this.videoCallState.inputText.trim();
+            if(!txt) return;
+            // 玩家输入目前只传话，如果需要动作以后可以靠正则提取，这里默认传过去
+            this.addVideoTranscript(txt, '', true);
+            this.videoCallState.inputText = '';
+        },
+        
+        // --- 核心：摄像头开启与图像截取 ---
+        async toggleRealCamera() {
+            if (this.videoCallState.isCameraOn) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                    this.videoCallState.localStream = stream;
+                    this.$nextTick(() => {
+                        if (this.$refs.localVideo) {
+                            this.$refs.localVideo.srcObject = stream;
+                        }
+                    });
+                    this.showToast('已开启摄像头，AI现在能看到你的动作了！');
+                } catch (err) {
+                    this.showToast('无法访问摄像头，请检查浏览器权限');
+                    this.videoCallState.isCameraOn = false;
+                }
+            } else {
+                if (this.videoCallState.localStream) {
+                    this.videoCallState.localStream.getTracks().forEach(track => track.stop());
+                    this.videoCallState.localStream = null;
+                }
+            }
+        },
+        captureVideoFrame() {
+            const video = this.$refs.localVideo;
+            if (!video || !this.videoCallState.localStream) return null;
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth || 480;
+            canvas.height = video.videoHeight || 640;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            return canvas.toDataURL('image/jpeg', 0.5); // 压缩画质发给大模型，省流量
+        },
+
+        async receiveVideoCallReply(greetingType = 'normal') {
+            if (!this.apiConfig.apiKey) return this.showToast('请先配置 API Key');
+            const session = this.wechatState.activeSession;
+            if (!session) return;
+            
+            this.videoCallState.isAiTyping = true;
+            
+            const recentTranscripts = this.videoCallState.transcripts.slice(-12).map(t => `[${t.isSelf ? '我' : t.name}]: (动作:${t.action||'无'})说:"${t.text}"`).join('\n');
+            
+            let greetingInstruction = '';
+            if (greetingType === 'outbound') {
+                greetingInstruction = '【指令】：玩家刚才拨通了你的视频，请你立刻接听，并展示出你现在的动作神态，然后开口说第一句话。';
+            } else if (greetingType === 'inbound') {
+                greetingInstruction = '【指令】：你主动拨打了玩家的视频，玩家刚刚接听，请展示你的动作并说明来意。';
+            }
+            
+            let systemPrompt = `【沉浸式视频通话模式】
+你现在正在和玩家打视频电话。请输出你在视频里做出的真实动作和说出的话。
+要求：
+1. 你的语言要贴合口语化。
+2. 动作必须具体，如“把脸凑近屏幕”、“单手撑着下巴轻笑”。
+3. 若你在群聊，选择适合接话的成员。
+
+你们刚才的视频记录：\n${recentTranscripts || '（刚接通）'}
+${greetingInstruction}`;
+
+            let structure = session.isGroup ? `{
+  "group_replies":[
+    {
+      "speaker": "说话的角色名字",
+      "action": "你在屏幕前做的动作神态",
+      "reply":["你要说的第一句话", "第二句话"], // 数组格式
+      "hang_up": true OR false
+    }
+  ]
+}` : `{
+  "action": "你在屏幕前做的动作神态",
+  "reply":["你要说的第一句话", "第二句话"], // 数组格式
+  "hang_up": true OR false
+}`;
+
+            try {
+                let url = this.apiConfig.baseUrl.trim().replace(/\/+$/, '');
+                if (!url.endsWith('/v1')) url += '/v1';
+                
+                // === 【多模态视觉注入】 ===
+                let userMessageContent =[{ type: 'text', text: greetingType === 'normal' ? '该你说话做动作了。' : '视频接通。' }];
+                
+                // 如果开启了摄像头，偷拍一张照片附在问题里发给它！
+                if (this.videoCallState.isCameraOn) {
+                    let base64Image = this.captureVideoFrame();
+                    if (base64Image) {
+                        userMessageContent.push({ type: "image_url", image_url: { url: base64Image } });
+                        userMessageContent[0].text += " (这是此刻玩家摄像头的实时截图！请一定要观察画面里玩家的动作、神态、环境，并在你的 action 和 reply 中做出最真实的互动反应！)";
+                    }
+                }
+                
+                const res = await fetch(`${url}/chat/completions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiConfig.apiKey.trim()}` },
+                    body: JSON.stringify({ 
+                        model: this.apiConfig.selectedModel, 
+                        messages:[
+                            { role: 'system', content: systemPrompt + '\n\nOutput JSON structure:\n' + structure },
+                            { role: 'user', content: userMessageContent }
+                        ],
+                        temperature: 0.8
+                    })
+                });
+
+                if (!res.ok) throw new Error('API Error');
+                const data = await res.json();
+                let rawContent = data.choices[0].message.content.trim().replace(/```json/g, '').replace(/```/g, '').trim();
+                let parsed = JSON.parse(rawContent);
+
+                let replies = session.isGroup ? (parsed.group_replies || []) : [parsed];
+                
+                for (let r of replies) {
+                    if (r.reply || r.action) {
+                        let speakerId = null;
+                        let speakerName = session.name;
+                        let speakerAvatar = session.avatar;
+                        
+                        if (session.isGroup) {
+                            const friend = this.wechatState.friendList.find(f => f.name === r.speaker || f.remark === r.speaker);
+                            if (friend) {
+                                speakerId = friend.id;
+                                speakerName = friend.remark || friend.name;
+                                speakerAvatar = friend.avatar;
+                            }
+                        }
+
+                        let sentences = Array.isArray(r.reply) ? r.reply : [r.reply || ""];
+                        let tDelay = 0;
+                        sentences.forEach((sentence, sIdx) => {
+                            setTimeout(() => {
+                                // 动作只在第一句话上方显示一次
+                                this.addVideoTranscript(sentence, sIdx === 0 ? r.action : '', false, speakerId);
+                                if (this.videoCallState.isSpeaker) {
+                                    this.playVoiceCallTTS(sentence, speakerId);
+                                }
+                            }, tDelay);
+                            tDelay += 1500 + Math.random() * 1000;
+                        });
+                        
+                        if (r.hang_up) {
+                            setTimeout(() => {
+                                this.showToast(`${speakerName} 挂断了视频`);
+                                this.endVideoCall(false, speakerAvatar, speakerName);
+                            }, tDelay + 2000);
+                            break;
+                        }
+                    }
+                }
+            } catch(e) {
+                this.showToast('请求失败: ' + e.message);
+            } finally {
+                this.videoCallState.isAiTyping = false;
+            }
+        },
+        toggleVideoMicrophone() {
+            this.videoCallState.isMuted = !this.videoCallState.isMuted;
+            if (!this.videoCallState.isMuted) {
+                this.showToast('暂未接通语音识别通道，请打字回复');
+                this.videoCallState.isMuted = true;
+            }
+        },
+        
+        startDragVideo(e) {
+            if(!this.videoCallState.isMinimized) return;
+            this.videoCallState.drag.isDragging = false;
+            const touch = e.touches ? e.touches[0] : e;
+            this.videoCallState.drag.startX = touch.clientX - this.videoCallState.drag.x;
+            this.videoCallState.drag.startY = touch.clientY - this.videoCallState.drag.y;
+            document.addEventListener('mousemove', this.doDragVideo);
+            document.addEventListener('touchmove', this.doDragVideo, {passive: false});
+            document.addEventListener('mouseup', this.stopDragVideo);
+            document.addEventListener('touchend', this.stopDragVideo);
+        },
+        doDragVideo(e) {
+            e.preventDefault(); 
+            this.videoCallState.drag.isDragging = true;
+            const touch = e.touches ? e.touches[0] : e;
+            let newX = touch.clientX - this.videoCallState.drag.startX;
+            let newY = touch.clientY - this.videoCallState.drag.startY;
+            newX = Math.max(0, Math.min(window.innerWidth - 120, newX));
+            newY = Math.max(0, Math.min(window.innerHeight - 60, newY));
+            this.videoCallState.drag.x = newX;
+            this.videoCallState.drag.y = newY;
+        },
+        stopDragVideo() {
+            setTimeout(() => { this.videoCallState.drag.isDragging = false; }, 50);
+            document.removeEventListener('mousemove', this.doDragVideo);
+            document.removeEventListener('touchmove', this.doDragVideo);
+            document.removeEventListener('mouseup', this.stopDragVideo);
+            document.removeEventListener('touchend', this.stopDragVideo);
         },
         
         // --- 悬浮小窗拖拽逻辑 ---
