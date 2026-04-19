@@ -2368,14 +2368,14 @@
                                         <span class="font-medium tracking-wide text-[15px]">{{ msg.content }}</span>
                                     </div>
                                     
-                                    <!-- 【新增】语音通话记录气泡 (点击回顾/多选拦截) -->
-                                    <div v-else-if="msg.type === 'voice_call_record'" class="flex items-center gap-2.5 cursor-pointer active:opacity-70 px-1 py-0.5" @click.stop="isMultiSelectMode ? toggleSelectMessage(msg) : reviewVoiceCall(msg.callData)">
+                                    <!-- 【新增】语音通话记录气泡 -->
+                                    <div v-else-if="msg.type === 'voice_call_record'" class="flex items-center gap-2.5 px-1 py-0.5">
                                         <i class="fas fa-phone-volume text-lg" :class="msg.isSelf ? 'text-gray-400' : 'text-green-500'"></i>
                                         <span class="font-medium tracking-wide text-[15px]">{{ msg.content }}</span>
                                     </div>
 
-                                    <!-- 【新增】视频通话记录气泡 (点击回顾/多选拦截) -->
-                                    <div v-else-if="msg.type === 'video_call_record'" class="flex items-center gap-2.5 cursor-pointer active:opacity-70 px-1 py-0.5" @click.stop="isMultiSelectMode ? toggleSelectMessage(msg) : reviewVideoCall(msg.callData)">
+                                    <!-- 【新增】视频通话记录气泡 -->
+                                    <div v-else-if="msg.type === 'video_call_record'" class="flex items-center gap-2.5 px-1 py-0.5">
                                         <i class="fas fa-video text-lg" :class="msg.isSelf ? 'text-gray-400' : 'text-green-500'"></i>
                                         <span class="font-medium tracking-wide text-[15px]">{{ msg.content }}</span>
                                     </div>
@@ -3183,15 +3183,57 @@
             </transition>            
             
             <!-- 我 -->
-            <main v-if="wechatState.activeNav === 'me'" class="flex-1 overflow-y-auto bg-white">
-                <div class="pt-20 px-6 pb-6">
-                    <div class="flex items-center gap-4 mb-8"><div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-100"><img v-if="homeProfile.avatar" :src="homeProfile.avatar" class="w-full h-full object-cover"></div><div><h2 class="text-xl font-bold">{{ homeProfile.name }}</h2><p class="text-xs text-gray-400 mt-1">微信号: {{ homeProfile.id }}</p></div><i class="fas fa-qrcode ml-auto text-gray-400"></i><i class="fas fa-chevron-right ml-4 text-gray-300 text-xs"></i></div>
-                    <div class="space-y-1 border-t border-gray-100">
-                        <div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="openMaskManager"><div class="flex items-center"><span>面具</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
-                        <div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="wechatState.activeNav='wallet'"><div class="flex items-center"><span>钱包</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
-                        <div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="openFavorites"><div class="flex items-center"><span>收藏</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
-                        <div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="openStickerManager"><div class="flex items-center"><span>表情</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
-                        <div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="wechatState.activeNav='blacklist-manage'"><div class="flex items-center"><span>黑名单管理</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
+            <main v-if="wechatState.activeNav === 'me'" class="flex-1 overflow-y-auto bg-[#f7f7f7]">
+                <!-- 顶部居中头像与信息 -->
+                <div class="flex flex-col items-center pt-16 pb-10">
+                    <div class="w-16 h-16 rounded-full bg-[#e5e5e5] overflow-hidden flex items-center justify-center mb-3 shadow-sm">
+                        <img v-if="homeProfile.avatar" :src="homeProfile.avatar" class="w-full h-full object-cover">
+                        <i v-else class="fas fa-user text-gray-400 text-3xl mt-2"></i>
+                    </div>
+                    <h2 class="text-[20px] font-medium text-gray-900 tracking-wide">{{ homeProfile.name }}</h2>
+                    <p class="text-[13px] text-gray-400 mt-1">Weixin ID: {{ homeProfile.id }}</p>
+                </div>
+                
+                <!-- 独立圆角卡片列表 -->
+                <div class="px-5 space-y-3 pb-24">
+                    <div class="bg-white rounded-[16px] p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition shadow-sm" @click="wechatState.activeNav='wallet'">
+                        <div class="flex items-center gap-3">
+                            <div class="w-6 h-6 rounded-full bg-gray-400 text-white flex items-center justify-center text-[10px]"><i class="fas fa-wallet"></i></div>
+                            <span class="font-medium text-[15px] text-gray-800">Pay and Services</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                    </div>
+                    
+                    <div class="bg-white rounded-[16px] p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition shadow-sm" @click="openFavorites">
+                        <div class="flex items-center gap-3">
+                            <div class="w-6 h-6 rounded-full bg-gray-400 text-white flex items-center justify-center text-[10px]"><i class="fas fa-cube"></i></div>
+                            <span class="font-medium text-[15px] text-gray-800">Favorites</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                    </div>
+                    
+                    <div class="bg-white rounded-[16px] p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition shadow-sm" @click="openStickerManager">
+                        <div class="flex items-center gap-3">
+                            <div class="w-6 h-6 rounded-full bg-gray-400 text-white flex items-center justify-center text-[10px]"><i class="fas fa-smile"></i></div>
+                            <span class="font-medium text-[15px] text-gray-800">Sticker Gallery</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                    </div>
+                    
+                    <div class="bg-white rounded-[16px] p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition shadow-sm" @click="openMaskManager">
+                        <div class="flex items-center gap-3">
+                            <div class="w-6 h-6 rounded-full bg-gray-400 text-white flex items-center justify-center text-[10px]"><i class="fas fa-mask"></i></div>
+                            <span class="font-medium text-[15px] text-gray-800">插件 (面具)</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                    </div>
+                    
+                    <div class="bg-white rounded-[16px] p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition shadow-sm" @click="wechatState.activeNav='blacklist-manage'">
+                        <div class="flex items-center gap-3">
+                            <div class="w-6 h-6 rounded-full bg-gray-400 text-white flex items-center justify-center text-[10px]"><i class="fas fa-user-slash"></i></div>
+                            <span class="font-medium text-[15px] text-gray-800">黑名单</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
                     </div>
                 </div>
             </main>
