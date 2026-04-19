@@ -2368,14 +2368,14 @@
                                         <span class="font-medium tracking-wide text-[15px]">{{ msg.content }}</span>
                                     </div>
                                     
-                                    <!-- 【新增】语音通话记录气泡 (点击回顾) -->
-                                    <div v-else-if="msg.type === 'voice_call_record'" class="flex items-center gap-2.5 cursor-pointer active:opacity-70 px-1 py-0.5" @click.stop="reviewVoiceCall(msg.callData)">
+                                    <!-- 【新增】语音通话记录气泡 (点击回顾/多选拦截) -->
+                                    <div v-else-if="msg.type === 'voice_call_record'" class="flex items-center gap-2.5 cursor-pointer active:opacity-70 px-1 py-0.5" @click.stop="isMultiSelectMode ? toggleSelectMessage(msg) : reviewVoiceCall(msg.callData)">
                                         <i class="fas fa-phone-volume text-lg" :class="msg.isSelf ? 'text-gray-400' : 'text-green-500'"></i>
                                         <span class="font-medium tracking-wide text-[15px]">{{ msg.content }}</span>
                                     </div>
 
-                                    <!-- 【新增】视频通话记录气泡 (点击回顾) -->
-                                    <div v-else-if="msg.type === 'video_call_record'" class="flex items-center gap-2.5 cursor-pointer active:opacity-70 px-1 py-0.5" @click.stop="reviewVideoCall(msg.callData)">
+                                    <!-- 【新增】视频通话记录气泡 (点击回顾/多选拦截) -->
+                                    <div v-else-if="msg.type === 'video_call_record'" class="flex items-center gap-2.5 cursor-pointer active:opacity-70 px-1 py-0.5" @click.stop="isMultiSelectMode ? toggleSelectMessage(msg) : reviewVideoCall(msg.callData)">
                                         <i class="fas fa-video text-lg" :class="msg.isSelf ? 'text-gray-400' : 'text-green-500'"></i>
                                         <span class="font-medium tracking-wide text-[15px]">{{ msg.content }}</span>
                                     </div>
@@ -3186,10 +3186,13 @@
             <main v-if="wechatState.activeNav === 'me'" class="flex-1 overflow-y-auto bg-white">
                 <div class="pt-20 px-6 pb-6">
                     <div class="flex items-center gap-4 mb-8"><div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-100"><img v-if="homeProfile.avatar" :src="homeProfile.avatar" class="w-full h-full object-cover"></div><div><h2 class="text-xl font-bold">{{ homeProfile.name }}</h2><p class="text-xs text-gray-400 mt-1">微信号: {{ homeProfile.id }}</p></div><i class="fas fa-qrcode ml-auto text-gray-400"></i><i class="fas fa-chevron-right ml-4 text-gray-300 text-xs"></i></div>
-                    <div class="space-y-1 border-t border-gray-100"><div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="openMaskManager"><div class="flex items-center gap-3"><i class="fas fa-mask text-purple-500 w-6"></i><span>面具</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="wechatState.activeNav='wallet'"><div class="flex items-center gap-3"><i class="fas fa-wallet text-green-600 w-6"></i><span>钱包</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="openFavorites"><div class="flex items-center gap-3"><i class="fas fa-cube text-orange-500 w-6"></i><span>收藏</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div><div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="openStickerManager"><div class="flex items-center gap-3"><i class="fas fa-smile text-yellow-500 w-6"></i><span>表情</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
-                        <!-- 【新增】黑名单管理 -->
-                        <div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="wechatState.activeNav='blacklist-manage'"><div class="flex items-center gap-3"><i class="fas fa-user-slash text-gray-500 w-6"></i><span>黑名单管理</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
-                        <div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50"><div class="flex items-center gap-3"><i class="fas fa-cog text-blue-600 w-6"></i><span>设置</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div></div>
+                    <div class="space-y-1 border-t border-gray-100">
+                        <div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="openMaskManager"><div class="flex items-center"><span>面具</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
+                        <div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="wechatState.activeNav='wallet'"><div class="flex items-center"><span>钱包</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
+                        <div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="openFavorites"><div class="flex items-center"><span>收藏</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
+                        <div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="openStickerManager"><div class="flex items-center"><span>表情</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
+                        <div class="py-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="wechatState.activeNav='blacklist-manage'"><div class="flex items-center"><span>黑名单管理</span></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
+                    </div>
                 </div>
             </main>
 
