@@ -3197,40 +3197,41 @@
                 <!-- 独立圆角卡片列表 -->
                 <div class="px-5 space-y-3 pb-24">
                     <div class="bg-white rounded-[16px] p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition shadow-sm" @click="wechatState.activeNav='wallet'">
-                        <div class="flex items-center gap-3">
-                            <div class="w-6 h-6 rounded-full bg-gray-400 text-white flex items-center justify-center text-[10px]"><i class="fas fa-wallet"></i></div>
+                        <div class="flex items-center gap-4">
+                            <i class="fas fa-wallet text-gray-400 text-lg w-6 text-center"></i>
                             <span class="font-medium text-[15px] text-gray-800">Pay and Services</span>
                         </div>
                         <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
                     </div>
                     
                     <div class="bg-white rounded-[16px] p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition shadow-sm" @click="openFavorites">
-                        <div class="flex items-center gap-3">
-                            <div class="w-6 h-6 rounded-full bg-gray-400 text-white flex items-center justify-center text-[10px]"><i class="fas fa-cube"></i></div>
+                        <div class="flex items-center gap-4">
+                            <i class="fas fa-cube text-gray-400 text-lg w-6 text-center"></i>
                             <span class="font-medium text-[15px] text-gray-800">Favorites</span>
                         </div>
                         <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
                     </div>
                     
                     <div class="bg-white rounded-[16px] p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition shadow-sm" @click="openStickerManager">
-                        <div class="flex items-center gap-3">
-                            <div class="w-6 h-6 rounded-full bg-gray-400 text-white flex items-center justify-center text-[10px]"><i class="fas fa-smile"></i></div>
+                        <div class="flex items-center gap-4">
+                            <!-- 换成 far 确保笑脸图标正常渲染不糊掉 -->
+                            <i class="far fa-smile text-gray-400 text-lg w-6 text-center"></i>
                             <span class="font-medium text-[15px] text-gray-800">meme</span>
                         </div>
                         <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
                     </div>
                     
                     <div class="bg-white rounded-[16px] p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition shadow-sm" @click="openMaskManager">
-                        <div class="flex items-center gap-3">
-                            <div class="w-6 h-6 rounded-full bg-gray-400 text-white flex items-center justify-center text-[10px]"><i class="fas fa-mask"></i></div>
+                        <div class="flex items-center gap-4">
+                            <i class="fas fa-mask text-gray-400 text-lg w-6 text-center"></i>
                             <span class="font-medium text-[15px] text-gray-800">mask</span>
                         </div>
                         <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
                     </div>
                     
                     <div class="bg-white rounded-[16px] p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition shadow-sm" @click="wechatState.activeNav='blacklist-manage'">
-                        <div class="flex items-center gap-3">
-                            <div class="w-6 h-6 rounded-full bg-gray-400 text-white flex items-center justify-center text-[10px]"><i class="fas fa-user-slash"></i></div>
+                        <div class="flex items-center gap-4">
+                            <i class="fas fa-user-slash text-gray-400 text-lg w-6 text-center"></i>
                             <span class="font-medium text-[15px] text-gray-800">Blacklist Management</span>
                         </div>
                         <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
