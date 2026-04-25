@@ -3214,8 +3214,8 @@
                     
                     <div class="bg-white rounded-[16px] p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition shadow-sm" @click="openStickerManager">
                         <div class="flex items-center gap-4">
-                            <!-- 换成 far 确保笑脸图标正常渲染不糊掉 -->
-                            <i class="far fa-smile text-gray-400 text-lg w-6 text-center"></i>
+                            <!-- 利用 text-stroke 属性对线稿进行人为加粗，完美平衡视觉重量且保持空心 -->
+                            <i class="far fa-smile text-gray-400 text-lg w-6 text-center" style="-webkit-text-stroke: 0.8px;"></i>
                             <span class="font-medium text-[15px] text-gray-800">meme</span>
                         </div>
                         <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
