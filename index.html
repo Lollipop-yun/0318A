@@ -877,9 +877,15 @@
                     <div class="absolute right-4 top-4 text-sm cursor-pointer" @click="redPacketModal.show = false">取消</div>
                 </div>
                 <div class="p-6 w-full space-y-4">
-                    <div class="bg-white rounded-lg p-3 flex items-center">
-                        <span class="text-gray-900 font-medium mr-2">金额</span>
-                        <input type="number" v-model="redPacketModal.amount" placeholder="0.00" class="flex-1 bg-transparent text-right outline-none text-lg font-bold placeholder-gray-300">
+                    <!-- 新增：群聊红包个数 -->
+                    <div v-if="wechatState.activeSession?.isGroup" class="bg-white rounded-lg p-3 flex items-center justify-between">
+                        <span class="text-gray-900 font-medium w-16 shrink-0">个数</span>
+                        <input type="number" v-model="redPacketModal.count" placeholder="填写个数" class="flex-1 bg-transparent text-right outline-none text-lg font-bold placeholder-gray-300 w-full min-w-0">
+                        <span class="text-gray-900 font-medium ml-2">个</span>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 flex items-center justify-between">
+                        <span class="text-gray-900 font-medium w-16 shrink-0">金额</span>
+                        <input type="number" v-model="redPacketModal.amount" placeholder="0.00" class="flex-1 bg-transparent text-right outline-none text-lg font-bold placeholder-gray-300 w-full min-w-0">
                         <span class="text-gray-900 font-medium ml-2">元</span>
                     </div>
                     <div class="bg-white rounded-lg p-3">
@@ -887,7 +893,7 @@
                     </div>
                     <div class="text-center text-3xl font-bold my-4">¥{{ redPacketModal.amount || '0.00' }}</div>
                     <button @click="sendRedPacket" class="w-full py-3 bg-[#ea5f39] text-[#fce8cd] rounded-lg font-bold text-base shadow-sm active:bg-[#c24e38]">塞钱进红包</button>
-                </div>
+                </div>                
             </div>
         </div>
     </transition>
@@ -901,22 +907,42 @@
                 </div>
                 <div class="p-6 flex flex-col">
                     <div class="flex items-center gap-4 mb-8">
-                         <div class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100"><img :src="getChatAvatar({isSelf: false, targetId: wechatState.activeSession.targetId})" class="w-full h-full object-cover"></div>
-                         <div>
-                             <div class="font-bold text-lg">{{ wechatState.activeSession?.name }}</div>
+                         <div class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100"><img :src="getChatAvatar({isSelf: false, targetId: transferModal.targetId || wechatState.activeSession.targetId})" class="w-full h-full object-cover"></div>
+                         <div class="flex-1">
+                             <div class="font-bold text-lg flex items-center justify-between" @click="wechatState.activeSession?.isGroup ? transferSelectMemberModal.show = true : null">
+                                 <span>{{ transferModal.targetId ? getFriendName(transferModal.targetId) : wechatState.activeSession?.name }}</span>
+                                 <span v-if="wechatState.activeSession?.isGroup" class="text-sm text-blue-500 font-normal cursor-pointer active:opacity-50">修改收款人 <i class="fas fa-chevron-right text-xs"></i></span>
+                             </div>
                              <div class="text-gray-400 text-sm">微信号: {{ getCurrentSessionId() }}</div>
                          </div>
                     </div>
                     <div class="text-sm text-gray-500 mb-4">转账金额</div>
                     <div class="flex items-end gap-2 border-b border-gray-100 pb-2 mb-6">
                         <span class="text-4xl font-bold">¥</span>
-                        <input type="number" v-model="transferModal.amount" placeholder="" class="flex-1 bg-transparent outline-none text-5xl font-bold h-16">
+                        <input type="number" v-model="transferModal.amount" placeholder="" class="flex-1 bg-transparent outline-none text-5xl font-bold h-16 w-full min-w-0">
                     </div>
                     <div class="flex items-center justify-between mb-8">
                          <input v-model="transferModal.note" placeholder="添加转账说明" class="text-sm text-gray-500 bg-transparent outline-none w-full">
                     </div>
                     <button @click="sendTransfer" class="w-full py-3.5 bg-[#07c160] text-white rounded-lg font-bold text-base shadow-sm active:opacity-90">转账</button>
                 </div>
+            </div>
+        </div>
+    </transition>
+
+    <!-- 【新增】转账收款人选择弹窗 (群聊用) -->
+    <transition name="app-slide">
+        <div v-if="transferSelectMemberModal.show" class="fixed inset-0 z-[70000] bg-gray-50 flex flex-col">
+            <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-100 sticky top-0 z-10">
+                <button @click="transferSelectMemberModal.show = false" class="text-gray-500 font-medium text-sm">取消</button>
+                <h1 class="text-[17px] font-bold">选择收款人</h1>
+                <div class="w-8"></div>
+            </header>
+            <div class="flex-1 overflow-y-auto p-4 bg-white">
+                 <div v-for="memId in wechatState.activeSession?.members" :key="memId" @click="transferModal.targetId = memId; transferSelectMemberModal.show = false" class="flex items-center gap-3 p-3 border-b border-gray-50 last:border-0 cursor-pointer active:bg-gray-50">
+                     <div class="w-10 h-10 rounded bg-gray-100 overflow-hidden"><img :src="getFriendAvatar(memId)" class="w-full h-full object-cover"></div>
+                     <span class="font-medium text-gray-900">{{ getFriendName(memId) }}</span>
+                 </div>
             </div>
         </div>
     </transition>
@@ -1278,10 +1304,10 @@
                             <span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 font-bold">{{ item.type === 'status' ? '心声' : '聊天' }}</span>
                             <span class="text-xs font-bold text-gray-700">{{ item.source }}</span>
                         </div>
-                        <span class="text-[10px] text-gray-300">{{ formatChatTime(item.time) }}</span>
+                        <span class="text-[10px] text-gray-300 mr-8">{{ formatChatTime(item.time) }}</span>
                      </div>
                      <div class="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">{{ item.content }}</div>
-                     <button @click="deleteFavorite(idx)" class="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-gray-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button>
+                     <button @click="deleteFavorite(idx)" class="absolute top-4 right-3 w-6 h-6 flex items-center justify-center text-gray-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button>
                 </div>
             </div>
         </div>
@@ -1291,9 +1317,9 @@
     <transition name="app-slide">
         <div v-if="showStickerManager" class="fixed inset-0 z-[50000] bg-gray-50 flex flex-col">
             <header class="bg-white h-[90px] pt-10 px-4 flex items-center justify-between border-b border-gray-100 sticky top-0 z-10">
-                <button @click="showStickerManager = false" class="w-8 h-8 flex items-center justify-center text-black"><i class="fas fa-chevron-left"></i></button>
-                <h1 class="text-[17px] font-bold">表情管理</h1>
-                <div class="flex items-center gap-3">
+                <button @click="showStickerManager = false" class="w-8 h-8 flex items-center justify-center text-black relative z-10"><i class="fas fa-chevron-left"></i></button>
+                <h1 class="text-[17px] font-bold absolute left-1/2 -translate-x-1/2">表情管理</h1>
+                <div class="flex items-center gap-3 relative z-10">
                     <button @click="triggerStickerUpload" class="text-black"><i class="fas fa-image text-lg"></i></button>
                     <button @click="openUrlImportModal" class="text-black"><i class="fas fa-link text-lg"></i></button>
                     <button @click="toggleStickerMultiSelect" :class="isStickerMultiSelect ? 'text-red-500' : 'text-black'"><i class="fas fa-check-square text-lg"></i></button>
@@ -2275,7 +2301,9 @@
                                     <div v-else-if="msg.type === 'transfer'" class="finance-content-wrapper">
                                         <div class="finance-content">
                                             <div class="finance-icon-box"><i class="fas fa-exchange-alt"></i></div>
-                                            <div class="finance-text"><div class="finance-title">¥{{ msg.amount }}</div><div class="finance-desc">{{ msg.isReceived ? '已收款' : (msg.isSelf ? '等待对方收款' : '转账给你') }}</div></div>
+                                            <div class="finance-text"><div class="finance-title">¥{{ msg.amount }}</div><div class="finance-desc">
+                                                    {{ msg.isReceived ? '已收款' : (msg.isSelf ? (wechatState.activeSession?.isGroup ? `转账给 ${getFriendName(msg.targetId)}` : '等待对方收款') : '转账给你') }}
+                                                </div>
                                         </div>
                                         <div class="finance-footer">微信转账</div>
                                     </div>
@@ -3002,7 +3030,36 @@
                     <!-- 分组视图模式 -->
                     <div v-if="wechatState.activeFilter === 'Group'">
                         <div class="p-4 border-b border-gray-50 flex items-center gap-3 active:bg-gray-50 cursor-pointer" @click="createNewGroup"><div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500"><i class="fas fa-plus"></i></div><span class="font-bold text-gray-800">新建分组</span></div>
-                        <div class="border-b border-gray-50"><div class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer" @click="toggleGroup('all')"><span class="font-bold text-gray-800">全部 ({{ wechatState.sessions.filter(s => !s.isGroup).length }})</span><i class="fas fa-chevron-right text-gray-300 transition-transform" :class="{'rotate-90': expandedGroups.includes('all')}"></i></div><div v-show="expandedGroups.includes('all')" class="bg-gray-50/30"><div v-for="session in filteredWechatContacts.filter(s => !s.isGroup)" :key="session.id" @click="enterChatRoom(session)" class="flex items-center p-4 active:bg-gray-50 transition border-b border-gray-50 last:border-0 relative" :class="{'bg-gray-50': session.isPinned}"><div class="relative shrink-0 mr-3"><div class="w-[50px] h-[50px] rounded-full overflow-hidden wechat-avatar-ring"><div class="w-full h-full rounded-full bg-gray-100 overflow-hidden"><img :src="session.customAvatarTarget || session.avatar" class="w-full h-full object-cover"></div></div></div><div class="flex-1 min-w-0"><div class="flex justify-between items-baseline mb-1"><h3 class="text-[16px] font-semibold text-gray-900 truncate flex items-center gap-1">{{ session.name }} <i v-if="session.isPinned" class="fas fa-thumbtack text-[10px] text-gray-400 rotate-45"></i></h3><span class="text-[11px] text-gray-400 font-normal">刚刚</span></div><div class="flex justify-between items-center"><p class="text-[13px] text-gray-500 truncate max-w-[80%]">{{ session.lastMessage || '...' }}</p><div v-if="session.unreadCount > 0" class="min-w-[16px] h-4 px-[4px] bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow-sm">{{ session.unreadCount > 99 ? '99+' : session.unreadCount }}</div></div></div></div></div></div>
+                        
+                        <!-- 【新增】群聊专属列表 -->
+                        <div class="border-b border-gray-50">
+                            <div class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer" @click="toggleGroup('group_chats')">
+                                <span class="font-bold text-gray-800">群聊 ({{ wechatState.sessions.filter(s => s.isGroup).length }})</span>
+                                <i class="fas fa-chevron-right text-gray-300 transition-transform" :class="{'rotate-90': expandedGroups.includes('group_chats')}"></i>
+                            </div>
+                            <div v-show="expandedGroups.includes('group_chats')" class="bg-gray-50/30">
+                                <div v-if="wechatState.sessions.filter(s => s.isGroup).length === 0" class="p-4 text-center text-xs text-gray-400">暂无群聊</div>
+                                <div v-for="session in filteredWechatContacts.filter(s => s.isGroup)" :key="session.id" @click="enterChatRoom(session)" class="flex items-center p-4 active:bg-gray-50 transition border-b border-gray-50 last:border-0 relative" :class="{'bg-gray-50': session.isPinned}">
+                                    <div class="relative shrink-0 mr-3">
+                                        <div class="w-[50px] h-[50px] rounded-full overflow-hidden wechat-avatar-ring">
+                                            <div class="w-full h-full rounded-full bg-gray-100 overflow-hidden"><img :src="session.avatar" class="w-full h-full object-cover"></div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex justify-between items-baseline mb-1">
+                                            <h3 class="text-[16px] font-semibold text-gray-900 truncate flex items-center gap-1">{{ session.name }} <i v-if="session.isPinned" class="fas fa-thumbtack text-[10px] text-gray-400 rotate-45"></i></h3>
+                                            <span class="text-[11px] text-gray-400 font-normal">刚刚</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <p class="text-[13px] text-gray-500 truncate max-w-[80%]">{{ session.lastMessage || '...' }}</p>
+                                            <div v-if="session.unreadCount > 0" class="min-w-[16px] h-4 px-[4px] bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow-sm">{{ session.unreadCount > 99 ? '99+' : session.unreadCount }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-b border-gray-50"><div class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer" @click="toggleGroup('all')"><span class="font-bold text-gray-800">全部 ({{ wechatState.sessions.filter(s => !s.isGroup).length }})</span><div v-for="session in filteredWechatContacts.filter(s => !s.isGroup)" :key="session.id" @click="enterChatRoom(session)" class="flex items-center p-4 active:bg-gray-50 transition border-b border-gray-50 last:border-0 relative" :class="{'bg-gray-50': session.isPinned}"><div class="relative shrink-0 mr-3"><div class="w-[50px] h-[50px] rounded-full overflow-hidden wechat-avatar-ring"><div class="w-full h-full rounded-full bg-gray-100 overflow-hidden"><img :src="session.customAvatarTarget || session.avatar" class="w-full h-full object-cover"></div></div></div><div class="flex-1 min-w-0"><div class="flex justify-between items-baseline mb-1"><h3 class="text-[16px] font-semibold text-gray-900 truncate flex items-center gap-1">{{ session.name }} <i v-if="session.isPinned" class="fas fa-thumbtack text-[10px] text-gray-400 rotate-45"></i></h3><span class="text-[11px] text-gray-400 font-normal">刚刚</span></div><div class="flex justify-between items-center"><p class="text-[13px] text-gray-500 truncate max-w-[80%]">{{ session.lastMessage || '...' }}</p><div v-if="session.unreadCount > 0" class="min-w-[16px] h-4 px-[4px] bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow-sm">{{ session.unreadCount > 99 ? '99+' : session.unreadCount }}</div></div></div></div></div></div>
                         <div v-for="group in wechatState.groups" :key="group.id" class="border-b border-gray-50"><div class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer" @click="toggleGroup(group.id)"><span class="font-bold text-gray-800">{{ group.name }} ({{ getGroupSessions(group.id).length }})</span><div class="flex items-center gap-3"><button @click.stop="deleteGroup(group.id)" class="text-gray-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button><i class="fas fa-chevron-right text-gray-300 transition-transform" :class="{'rotate-90': expandedGroups.includes(group.id)}"></i></div></div><div v-show="expandedGroups.includes(group.id)" class="bg-gray-50/30"><div v-if="getGroupSessions(group.id).length === 0" class="p-4 text-center text-xs text-gray-400">该分组暂无好友</div><div v-for="session in getGroupSessions(group.id)" :key="session.id" @click="enterChatRoom(session)" class="flex items-center p-4 active:bg-gray-50 transition border-b border-gray-50 last:border-0 relative" :class="{'bg-gray-50': session.isPinned}"><div class="relative shrink-0 mr-3"><div class="w-[50px] h-[50px] rounded-full overflow-hidden wechat-avatar-ring"><div class="w-full h-full rounded-full bg-gray-100 overflow-hidden"><img :src="session.customAvatarTarget || session.avatar" class="w-full h-full object-cover"></div></div></div><div class="flex-1 min-w-0"><div class="flex justify-between items-baseline mb-1"><h3 class="text-[16px] font-semibold text-gray-900 truncate flex items-center gap-1">{{ session.name }} <i v-if="session.isPinned" class="fas fa-thumbtack text-[10px] text-gray-400 rotate-45"></i></h3><span class="text-[11px] text-gray-400 font-normal">刚刚</span></div><div class="flex justify-between items-center"><p class="text-[13px] text-gray-500 truncate max-w-[80%]">{{ session.lastMessage || '...' }}</p><div v-if="session.unreadCount > 0" class="min-w-[16px] h-4 px-[4px] bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow-sm">{{ session.unreadCount > 99 ? '99+' : session.unreadCount }}</div></div></div></div></div></div>
                     </div>
                     <!-- 正常视图模式 -->
@@ -4194,7 +4251,7 @@ createApp({
             appList: Object.keys(DEFAULT_APPS), appCustomization: {}, tempIconUrls: {}, uploadingAppId: null,
             homeScreenPresets:[],
             wechatState: { activeFilter: 'Chats', activeNav: 'chat', contacts: [], searchQuery: '', friendList:[], sessions:[], activeSession: null, showPlusMenu: false, showChatFunctions: false, showAttachMenu: false, groups: [], newFriends:[], showGroupMentionPanel: false },
-            expandedGroups: ['all'],
+            expandedGroups:['all', 'group_chats'],
             groupSelectModal: { show: false },
             addContactModal: { show: false }, chatWizard: { show: false, step: 1, type: 'single', selectedContacts:[], selectedMask: null, isObserver: false },
             newContact: { name: '', remark: '', username: '', gender: '男', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: 'https://pic1.imgdb.cn/item/69d5d388fe07599d0e204634.jpg' },
@@ -4244,8 +4301,9 @@ createApp({
             imageUploadInput: null, 
 
             // Red Packet & Transfer & Wallet & Intimate Pay
-            redPacketModal: { show: false, amount: '', note: '' },
-            transferModal: { show: false, amount: '', note: '' },
+            redPacketModal: { show: false, amount: '', note: '', count: '' },
+            transferModal: { show: false, amount: '', note: '', targetId: null },
+            transferSelectMemberModal: { show: false },
             currentRedPacketData: null,
             wallet: { balance: 0.00, transactions: [], intimatePays: [] },
             qinmiSelectModal: { show: false },
@@ -4840,6 +4898,34 @@ createApp({
                     });
                     this.saveData();
                     this.showToast('朋友圈评论成功');
+                    
+                    // === 解析红包 ===
+                if (parsed.red_packet) {
+                    const amount = parsed.red_packet.amount || "8.88";
+                    const note = parsed.red_packet.note || "恭喜发财";
+                    const count = (session.isGroup && parsed.red_packet.count) ? parseInt(parsed.red_packet.count) : (session.isGroup ? 3 : 1);
+                    
+                    const rpMsg = { type: 'red_packet', amount: amount, count: count, note: note, isSelf: false, name: speakerName, time: Date.now(), avatar: speakerAvatar, isOpened: false };
+                    session.messages.push(rpMsg); session.lastMessage = '[微信红包]';
+                    
+                    // 触发被抢完旁白
+                    this.generateRedPacketSystemMsg(session, rpMsg, session.isGroup, count, false);
+                }
+
+                // === 解析转账 ===
+                if (parsed.transfer) {
+                    const amount = parsed.transfer.amount || "52.00";
+                    const note = parsed.transfer.note || "转账给你";
+                    
+                    let targetId = null;
+                    if (session.isGroup && parsed.transfer.target_member) {
+                         const targetFriend = this.wechatState.friendList.find(f => (f.remark || f.name) === parsed.transfer.target_member);
+                         if (targetFriend) targetId = targetFriend.id;
+                    }
+                    
+                    const tfMsg = { type: 'transfer', amount: amount, note: note, targetId: targetId, isSelf: false, name: speakerName, time: Date.now(), avatar: speakerAvatar };
+                    session.messages.push(tfMsg); session.lastMessage = '[微信转账]';
+                }
                     
                     // 30% 概率触发私聊
                     if (Math.random() < 0.3) {
@@ -6382,8 +6468,8 @@ Structure:
   "call_video_user": true OR false, // OPTIONAL: 如果你想主动打【视频通话】，请设为 true！
   "recall": true OR false, // OPTIONAL: 若你发出这句话后立刻觉得后悔、不妥、怕对方生气，想要迅速撤回刚才那句话时设为 true
   "fake_image": "OPTIONAL: description...",
-  "red_packet": { "amount": "8.88", "note": "Happy Day" },
-  "transfer": { "amount": "52.00", "note": "For you" },
+  "red_packet": { "amount": "根据语境或人设决定的具体金额(如520.00)", "count": "红包个数(仅群聊有效，根据人数定)", "note": "红包留言" },
+  "transfer": { "amount": "转账金额", "target_member": "填入你想转给的群成员名字(群聊时必填)", "note": "留言" },
   "location": { "name": "Place Name", "address": "Detailed Address" },
   "qinmi_reply": "accept" OR "reject",
   "music_control": "next" OR "prev" OR "stop",
@@ -6424,6 +6510,11 @@ Structure:
                                  { type: "image_url", image_url: { url: m.content } }
                              ] 
                          });
+                         } else if (m.type === 'red_packet') {
+                        contextMessages.push({ role: m.isSelf ? 'user' : 'assistant', content: `[发送了一个微信红包: ${m.amount}元, 留言: ${m.note}]` });
+                    } else if (m.type === 'transfer') {
+                        const targetInfo = m.targetId ? ` 给 ${this.getFriendName(m.targetId)}` : '';
+                        contextMessages.push({ role: m.isSelf ? 'user' : 'assistant', content: `[发起了一笔微信转账${targetInfo}: ${m.amount}元, 留言: ${m.note}]` });
                     } else if (m.type === 'sticker') {
                          contextMessages.push({ role: m.isSelf ? 'user' : 'assistant', content: `[发送了表情包: ${m.desc || '未命名'}]` });
                     } else if (m.type === 'moment') { 
@@ -8736,14 +8827,90 @@ ${settings.bannedWords && settings.bannedWords.trim() ? `5. 【绝对禁忌词�
             }
         },
 
+        openRedPacketModal() {
+             this.redPacketModal = { show: true, amount: '', note: '', count: '' };
+             this.wechatState.showAttachMenu = false;
+        },
+        sendRedPacket() {
+             const amt = parseFloat(this.redPacketModal.amount);
+             if(!amt || amt <= 0) return this.showToast('请输入金额');
+             if(this.wallet.balance < amt) return this.showToast('余额不足');
+             
+             const isGroup = this.wechatState.activeSession.isGroup;
+             let count = 1;
+             if (isGroup) {
+                 count = parseInt(this.redPacketModal.count);
+                 if(!count || count <= 0) return this.showToast('请输入正确的个数');
+             }
+             
+             this.addToWallet('expense', amt, this.wechatState.activeSession.name, '发出红包');
+             
+             const msg = {
+                 type: 'red_packet',
+                 amount: this.redPacketModal.amount,
+                 count: count,
+                 note: this.redPacketModal.note || '恭喜发财，大吉大利',
+                 isSelf: true,
+                 time: Date.now(),
+                 avatar: this.getMaskById(this.wechatState.activeSession.maskId).avatar,
+                 isOpened: false
+             };
+             this.wechatState.activeSession.messages.push(msg);
+             this.wechatState.activeSession.lastMessage = '[微信红包]';
+             this.redPacketModal.show = false;
+             this.scrollToBottom();
+             this.saveData();
+             
+             // 延时生成红包被抢完的旁白
+             this.generateRedPacketSystemMsg(this.wechatState.activeSession, msg, isGroup, count, true);
+        },
+        generateRedPacketSystemMsg(session, rpMsg, isGroup, count, isSelfSent) {
+             const delay = 2000 + Math.random() * 4000;
+             setTimeout(() => {
+                 let content = '';
+                 const timeSpent = `${Math.floor(Math.random() * 59) + 1}秒`;
+                 
+                 if (isGroup) {
+                     let takers =[];
+                     if (session.members && session.members.length > 0) {
+                         const shuffled = [...session.members].sort(() => 0.5 - Math.random());
+                         const takeCount = Math.min(count, shuffled.length);
+                         takers = shuffled.slice(0, takeCount).map(id => this.getFriendName(id));
+                     }
+                     if(takers.length === 0) takers = ['群成员'];
+                     const luckyKing = takers[Math.floor(Math.random() * takers.length)];
+                     
+                     if (isSelfSent) {
+                         content = `你的红包已被 ${takers.join('、')} 领取。${count}个红包共在${timeSpent}被抢光，${luckyKing}是手气王。`;
+                     } else {
+                         content = `"${rpMsg.name}"的红包已被抢光。共${count}个红包，用时${timeSpent}，${luckyKing}是手气王。`;
+                     }
+                 } else {
+                     if (isSelfSent) {
+                         content = `"${session.name}" 领取了你的红包`;
+                     } else {
+                         content = `你领取了 "${rpMsg.name}" 的红包`;
+                     }
+                 }
+                 
+                 session.messages.push({ type: 'system', content: content, time: Date.now() });
+                 rpMsg.isOpened = true; 
+                 this.scrollToBottom();
+                 this.saveData();
+             }, delay);
+        },
         openTransferModal() {
-             this.transferModal = { show: true, amount: '', note: '' };
+             this.transferModal = { show: true, amount: '', note: '', targetId: null };
+             if (this.wechatState.activeSession.isGroup && this.wechatState.activeSession.members.length > 0) {
+                 this.transferModal.targetId = this.wechatState.activeSession.members[0];
+             }
              this.wechatState.showAttachMenu = false;
         },
         sendTransfer() {
              const amt = parseFloat(this.transferModal.amount);
              if(!amt || amt <= 0) return this.showToast('请输入金额');
              if(this.wallet.balance < amt) return this.showToast('余额不足');
+             if(this.wechatState.activeSession.isGroup && !this.transferModal.targetId) return this.showToast('请选择收款人');
              
              this.addToWallet('expense', amt, this.wechatState.activeSession.name, '转账支出');
 
@@ -8751,6 +8918,7 @@ ${settings.bannedWords && settings.bannedWords.trim() ? `5. 【绝对禁忌词�
                  type: 'transfer',
                  amount: this.transferModal.amount,
                  note: this.transferModal.note,
+                 targetId: this.transferModal.targetId,
                  isSelf: true,
                  time: Date.now(),
                  avatar: this.getMaskById(this.wechatState.activeSession.maskId).avatar
