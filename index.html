@@ -3991,6 +3991,9 @@
     <div @click="navigateSettings('data-manage'); calculateStorage();" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer">
         <div class="flex items-center gap-4"><i class="fas fa-database text-gray-700 text-[18px] w-6 text-center opacity-80"></i><span class="font-medium text-[15px] text-gray-900 tracking-wide">数据管理</span></div><i class="fas fa-chevron-right text-gray-300 text-sm"></i>
     </div>
+    <div @click="navigateSettings('github-backup')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer">
+        <div class="flex items-center gap-4"><i class="fab fa-github text-gray-700 text-[18px] w-6 text-center opacity-80"></i><span class="font-medium text-[15px] text-gray-900 tracking-wide">GitHub 云备份</span></div><i class="fas fa-chevron-right text-gray-300 text-sm"></i>
+    </div>
     <div @click="navigateSettings('notification')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer">
         <div class="flex items-center gap-4"><i class="fas fa-bell text-gray-700 text-[18px] w-6 text-center opacity-80"></i><span class="font-medium text-[15px] text-gray-900 tracking-wide">通知设置</span></div><i class="fas fa-chevron-right text-gray-300 text-sm"></i>
     </div>
@@ -4107,37 +4110,107 @@
                         <button @click="testPushNotification" class="w-full bg-gray-900 text-white py-3 rounded-xl text-sm font-bold active:scale-95 transition">测试推送</button>
                     </div>
                 </div>
-            </transition></main></div></transition>
+            </transition>
+            <transition name="page-slide">
+                <div v-if="settingsPage === 'github-backup'" class="absolute inset-0 p-4 pb-20 overflow-y-auto">
+                    <div class="space-y-5">
+                        <!-- 表单区 -->
+                        <div class="bg-white rounded-[20px] p-5 shadow-[0_2px_15px_rgba(0,0,0,0.02)] space-y-4">
+                            <div class="flex items-center gap-2 mb-2"><i class="fab fa-github text-xl"></i><span class="font-bold text-lg">GitHub 云端同步</span></div>
+                            
+                            <div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">GitHub Token</label><input v-model="githubConfig.token" type="password" placeholder="ghp_xxxxxxxxxxxx" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div>
+                            
+                            <div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">仓库路径</label><input v-model="githubConfig.repo" placeholder="用户名/仓库名" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div>
+                            
+                            <div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">备份文件名字</label><input v-model="githubConfig.filename" placeholder="AoveinOS_Backup.json" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div>
+                            
+                            <button @click="testGitHubToken" class="w-full bg-gray-50 text-gray-700 py-3 rounded-xl text-sm font-bold active:scale-95 transition border border-gray-200 mt-2">测试连接状态</button>
+                        </div>
+
+                        <!-- 自动备份与执行区 -->
+                        <div class="bg-white rounded-[20px] p-5 shadow-[0_2px_15px_rgba(0,0,0,0.02)] space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-gray-800 text-sm">开启自动备份上传</span>
+                                <input type="checkbox" id="auto-backup-toggle" class="switch-checkbox" v-model="githubConfig.autoBackup" @change="saveData">
+                                <label for="auto-backup-toggle" class="switch-label"><div class="switch-button"></div></label>
+                            </div>
+                            <div v-if="githubConfig.autoBackup" class="animate-fade-in">
+                                <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">备份频率</label>
+                                <select v-model="githubConfig.frequency" @change="saveData" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-medium border border-gray-200 outline-none">
+                                    <option :value="12">每 12 小时</option>
+                                    <option :value="24">每 24 小时</option>
+                                    <option :value="36">每 36 小时</option>
+                                    <option :value="48">每 48 小时</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex gap-2 pt-4 border-t border-gray-50 mt-2">
+                                <button @click="uploadToGitHub(false)" class="flex-1 bg-black text-white py-3.5 rounded-xl text-xs font-bold active:scale-95 transition shadow-md">将数据上传至云端</button>
+                                <button @click="restoreFromGitHub" class="flex-1 bg-blue-500 text-white py-3.5 rounded-xl text-xs font-bold active:scale-95 transition shadow-md">拉取云端覆盖当前</button>
+                            </div>
+                        </div>
+
+                        <!-- 教程区 -->
+                        <div class="bg-white rounded-[20px] p-5 border border-gray-100 text-gray-700 shadow-[0_2px_15px_rgba(0,0,0,0.02)] space-y-5">
+                            <div>
+                                <h4 class="font-bold text-gray-900 text-[15px] mb-3">一、创建令牌教程</h4>
+                                <ol class="list-decimal pl-4 space-y-1.5 text-xs font-medium">
+                                    <li>登录GitHub，点右上角头像 → Settings</li>
+                                    <li>下滑左侧找到 Developer settings</li>
+                                    <li>点 Personal access tokens → Tokens (classic)</li>
+                                    <li>点 Generate new token → Generate new token (classic)</li>
+                                    <li>Expiration：选 No expiration（永久不过期）</li>
+                                    <li>Scopes勾选：repo</li>
+                                    <li>拉到底点 Generate token</li>
+                                    <li class="text-red-500 font-bold tracking-wide">出现 ghp_ 开头密钥，立刻复制保存，关掉就看不到了</li>
+                                </ol>
+                            </div>
+
+                            <div class="pt-4 border-t border-gray-100">
+                                <h4 class="font-bold text-gray-900 text-[15px] mb-3">二、GitHub 创建仓库教程</h4>
+                                <ol class="list-decimal pl-4 space-y-1.5 text-xs font-medium">
+                                    <li>GitHub 首页右上角，点 + 号 → New repository</li>
+                                    <li>填 Repository name（仓库名，不能中文空格）</li>
+                                    <li>选 Private 私有</li>
+                                    <li>直接点底部 Create repository</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </transition>
+            </main></div></transition>
     
     <!-- 主题 App -->
     <transition name="app-slide"><div v-if="currentApp === 'themes'" class="absolute inset-0 z-[1000] bg-gray-50 flex flex-col overflow-hidden"><header class="bg-white/80 backdrop-blur h-[90px] pt-10 flex items-center justify-between px-4 border-b border-gray-200 sticky top-0 z-10"><button @click="navigateThemes('back')" class="w-8 h-8 flex items-center justify-center text-gray-800 bg-gray-100 rounded-full active:bg-gray-200 transition"><i v-if="themesPage !== 'main'" class="fas fa-chevron-left text-sm"></i><i v-else class="fas fa-times text-sm"></i></button><h1 class="font-bold text-gray-900 text-[17px]">{{ themesTitle }}</h1><div class="w-8"></div></header><main class="flex-1 overflow-y-auto relative">
     <transition name="page-slide"><div v-if="themesPage === 'main'" class="absolute inset-0 p-4"><div class="bg-white rounded-[20px] overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.02)] divide-y divide-gray-50">
     <div @click="navigateThemes('beautify')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer">
-        <div class="flex items-center gap-4"><i class="fas fa-magic text-gray-700 text-[18px] w-6 text-center opacity-80"></i>
+        <div class="flex items-center gap-4"><i class="fas fa-wand-magic-sparkles text-gray-700 text-[18px] w-6 text-center opacity-80"></i>
             <div><div class="font-medium text-[15px] text-gray-900 tracking-wide">气泡与主题美化</div><div class="text-[11px] text-gray-400 mt-0.5">自定义界面CSS样式</div></div>
         </div><i class="fas fa-chevron-right text-gray-300 text-sm"></i>
     </div>
     <div @click="navigateThemes('wallpaper')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer">
-        <div class="flex items-center gap-4"><i class="fas fa-image text-gray-700 text-[18px] w-6 text-center opacity-80"></i>
+        <div class="flex items-center gap-4"><i class="fas fa-panorama text-gray-700 text-[18px] w-6 text-center opacity-80"></i>
             <div><div class="font-medium text-[15px] text-gray-900 tracking-wide">壁纸设置</div><div class="text-[11px] text-gray-400 mt-0.5">更换主屏幕背景图片</div></div>
         </div><i class="fas fa-chevron-right text-gray-300 text-sm"></i>
     </div>
     <div @click="navigateThemes('font')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer">
-        <div class="flex items-center gap-4"><i class="fas fa-font text-gray-700 text-[18px] w-6 text-center opacity-80"></i>
+        <div class="flex items-center gap-4"><i class="fas fa-pen-nib text-gray-700 text-[18px] w-6 text-center opacity-80"></i>
             <div><div class="font-medium text-[15px] text-gray-900 tracking-wide">字体设置</div><div class="text-[11px] text-gray-400 mt-0.5">自定义系统全局字体</div></div>
         </div><i class="fas fa-chevron-right text-gray-300 text-sm"></i>
     </div>
     <div @click="navigateThemes('icons')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer">
-        <div class="flex items-center gap-4"><i class="fas fa-icons text-gray-700 text-[18px] w-6 text-center opacity-80"></i>
+        <div class="flex items-center gap-4"><i class="fas fa-shapes text-gray-700 text-[18px] w-6 text-center opacity-80"></i>
             <div><div class="font-medium text-[15px] text-gray-900 tracking-wide">图标设置</div><div class="text-[11px] text-gray-400 mt-0.5">自定义桌面App名称和图标</div></div>
         </div><i class="fas fa-chevron-right text-gray-300 text-sm"></i>
     </div>
     <div @click="navigateThemes('home_preset')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer">
-        <div class="flex items-center gap-4"><i class="fas fa-layer-group text-gray-700 text-[18px] w-6 text-center opacity-80"></i>
+        <div class="flex items-center gap-4"><i class="fas fa-box-archive text-gray-700 text-[18px] w-6 text-center opacity-80"></i>
             <div><div class="font-medium text-[15px] text-gray-900 tracking-wide">桌面预设</div><div class="text-[11px] text-gray-400 mt-0.5">保存与导入桌面全套配置</div></div>
         </div><i class="fas fa-chevron-right text-gray-300 text-sm"></i>
     </div>
-</div></div></transition>
+</div>
+</div></transition>
 
         <!-- 主屏幕预设管理页 -->
         <transition name="page-slide">
@@ -4392,6 +4465,7 @@ createApp({
             minimaxConfig: { enabled: false, region: 'cn', groupId: '', apiKey: '', selectedModel: '', voiceId: 'male-qn-qingse' }, minimaxModels:[],
             notificationConfig: { currentSound: null, currentName: '默认提示音' }, soundPresets:[],
             pushConfig: { enabled: false }, // 新增推送设置
+            githubConfig: { token: '', repo: '', filename: 'AoveinOS_Backup.json', autoBackup: false, frequency: 24, lastBackupTime: 0 },
             storageStats: { total: '0 KB', items:[] }, showSettingsDisclaimer: false,
             
             themeConfig: { wallpaper: '', fontFamily: '', fontUrl: '', fontSize: 1.0, fontColor: '#000000', isDarkMode: false }, fontPresets:[], fontInputUrl: '',
@@ -7637,23 +7711,24 @@ Structure:
             const sizeOf = (obj) => { try { return new Blob([JSON.stringify(obj || {})]).size; } catch(e){return 0;} };
             
             const chats = sizeOf(this.wechatState.sessions) + sizeOf(this.moments) + sizeOf(this.diaries);
-            const contacts = sizeOf(this.wechatState.friendList) + sizeOf(this.masks) + sizeOf(this.wechatState.groups);
+            const contacts = sizeOf(this.wechatState.friendList) + sizeOf(this.wechatState.groups);
             const media = sizeOf(this.stickers) + sizeOf(this.musicPlaylist) + sizeOf(this.bookshelf);
             const worldbook = sizeOf(this.worldData);
             const api = sizeOf(this.apiConfig) + sizeOf(this.minimaxConfig) + sizeOf(this.apiPresets);
-            const themes = sizeOf(this.themeConfig) + sizeOf(this.appCustomization) + sizeOf(this.beautifyConfig) + sizeOf(this.offlineBeautifyConfig) + sizeOf(this.voiceCallTheme) + sizeOf(this.homeScreenPresets);
+            // 将面具 (masks) 归纳到了个性化设置里
+            const themes = sizeOf(this.masks) + sizeOf(this.themeConfig) + sizeOf(this.appCustomization) + sizeOf(this.beautifyConfig) + sizeOf(this.offlineBeautifyConfig) + sizeOf(this.voiceCallTheme) + sizeOf(this.homeScreenPresets);
             const settings = sizeOf(this.notificationConfig) + sizeOf(this.pushConfig) + sizeOf(this.dataProtection) + sizeOf(this.homeProfile) + sizeOf(this.cardProfile);
 
             const totalBytes = chats + contacts + media + api + worldbook + themes + settings;
             let totalStr = (totalBytes / 1024).toFixed(1) + ' KB';
             if (totalBytes > 1024 * 1024) totalStr = (totalBytes / (1024 * 1024)).toFixed(2) + ' MB';
 
-            // 动态构建数组，只要占了内存 (>0) 就展示
+            // 动态构建数组，只展示占用了内存 (>0) 的部分
             const items =[
                 { name: '聊天记录', size: chats, color: 'bg-blue-500' },
-                { name: '面具、联系人与群聊', size: contacts, color: 'bg-purple-500' },
+                { name: '联系人与群聊', size: contacts, color: 'bg-purple-500' },
                 { name: '表情包与媒体', size: media, color: 'bg-yellow-400' },
-                { name: '世界书与论坛', size: worldbook, color: 'bg-green-500' },
+                { name: '世界书与设置', size: worldbook, color: 'bg-green-500' },
                 { name: '个性化设置', size: themes, color: 'bg-pink-400' },
                 { name: 'API 数据', size: api, color: 'bg-teal-400' },
                 { name: '系统设置', size: settings, color: 'bg-gray-400' }
@@ -7715,6 +7790,109 @@ Structure:
             a.href = u; 
             a.download = `AoveinOS_Backup_${dateStr}.json`; 
             a.click(); 
+        },
+        async testGitHubToken() {
+            if (!this.githubConfig.token || !this.githubConfig.repo) return this.showToast('请先填写Token和仓库路径');
+            this.showToast('正在测试连接...');
+            try {
+                const res = await fetch(`https://api.github.com/repos/${this.githubConfig.repo.trim()}`, {
+                    headers: { 'Authorization': `token ${this.githubConfig.token.trim()}` }
+                });
+                if (res.ok) {
+                    this.showToast('✅ 连接成功！仓库存在且权限正常');
+                } else {
+                    this.showToast('❌ 连接失败，请检查Token或仓库名是否正确');
+                }
+            } catch (e) {
+                this.showToast('❌ 网络请求失败');
+            }
+        },
+        async uploadToGitHub(isAuto = false) {
+            if (!this.githubConfig.token || !this.githubConfig.repo || !this.githubConfig.filename) {
+                if (!isAuto) this.showToast('配置不完整，无法备份');
+                return;
+            }
+            if (!isAuto) this.showToast('正在打包数据上传至 GitHub...');
+            
+            try {
+                const repo = this.githubConfig.repo.trim();
+                const file = this.githubConfig.filename.trim();
+                const token = this.githubConfig.token.trim();
+                const fileUrl = `https://api.github.com/repos/${repo}/contents/${file}`;
+                
+                let sha = null;
+                const getRes = await fetch(fileUrl, { headers: { 'Authorization': `token ${token}` } });
+                if (getRes.ok) {
+                    const getData = await getRes.json();
+                    sha = getData.sha;
+                }
+
+                // 完美深拷贝当前数据并过滤掉无需保存的弹窗状态
+                const d = JSON.parse(JSON.stringify(this.$data));
+                d.isAppOpen = false; d.currentApp = null;
+                const modalsToClose =['maskModal','addContactModal','chatWizard','statusModal','worldBinderModal','voiceInputModal','redPacketModal','transferModal','avatarSettingModal'];
+                modalsToClose.forEach(m => { if(d[m]) d[m].show = false; });
+                
+                // 将 JSON 转为安全的 Base64 (支持中文 UTF-8)
+                const contentStr = JSON.stringify(d);
+                const base64Content = btoa(unescape(encodeURIComponent(contentStr)));
+
+                const body = {
+                    message: `Aovein Auto Backup ${new Date().toLocaleString()}`,
+                    content: base64Content
+                };
+                if (sha) body.sha = sha;
+
+                const putRes = await fetch(fileUrl, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                if (putRes.ok) {
+                    this.githubConfig.lastBackupTime = Date.now();
+                    this.saveData();
+                    if (!isAuto) this.showToast('✅ 备份上传成功！');
+                } else {
+                    throw new Error('权限不足或路径错误');
+                }
+            } catch (e) {
+                if (!isAuto) this.showToast('❌ 备份失败: ' + e.message);
+            }
+        },
+        async restoreFromGitHub() {
+            if (!this.githubConfig.token || !this.githubConfig.repo || !this.githubConfig.filename) {
+                return this.showToast('请先完善配置');
+            }
+            this.showConfirm('⚠️ 警告：这将从云端拉取数据完全覆盖你手机当前的存档！确定要覆盖吗？', async () => {
+                this.showToast('正在从云端拉取数据...');
+                try {
+                    const repo = this.githubConfig.repo.trim();
+                    const file = this.githubConfig.filename.trim();
+                    const token = this.githubConfig.token.trim();
+                    const fileUrl = `https://api.github.com/repos/${repo}/contents/${file}`;
+                    
+                    const res = await fetch(fileUrl, { headers: { 'Authorization': `token ${token}` } });
+                    if (!res.ok) throw new Error('未找到备份文件或Token失效');
+                    const data = await res.json();
+                    
+                    // 解码 Base64
+                    const contentStr = decodeURIComponent(escape(atob(data.content)));
+                    const parsedData = JSON.parse(contentStr);
+                    
+                    if (!parsedData.wechatState && !parsedData.homeProfile) throw new Error('解析失败：不是有效存档');
+
+                    window._isImporting = true;
+                    try { localStorage.setItem('onyunx_hybrid_v40', contentStr); } catch(err){}
+                    try { await this.writeSafeData('onyunx_hybrid_v40', contentStr); } catch(err){}
+                    
+                    this.showToast('✅ 云端数据恢复成功！即将刷新...');
+                    setTimeout(() => location.reload(), 1500);
+                } catch (e) {
+                    window._isImporting = false;
+                    this.showToast('❌ 恢复失败: ' + e.message);
+                }
+            });
         },
         triggerImport() { this.$refs.importInput.click(); },        
         
@@ -7813,13 +7991,20 @@ Structure:
             window._saveTimer = setTimeout(() => { this.saveDataNow(); }, 1500); 
         },
         async saveDataNow() {
-            // 核心修复：如果正在执行导入数据操作，绝对禁止网页自动覆盖保存旧数据！
             if (window._isImporting) return;
             
             try { 
                 const dataStr = JSON.stringify(this.$data);
-                try { localStorage.setItem('onyunx_hybrid_v40', dataStr); } catch(err) { console.warn("浅层缓存已满，不影响大数据库"); }
+                try { localStorage.setItem('onyunx_hybrid_v40', dataStr); } catch(err) { console.warn("浅层缓存已满"); }
                 await this.writeSafeData('onyunx_hybrid_v40', dataStr);
+                
+                // === 检查是否触发 GitHub 自动云备份 ===
+                if (this.githubConfig && this.githubConfig.autoBackup && this.githubConfig.token) {
+                    const freqMs = (this.githubConfig.frequency || 24) * 60 * 60 * 1000;
+                    if (Date.now() - (this.githubConfig.lastBackupTime || 0) > freqMs) {
+                        this.uploadToGitHub(true); // 传入 true 代表后台静默上传，不打扰用户
+                    }
+                }
             } catch(e) { console.warn("保存失败", e); } 
         },
         handleImport(e) { 
