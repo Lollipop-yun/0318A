@@ -436,6 +436,27 @@
 
     <!-- 全局弹窗 (Z-Index 调高) -->
     <transition name="fade"><div v-if="toast.show" class="fixed inset-0 z-[90000] flex items-center justify-center pointer-events-none"><div class="bg-black/70 text-white px-5 py-3 rounded-xl shadow-lg backdrop-blur-sm text-sm font-medium">{{ toast.message }}</div></div></transition>
+    
+    <!-- 设置内免责声明弹窗 -->
+    <transition name="scale">
+        <div v-if="showSettingsDisclaimer" class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div class="bg-white w-[85%] max-h-[75vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col">
+                <div class="p-5 text-center border-b border-gray-100 font-bold text-lg text-gray-900 shrink-0">免责声明及隐私协议</div>
+                <div class="p-5 overflow-y-auto text-sm text-gray-600 leading-relaxed text-justify space-y-4 font-medium flex-1">
+                    <p>欢迎使用 Aovein 小手机终端系统。</p>
+                    <p>1. <b>纯本地运行与隐私保护：</b> 本系统采用最严格的纯本地（Local）运行架构。您输入的账号、密码、配置信息及聊天数据均加密存储于您本机的浏览器缓存中。本系统<b>没有任何云端数据库或后端服务器</b>，绝对不存在“窥屏”、上传或收集用户隐私数据的可能。</p>
+                    <p>2. <b>第三方接口声明：</b> 您的 API Key 仅用于直接与您配置的大模型服务商（如 OpenAI、MiniMax 等）建立点对点通信，请妥善保管。</p>
+                    <p>3. <b>免责条款：</b> 本产品仅供 UI 交互展示与娱乐模拟使用。使用者在应用内进行的一切模拟操作、AI 生成内容及由此产生的衍生行为，由使用者本人自行承担全部责任。使用者做出的任何行为均与本代码原作者无关。</p>
+                    <p>4. <b>合规使用：</b> 严禁将本产品用于任何非法、诈骗或造谣用途，一经发现，由使用者独立承担全部法律后果。</p>
+                    <p>5. <b>角色导入规范：</b> 严禁导入未经授权的第三方角色卡。仅允许导入使用者本人原创，或已获得原作者明确授权的角色设定，请尊重原创版权。</p>
+                </div>
+                <div class="p-4 border-t border-gray-100 bg-gray-50 shrink-0">
+                    <button @click="showSettingsDisclaimer = false" class="w-full bg-black text-white py-3 rounded-xl font-bold text-sm shadow-md active:scale-95 transition">关闭阅读</button>
+                </div>
+            </div>
+        </div>
+    </transition>
+    
     <!-- ================= 移至全局的一起读组件 ================= -->
     <!-- 一起读选择小说弹窗 -->
     <transition name="scale">
@@ -3982,7 +4003,14 @@
     <div class="p-4 flex items-center justify-between active:bg-gray-50">
         <div class="flex items-center gap-4"><i class="fas fa-eye-slash text-gray-700 text-[18px] w-6 text-center opacity-80"></i><span class="font-medium text-[15px] text-gray-900 tracking-wide">隐藏状态栏</span></div><input type="checkbox" id="toggle-sb" class="switch-checkbox" v-model="hideStatusBar" @change="saveData"><label for="toggle-sb" class="switch-label"><div class="switch-button"></div></label>
     </div>
-</div></div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'api-config'" class="absolute inset-0 p-4"><div class="space-y-5 pb-10"><div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4"><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">反代地址</label><input v-model="apiConfig.baseUrl" placeholder="https://..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">API 密钥</label><input v-model="apiConfig.apiKey" type="password" placeholder="sk-..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div class="flex items-center gap-2"><button @click="fetchModels" :disabled="isLoading" class="flex-1 bg-gray-900 text-white py-2.5 rounded-xl text-sm font-bold active:scale-95 transition flex items-center justify-center gap-2"><i v-if="isLoading" class="fas fa-spinner fa-spin"></i><span v-else>拉取模型</span></button></div><div v-if="availableModels.length > 0" class="animate-fade-in"><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">选择模型</label><div @click="modelSelectModal.show = true" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-medium border border-gray-200 flex justify-between items-center cursor-pointer"><span>{{ apiConfig.selectedModel || '点击选择' }}</span><i class="fas fa-chevron-down text-gray-400 text-xs"></i></div></div><div><div class="flex justify-between mb-1"><label class="text-xs font-bold text-gray-500 ml-1">温度 (创造性): {{ apiConfig.temperature }}</label></div><input type="range" min="0" max="2" step="0.1" v-model.number="apiConfig.temperature" class="w-full h-2 bg-gray-200 rounded-lg cursor-pointer"></div></div>
+</div>
+<!-- 新增的底部免责声明和版本号 -->
+<div class="mt-8 mb-10 flex items-center justify-center gap-2 text-[12px] font-medium text-gray-400">
+    <span>Version 1.0.0</span>
+    <span class="mx-1 text-gray-300">|</span>
+    <span @click="showSettingsDisclaimer = true" class="text-blue-500 cursor-pointer active:opacity-70">用户条约与免责声明</span>
+</div>
+</div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'api-config'" class="absolute inset-0 p-4"><div class="space-y-5 pb-10"><div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4"><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">反代地址</label><input v-model="apiConfig.baseUrl" placeholder="https://..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">API 密钥</label><input v-model="apiConfig.apiKey" type="password" placeholder="sk-..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div class="flex items-center gap-2"><button @click="fetchModels" :disabled="isLoading" class="flex-1 bg-gray-900 text-white py-2.5 rounded-xl text-sm font-bold active:scale-95 transition flex items-center justify-center gap-2"><i v-if="isLoading" class="fas fa-spinner fa-spin"></i><span v-else>拉取模型</span></button></div><div v-if="availableModels.length > 0" class="animate-fade-in"><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">选择模型</label><div @click="modelSelectModal.show = true" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-medium border border-gray-200 flex justify-between items-center cursor-pointer"><span>{{ apiConfig.selectedModel || '点击选择' }}</span><i class="fas fa-chevron-down text-gray-400 text-xs"></i></div></div><div><div class="flex justify-between mb-1"><label class="text-xs font-bold text-gray-500 ml-1">温度 (创造性): {{ apiConfig.temperature }}</label></div><input type="range" min="0" max="2" step="0.1" v-model.number="apiConfig.temperature" class="w-full h-2 bg-gray-200 rounded-lg cursor-pointer"></div></div>
 
 <!-- === 新增：MiniMax 语音合成面板 === -->
 <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
@@ -4025,24 +4053,20 @@
                         <div class="text-3xl font-bold text-gray-900 tracking-tight font-mono">{{ storageStats.total }}</div>
                     </div>
                 </div>
-                <!-- 进度条 -->
+                <!-- 动态进度条 -->
                 <div class="w-full h-3 rounded-full flex overflow-hidden gap-[2px] bg-gray-100 mb-5">
-                    <div class="h-full bg-blue-500" :style="{ width: storageStats.chats + '%' }"></div>
-                    <div class="h-full bg-purple-500" :style="{ width: storageStats.contacts + '%' }"></div>
-                    <div class="h-full bg-yellow-400" :style="{ width: storageStats.media + '%' }"></div>
-                    <div class="h-full bg-teal-400" :style="{ width: storageStats.api + '%' }"></div>
-                    <div class="h-full bg-gray-400" :style="{ width: storageStats.other + '%' }"></div>
+                    <div v-for="(item, idx) in storageStats.items" :key="idx" class="h-full" :class="item.color" :style="{ width: item.percent + '%' }"></div>
                 </div>
-                <!-- 图例列表 -->
+                <!-- 动态图例列表 -->
                 <div class="grid grid-cols-2 gap-y-3 gap-x-2 text-[11px] font-medium text-gray-600">
-                    <div class="flex items-center gap-2"><div class="w-2.5 h-2.5 rounded-sm bg-blue-500"></div>聊天记录 ({{ storageStats.chats }}%)</div>
-                    <div class="flex items-center gap-2"><div class="w-2.5 h-2.5 rounded-sm bg-purple-500"></div>面具与联系人 ({{ storageStats.contacts }}%)</div>
-                    <div class="flex items-center gap-2"><div class="w-2.5 h-2.5 rounded-sm bg-yellow-400"></div>表情/小说/音乐 ({{ storageStats.media }}%)</div>
-                    <div class="flex items-center gap-2"><div class="w-2.5 h-2.5 rounded-sm bg-teal-400"></div>API 数据 ({{ storageStats.api }}%)</div>
-                    <div class="flex items-center gap-2"><div class="w-2.5 h-2.5 rounded-sm bg-gray-400"></div>世界书与设置 ({{ storageStats.other }}%)</div>
+                    <div v-for="(item, idx) in storageStats.items" :key="idx" class="flex items-center gap-2">
+                        <div class="w-2.5 h-2.5 rounded-sm shrink-0" :class="item.color"></div>
+                        <span class="truncate">{{ item.name }} ({{ item.percent }}%)</span>
+                    </div>
                 </div>
             </div>
 
+            <!-- 数据保护与导入导出 -->
             <div class="bg-white rounded-[20px] overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.02)] divide-y divide-gray-50">
                 <div class="p-4 flex items-center justify-between active:bg-gray-50">
                     <div class="flex items-center gap-4"><i class="fas fa-shield-alt text-gray-700 text-[18px] w-6 text-center opacity-80"></i>
@@ -4059,11 +4083,19 @@
                     <div class="flex items-center gap-4"><i class="fas fa-file-import text-gray-700 text-[18px] w-6 text-center opacity-80"></i><span class="font-medium text-[15px] text-gray-900 tracking-wide">导入存档数据</span></div><i class="fas fa-chevron-right text-gray-300 text-sm"></i>
                 </div>
             </div>
+
+            <!-- 恢复出厂设置 -->
+            <div class="bg-white rounded-[20px] overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
+                <div @click="confirmFactoryReset" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer">
+                    <div class="flex items-center gap-4"><i class="fas fa-exclamation-triangle text-red-500 text-[18px] w-6 text-center opacity-80"></i><span class="font-medium text-[15px] text-red-500 tracking-wide">恢复出厂设置</span></div><i class="fas fa-chevron-right text-gray-300 text-sm"></i>
+                </div>
+            </div>
             
             <input type="file" ref="importInput" accept=".json" class="hidden" @change="handleImport">
         </div>
     </div>
-</transition><transition name="page-slide"><div v-if="settingsPage === 'notification'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"><div class="flex items-center justify-between mb-4"><span class="text-sm font-bold text-gray-700">当前提示音</span><span class="text-xs text-gray-400">{{ notificationConfig.currentName || '系统默认' }}</span></div><div class="flex gap-2"><button @click="triggerAudioUpload" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-upload"></i> 导入文件</button><button @click="triggerAudioUrl" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-link"></i> 网络直链</button><button @click="playCurrentSound" class="w-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center border border-green-100 active:scale-95 transition"><i class="fas fa-play"></i></button></div><input type="file" ref="audioInput" accept="audio/*" class="hidden" @change="handleAudioUpload"><button @click="simulateAiMessage" class="w-full mt-3 bg-gray-800 text-white py-2.5 rounded-xl text-xs font-bold active:bg-black transition">测试音效</button></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">音频预设</span><button @click="saveSoundPreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="soundPresets.length === 0" class="p-6 text-center text-gray-400 text-xs">暂无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(sound, idx) in soundPresets" :key="idx" class="p-4 flex items-center justify-between"><span class="font-bold text-gray-700 text-sm truncate max-w-[50%]">{{ sound.name }}</span><div class="flex items-center gap-2"><button @click="playPresetSound(sound)" class="w-7 h-7 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center"><i class="fas fa-play text-[10px]"></i></button><button @click="applySoundPreset(sound)" class="w-7 h-7 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-check text-[10px]"></i></button><button @click="deleteSoundPreset(idx)" class="w-7 h-7 rounded-full bg-red-50 text-red-500 flex items-center justify-center"><i class="fas fa-trash text-[10px]"></i></button></div></div></div></div></div></div></transition><transition name="page-slide">
+</transition>
+<transition name="page-slide"><div v-if="settingsPage === 'notification'" class="absolute inset-0 p-4"><div class="space-y-4"><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"><div class="flex items-center justify-between mb-4"><span class="text-sm font-bold text-gray-700">当前提示音</span><span class="text-xs text-gray-400">{{ notificationConfig.currentName || '系统默认' }}</span></div><div class="flex gap-2"><button @click="triggerAudioUpload" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-upload"></i> 导入文件</button><button @click="triggerAudioUrl" class="flex-1 bg-gray-50 py-2.5 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-100 transition border border-gray-100 flex items-center justify-center gap-2"><i class="fas fa-link"></i> 网络直链</button><button @click="playCurrentSound" class="w-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center border border-green-100 active:scale-95 transition"><i class="fas fa-play"></i></button></div><input type="file" ref="audioInput" accept="audio/*" class="hidden" @change="handleAudioUpload"><button @click="simulateAiMessage" class="w-full mt-3 bg-gray-800 text-white py-2.5 rounded-xl text-xs font-bold active:bg-black transition">测试音效</button></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">音频预设</span><button @click="saveSoundPreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="soundPresets.length === 0" class="p-6 text-center text-gray-400 text-xs">暂无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(sound, idx) in soundPresets" :key="idx" class="p-4 flex items-center justify-between"><span class="font-bold text-gray-700 text-sm truncate max-w-[50%]">{{ sound.name }}</span><div class="flex items-center gap-2"><button @click="playPresetSound(sound)" class="w-7 h-7 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center"><i class="fas fa-play text-[10px]"></i></button><button @click="applySoundPreset(sound)" class="w-7 h-7 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-check text-[10px]"></i></button><button @click="deleteSoundPreset(idx)" class="w-7 h-7 rounded-full bg-red-50 text-red-500 flex items-center justify-center"><i class="fas fa-trash text-[10px]"></i></button></div></div></div></div></div></div></transition><transition name="page-slide">
                 <div v-if="settingsPage === 'push-config'" class="absolute inset-0 p-4">
                     <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
                         <div class="flex justify-between items-center">
@@ -4360,7 +4392,7 @@ createApp({
             minimaxConfig: { enabled: false, region: 'cn', groupId: '', apiKey: '', selectedModel: '', voiceId: 'male-qn-qingse' }, minimaxModels:[],
             notificationConfig: { currentSound: null, currentName: '默认提示音' }, soundPresets:[],
             pushConfig: { enabled: false }, // 新增推送设置
-            storageStats: { total: '0 KB', chats: 0, contacts: 0, media: 0, api: 0, other: 0 },
+            storageStats: { total: '0 KB', items:[] }, showSettingsDisclaimer: false,
             
             themeConfig: { wallpaper: '', fontFamily: '', fontUrl: '', fontSize: 1.0, fontColor: '#000000', isDarkMode: false }, fontPresets:[], fontInputUrl: '',
             
@@ -7603,25 +7635,47 @@ Structure:
         // Export All Data (Corrected)
         calculateStorage() {
             const sizeOf = (obj) => { try { return new Blob([JSON.stringify(obj || {})]).size; } catch(e){return 0;} };
-            const chatSize = sizeOf(this.wechatState.sessions) + sizeOf(this.moments) + sizeOf(this.diaries);
-            const contactSize = sizeOf(this.wechatState.friendList) + sizeOf(this.masks);
-            const mediaSize = sizeOf(this.stickers) + sizeOf(this.musicPlaylist) + sizeOf(this.bookshelf);
-            const apiSize = sizeOf(this.apiConfig) + sizeOf(this.minimaxConfig) + sizeOf(this.apiPresets);
-            const otherSize = sizeOf(this.worldData) + sizeOf(this.themeConfig) + sizeOf(this.appCustomization) + sizeOf(this.beautifyConfig) + sizeOf(this.offlineBeautifyConfig) + sizeOf(this.voiceCallTheme);
             
-            const totalBytes = chatSize + contactSize + mediaSize + apiSize + otherSize;
+            const chats = sizeOf(this.wechatState.sessions) + sizeOf(this.moments) + sizeOf(this.diaries);
+            const contacts = sizeOf(this.wechatState.friendList) + sizeOf(this.masks) + sizeOf(this.wechatState.groups);
+            const media = sizeOf(this.stickers) + sizeOf(this.musicPlaylist) + sizeOf(this.bookshelf);
+            const worldbook = sizeOf(this.worldData);
+            const api = sizeOf(this.apiConfig) + sizeOf(this.minimaxConfig) + sizeOf(this.apiPresets);
+            const themes = sizeOf(this.themeConfig) + sizeOf(this.appCustomization) + sizeOf(this.beautifyConfig) + sizeOf(this.offlineBeautifyConfig) + sizeOf(this.voiceCallTheme) + sizeOf(this.homeScreenPresets);
+            const settings = sizeOf(this.notificationConfig) + sizeOf(this.pushConfig) + sizeOf(this.dataProtection) + sizeOf(this.homeProfile) + sizeOf(this.cardProfile);
+
+            const totalBytes = chats + contacts + media + api + worldbook + themes + settings;
             let totalStr = (totalBytes / 1024).toFixed(1) + ' KB';
             if (totalBytes > 1024 * 1024) totalStr = (totalBytes / (1024 * 1024)).toFixed(2) + ' MB';
 
-            // 计算百分比
-            this.storageStats = {
-                total: totalStr,
-                chats: totalBytes ? ((chatSize / totalBytes) * 100).toFixed(1) : 0,
-                contacts: totalBytes ? ((contactSize / totalBytes) * 100).toFixed(1) : 0,
-                media: totalBytes ? ((mediaSize / totalBytes) * 100).toFixed(1) : 0,
-                api: totalBytes ? ((apiSize / totalBytes) * 100).toFixed(1) : 0,
-                other: totalBytes ? ((otherSize / totalBytes) * 100).toFixed(1) : 0
-            };
+            // 动态构建数组，只要占了内存 (>0) 就展示
+            const items =[
+                { name: '聊天记录', size: chats, color: 'bg-blue-500' },
+                { name: '面具、联系人与群聊', size: contacts, color: 'bg-purple-500' },
+                { name: '表情包与媒体', size: media, color: 'bg-yellow-400' },
+                { name: '世界书与论坛', size: worldbook, color: 'bg-green-500' },
+                { name: '个性化设置', size: themes, color: 'bg-pink-400' },
+                { name: 'API 数据', size: api, color: 'bg-teal-400' },
+                { name: '系统设置', size: settings, color: 'bg-gray-400' }
+            ].filter(i => i.size > 0).sort((a,b) => b.size - a.size);
+
+            items.forEach(i => {
+                i.percent = totalBytes ? ((i.size / totalBytes) * 100).toFixed(1) : 0;
+            });
+
+            this.storageStats = { total: totalStr, items: items };
+        },
+        confirmFactoryReset() {
+            this.showConfirm('警告：恢复出厂设置将清空所有聊天、世界书、主题等本地存档，此操作不可逆！确认继续吗？', () => {
+                localStorage.clear();
+                try {
+                    const req = indexedDB.deleteDatabase('AoveinOS_DB');
+                    req.onsuccess = () => { setTimeout(() => location.reload(), 500); };
+                    req.onerror = () => { setTimeout(() => location.reload(), 500); };
+                } catch(e) {
+                    setTimeout(() => location.reload(), 500);
+                }
+            });
         },
         exportData() { 
             // 完美深拷贝，斩断所有 Vue proxy 响应式关联
