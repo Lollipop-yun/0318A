@@ -1975,6 +1975,46 @@
                 </div>
             </div>
         </transition>
+        <!-- 重回消息风格走向弹窗 -->
+        <transition name="scale">
+            <div v-if="regenerateModal.show" class="fixed inset-0 z-[105000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl p-6 flex flex-col gap-4">
+                    <h3 class="text-lg font-bold text-center mb-2">重回消息风格走向</h3>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">你想让TA怎样回复？(选填)</label>
+                        <input v-model="regenerateModal.prompt" placeholder="例如: 傲娇一点、吃醋、转移话题..." class="w-full bg-gray-50 p-3.5 rounded-xl text-sm border border-gray-200 outline-none">
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <button @click="regenerateModal.show = false" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold text-sm active:scale-95 transition">取消</button>
+                        <button @click="confirmRegenerate" class="flex-1 bg-black text-white py-3 rounded-xl font-bold text-sm active:scale-95 transition">确定重回</button>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- 时间戳显示位置弹窗 -->
+        <transition name="app-slide">
+            <div v-if="timestampModeModal.show" class="fixed inset-0 z-[105000]">
+                <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="timestampModeModal.show = false"></div>
+                <div class="ios-list-modal">
+                    <div class="ios-list-header">时间戳排版模式 <button class="absolute right-4 text-blue-500 font-normal text-sm" @click="timestampModeModal.show = false">取消</button></div>
+                    <div class="ios-list-content p-0 bg-white">
+                        <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setTimestampMode('outside')">
+                            <div><div class="font-bold text-gray-900">气泡外 (默认)</div><div class="text-xs text-gray-500 mt-1">显示在每条气泡外部的下方</div></div>
+                            <i v-if="(wechatState.activeSession?.timestampMode || 'outside') === 'outside'" class="fas fa-check text-blue-500"></i>
+                        </div>
+                        <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setTimestampMode('inside')">
+                            <div><div class="font-bold text-gray-900">气泡内</div><div class="text-xs text-gray-500 mt-1">将时间嵌入到气泡内部底端</div></div>
+                            <i v-if="wechatState.activeSession?.timestampMode === 'inside'" class="fas fa-check text-blue-500"></i>
+                        </div>
+                        <div class="p-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setTimestampMode('midchat')">
+                            <div><div class="font-bold text-gray-900">聊天中途</div><div class="text-xs text-gray-500 mt-1">关闭单条时间，每隔20分钟在中间显示一次</div></div>
+                            <i v-if="wechatState.activeSession?.timestampMode === 'midchat'" class="fas fa-check text-blue-500"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
     <transition name="app-slide">
         <div v-if="currentApp === 'wechat'" class="absolute inset-0 z-[1000] bg-[#f7f7f7] flex flex-col overflow-hidden text-black" @click="closeChatMenus">
             
@@ -2558,10 +2598,20 @@
                                             </div>
                                         </transition>
                                     </div>
+                                    
+                                    <!-- 气泡内时间戳 (仅在设置为inside时显示) -->
+                                    <div v-if="(wechatState.activeSession?.timestampMode || 'outside') === 'inside'" class="text-[10px] opacity-60 mt-1.5 font-mono tracking-wide flex items-center justify-end gap-1" :class="msg.isSelf ? 'text-gray-500' : 'text-gray-400'">
+                                        <span>{{ formatChatTime(msg.time) }}</span>
+                                        <span>{{ wechatState.activeSession?.readText || 'Read' }}</span>
+                                    </div>
                                 </div>
                                 <!-- 语音转文字展开 -->
                                 <div v-if="msg.type === 'voice' && msg.isExpanded" class="voice-transcription">{{ msg.content }}</div>
-                                <span class="chat-timestamp-small" :class="wechatState.activeSession.wallpaper ? 'text-white/60 drop-shadow-sm' : 'text-gray-300'">{{ formatChatTime(msg.time) }} Read</span>
+                                
+                                <!-- 气泡外时间戳 (默认 outside 模式时显示) -->
+                                <span v-if="(wechatState.activeSession?.timestampMode || 'outside') === 'outside'" class="chat-timestamp-small" :class="wechatState.activeSession.wallpaper ? 'text-white/60 drop-shadow-sm' : 'text-gray-300'">
+                                    {{ formatChatTime(msg.time) }} {{ wechatState.activeSession?.readText || 'Read' }}
+                                </span>
                             </div>
                             
                             <!-- 【新增】被拉黑时 AI 发出消息的红色感叹号 -->
@@ -3055,6 +3105,24 @@
                             <span class="text-sm">顶部备注显示位置</span>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs text-gray-400">{{ (wechatState.activeSession?.headerLayout || 'center') === 'center' ? '顶部中间' : '顶部左侧 (带状态)' }}</span>
+                                <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                            </div>
+                        </div>
+
+                        <!-- 时间戳显示位置选择 -->
+                        <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="timestampModeModal.show = true">
+                            <span class="text-sm">时间戳显示位置</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-gray-400">{{ getTimestampModeName(wechatState.activeSession?.timestampMode) }}</span>
+                                <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- 文字戳 (Read) 修改 -->
+                        <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="editReadText">
+                            <span class="text-sm">文字戳 (Read) 设置</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-gray-400">{{ wechatState.activeSession?.readText || 'Read' }}</span>
                                 <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
                             </div>
                         </div>
@@ -4568,6 +4636,8 @@ createApp({
             githubFreqModal: { show: false },
             headerLayoutModal: { show: false },
             editStatusModal: { show: false, color: 'online', text: '' },
+            regenerateModal: { show: false, prompt: '' },
+            timestampModeModal: { show: false },
             
             themeConfig: { wallpaper: '', fontFamily: '', fontUrl: '', fontSize: 1.0, fontColor: '#000000', isDarkMode: false }, fontPresets:[], fontInputUrl: '',
             
@@ -4871,9 +4941,13 @@ createApp({
         },
         shouldShowTime(msg, index) {
             if (index === 0) return true;
-            const prevMsg = this.wechatState.activeSession.messages[index - 1];
-            // If time diff > 5 mins (300000ms), show timestamp
-            return (msg.time - prevMsg.time) > 300000;
+            const session = this.wechatState.activeSession;
+            const prevMsg = session.messages[index - 1];
+            const mode = session.timestampMode || 'outside';
+            
+            // 如果选中了中途，间隔为 20 分钟 (1200000ms)；否则为默认的 5 分钟
+            const threshold = mode === 'midchat' ? 1200000 : 300000;
+            return (msg.time - prevMsg.time) > threshold;
         },
         
         // --- 转账接收与退还方法 ---
@@ -6489,6 +6563,41 @@ createApp({
             const d = new Date(ts);
             return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
         },
+        confirmRegenerate() {
+            const session = this.wechatState.activeSession;
+            let i = session.messages.length - 1;
+            // 删除最后一轮 AI 的发言
+            while (i >= 0) {
+                const m = session.messages[i];
+                if (!m.isSelf) { session.messages.splice(i, 1); } else { break; } 
+                i--;
+            }
+            this.saveData();
+            this.regenerateModal.show = false;
+            // 带着用户的风格走向要求，重新请求大模型
+            this.triggerReceive(this.regenerateModal.prompt);
+        },
+        setTimestampMode(mode) {
+            if (this.wechatState.activeSession) {
+                this.wechatState.activeSession.timestampMode = mode;
+                this.saveData();
+            }
+            this.timestampModeModal.show = false;
+        },
+        getTimestampModeName(mode) {
+            if (mode === 'inside') return '气泡内';
+            if (mode === 'midchat') return '聊天中途 (每20分钟)';
+            return '气泡外 (默认)';
+        },
+        editReadText() {
+            const current = this.wechatState.activeSession?.readText || 'Read';
+            this.showInput('修改文字戳', current, '例如: 已读、Read...', (val) => {
+                if (val && this.wechatState.activeSession) {
+                    this.wechatState.activeSession.readText = val;
+                    this.saveData();
+                }
+            });
+        },
         setHeaderLayout(layout) {
             if (this.wechatState.activeSession) {
                 this.wechatState.activeSession.headerLayout = layout;
@@ -6590,20 +6699,30 @@ createApp({
                 console.error("生成自动回复失败", e);
             }
         },
-        triggerReceive() {
+        triggerReceive(directionPrompt = '') {
+            const session = this.wechatState.activeSession;
             if (!this.apiConfig.apiKey) { this.showToast('请先配置 API Key'); return; }
             
-            // Blocking Logic (上帝视角重构)
-            if (this.wechatState.activeSession.isBlocked) {
-                // 30% 概率触发发好友申请，70% 概率直接发感叹号消息控诉
+            if (session.isBlocked) {
                 if (Math.random() < 0.3) {
-                     this.triggerReAddRequest(this.wechatState.activeSession);
+                     this.triggerReAddRequest(session);
                      return;
+                }
+            }
+
+            // --- 离线状态严格拦截 ---
+            if (!session.isGroup) {
+                const status = session.onlineStatus || 'online';
+                if (status === 'offline') {
+                    this.showToast('对方目前处于离线状态，无法收到/回复你的消息');
+                    return; // 只要离线，绝对不让AI正常说话
                 }
             }
             
             this.isTyping = true; 
-            this.generateAiReply();
+            // 兼容点击事件传过来的异常参数
+            const prompt = typeof directionPrompt === 'string' ? directionPrompt : '';
+            this.generateAiReply(prompt);
         },
         async triggerReAddRequest(session, isPostReject = false) {
              const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
@@ -6735,7 +6854,7 @@ createApp({
             this.showToast(`已将 ${session.name} 移出黑名单`);
         },
         
-        async generateAiReply() {
+        async generateAiReply(directionPrompt = '') {
             const session = this.wechatState.activeSession;
             const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
             const mask = this.getMaskById(session.maskId);
@@ -6975,6 +7094,11 @@ Structure:
 你必须模拟真人说话的真实节奏，按句号、叹号或呼吸停顿，把长段落切分成多个短句，填入数组！
 ❌ 错误示范：["怎么了？你怎么不说话，别生闷气了行不行，我真的很担心你。"]
 ✅ 正确示范：["怎么了？", "你怎么不说话", "别生闷气了行不行", "我真的很担心你。"]`;
+
+            // 如果用户在“重回”时提出了具体的走向要求，强行注入最高优先级的提示词
+            if (directionPrompt && directionPrompt.trim() !== '') {
+                systemPrompt += `\n\n【！！！极其重要的剧情走向指令！！！】：\n我(玩家)对你接下来的回复提出了特殊的剧情走向/风格要求：“${directionPrompt}”。请你必须严格按照这个风格/情绪/剧情走向来回复我这一轮的消息！`;
+            }
 
             contextMessages.push({ role: 'system', content: systemPrompt });
             // --- 读取线下约会相处的记忆 ---
@@ -7539,14 +7663,9 @@ Structure:
             else if (action === 'edit') { this.showInput("编辑", msg.content, "", (v) => { if(v){msg.content=v; this.saveData();} }); }
             else if (action === 'favorite') { this.addToFavorites(msg.content, 'message', session.name); this.showToast('已收藏'); }
             else if (action === 'regenerate') {
-                let i = session.messages.length - 1;
-                while (i >= 0) {
-                    const m = session.messages[i];
-                    if (!m.isSelf) { session.messages.splice(i, 1); } else { break; } 
-                    i--;
-                }
-                this.saveData();
-                this.triggerReceive(); 
+                this.chatContextMenu.show = false;
+                this.regenerateModal.prompt = '';
+                this.regenerateModal.show = true;
             }
             else { this.showToast('功能开发中'); }
             this.chatContextMenu.show = false;
