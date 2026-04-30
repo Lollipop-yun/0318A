@@ -1909,6 +1909,72 @@
         <input type="file" ref="groupAvatarInput2" accept="image/*" class="hidden" @change="handleGroupAvatarChange2">
 
     <!-- ================= 微信 (WeChat) App ================= -->
+    <!-- 频率选择弹窗 (GitHub) -->
+        <transition name="app-slide">
+            <div v-if="githubFreqModal.show" class="fixed inset-0 z-[105000]">
+                <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="githubFreqModal.show = false"></div>
+                <div class="ios-list-modal">
+                    <div class="ios-list-header">选择自动备份频率 <button class="absolute right-4 text-blue-500 font-normal text-sm" @click="githubFreqModal.show = false">取消</button></div>
+                    <div class="ios-list-content p-0 bg-white">
+                        <div v-for="h in [12, 24, 36, 48]" :key="h" class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="githubConfig.frequency = h; saveData(); githubFreqModal.show = false">
+                            <span class="text-gray-900 font-medium">每 {{ h }} 小时</span>
+                            <i v-if="githubConfig.frequency === h" class="fas fa-check text-blue-500"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- 聊天顶部备注位置排版弹窗 -->
+        <transition name="app-slide">
+            <div v-if="headerLayoutModal.show" class="fixed inset-0 z-[105000]">
+                <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="headerLayoutModal.show = false"></div>
+                <div class="ios-list-modal">
+                    <div class="ios-list-header">选择顶部排版模式 <button class="absolute right-4 text-blue-500 font-normal text-sm" @click="headerLayoutModal.show = false">取消</button></div>
+                    <div class="ios-list-content p-0 bg-white">
+                        <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setHeaderLayout('center')">
+                            <div><div class="font-bold text-gray-900">顶部中间</div><div class="text-xs text-gray-500 mt-1">默认经典居中样式</div></div>
+                            <i v-if="(wechatState.activeSession?.headerLayout || 'center') === 'center'" class="fas fa-check text-blue-500"></i>
+                        </div>
+                        <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setHeaderLayout('left')">
+                            <div><div class="font-bold text-gray-900">顶部左侧 (带状态)</div><div class="text-xs text-gray-500 mt-1">显示头像与在线/离线/忙碌状态</div></div>
+                            <i v-if="wechatState.activeSession?.headerLayout === 'left'" class="fas fa-check text-blue-500"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- 编辑在线状态弹窗 -->
+        <transition name="scale">
+            <div v-if="editStatusModal.show" class="fixed inset-0 z-[105000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl p-6 flex flex-col gap-4">
+                    <h3 class="text-lg font-bold text-center mb-2">修改角色在线状态</h3>
+                    <div class="flex justify-around mb-2">
+                        <div @click="editStatusModal.color = 'online'" class="flex flex-col items-center gap-1.5 cursor-pointer">
+                            <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center border-2" :class="editStatusModal.color === 'online' ? 'border-gray-800' : 'border-transparent'"><i v-if="editStatusModal.color === 'online'" class="fas fa-check text-white text-[10px]"></i></div>
+                            <span class="text-xs text-gray-600 font-bold">在线</span>
+                        </div>
+                        <div @click="editStatusModal.color = 'busy'" class="flex flex-col items-center gap-1.5 cursor-pointer">
+                            <div class="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center border-2" :class="editStatusModal.color === 'busy' ? 'border-gray-800' : 'border-transparent'"><i v-if="editStatusModal.color === 'busy'" class="fas fa-check text-white text-[10px]"></i></div>
+                            <span class="text-xs text-gray-600 font-bold">忙碌</span>
+                        </div>
+                        <div @click="editStatusModal.color = 'offline'" class="flex flex-col items-center gap-1.5 cursor-pointer">
+                            <div class="w-6 h-6 rounded-full bg-gray-400 flex items-center justify-center border-2" :class="editStatusModal.color === 'offline' ? 'border-gray-800' : 'border-transparent'"><i v-if="editStatusModal.color === 'offline'" class="fas fa-check text-white text-[10px]"></i></div>
+                            <span class="text-xs text-gray-600 font-bold">离线</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">当前在干嘛 (状态文字)</label>
+                        <input v-model="editStatusModal.text" placeholder="例如: 睡觉中、打游戏、搬砖..." class="w-full bg-gray-50 p-3.5 rounded-xl text-sm border border-gray-200 outline-none">
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <button @click="editStatusModal.show = false" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold text-sm active:scale-95 transition">取消</button>
+                        <button @click="saveEditStatus" class="flex-1 bg-black text-white py-3 rounded-xl font-bold text-sm active:scale-95 transition">保存</button>
+                    </div>
+                </div>
+            </div>
+        </transition>
     <transition name="app-slide">
         <div v-if="currentApp === 'wechat'" class="absolute inset-0 z-[1000] bg-[#f7f7f7] flex flex-col overflow-hidden text-black" @click="closeChatMenus">
             
@@ -2262,17 +2328,38 @@
 
             <!-- 聊天房间 (Chat Room) -->
             <div v-if="wechatState.activeNav === 'room'" class="flex-1 flex flex-col bg-[#fdfdfd] absolute inset-0 z-20">
-                <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white/95 backdrop-blur border-b border-gray-100 z-30">
-                    <button @click="wechatState.activeNav = 'chat'" class="w-8 h-8 flex items-center justify-center"><i class="fas fa-chevron-left text-lg text-gray-800"></i></button>
-                    <!-- 点击标题显示心声 (群聊屏蔽) -->
-                    <div class="flex flex-col items-center cursor-pointer active:opacity-50 absolute left-1/2 -translate-x-1/2" @click="!wechatState.activeSession.isGroup && openStatusModal()">
+                <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white/95 backdrop-blur border-b border-gray-100 z-30 relative">
+                    <div class="flex items-center h-full flex-1">
+                        <button @click="wechatState.activeNav = 'chat'" class="w-8 h-8 flex items-center justify-center shrink-0"><i class="fas fa-chevron-left text-lg text-gray-800"></i></button>
+                        
+                        <!-- 左侧排版模式 -->
+                        <div v-if="(wechatState.activeSession?.headerLayout || 'center') === 'left'" class="flex items-center gap-2 pl-2 flex-1">
+                            <div class="w-[38px] h-[38px] rounded-full overflow-hidden shrink-0 border border-gray-100 cursor-pointer active:opacity-80" @click="!wechatState.activeSession.isGroup && openStatusModal()">
+                                <img :src="wechatState.activeSession.isGroup ? wechatState.activeSession.avatar : getCurrentSessionAvatar()" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex flex-col">
+                                <h1 class="font-bold text-[15px] text-gray-900 leading-tight flex items-center gap-1">
+                                    <span v-if="isTyping" class="text-sm font-normal text-gray-500">正在输入<span class="typing-dot">.</span><span class="typing-dot">.</span><span class="typing-dot">.</span></span>
+                                    <span v-else>{{ getCurrentChatTitle() }}</span>
+                                </h1>
+                                <div class="flex items-center gap-1.5 mt-[3px] cursor-pointer" @dblclick="openEditStatusModal()">
+                                    <div class="w-2 h-2 rounded-full shadow-sm" :class="getStatusColorClass(wechatState.activeSession?.onlineStatus)"></div>
+                                    <span class="text-[10px] text-gray-500 font-medium select-none">{{ wechatState.activeSession?.statusText || '手机在线' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 中间排版模式 (原版) -->
+                    <div v-if="(wechatState.activeSession?.headerLayout || 'center') === 'center'" class="flex flex-col items-center cursor-pointer active:opacity-50 absolute left-1/2 -translate-x-1/2" @click="!wechatState.activeSession.isGroup && openStatusModal()">
                         <h1 class="font-medium text-[16px] text-gray-900 flex items-center gap-1">
                             <span v-if="isTyping">对方正在输入中<span class="typing-dot">.</span><span class="typing-dot">.</span><span class="typing-dot">.</span></span>
                             <span v-else>{{ getCurrentChatTitle() }}</span>
                         </h1>
                         <span class="text-[10px] text-gray-300 tracking-wider">Only You.</span>
                     </div>
-                    <div class="flex items-center gap-1">
+
+                    <div class="flex items-center gap-1 shrink-0">
                         <!-- 加上 v-if="!wechatState.activeSession.isGroup" 判断，群聊不显示此按钮 -->
                         <button v-if="!wechatState.activeSession.isGroup" class="w-8 h-8 flex items-center justify-center text-gray-800" @click="groupSelectModal.show = true"><i class="fas fa-folder-open"></i></button>
                         <button class="w-8 h-8 flex items-center justify-center text-gray-800" @click="goToChatDetails"><i class="fas fa-ellipsis-h"></i></button>
@@ -2963,6 +3050,15 @@
                     <div class="space-y-6">
                         <div class="flex justify-between items-center"><span class="text-sm">查找聊天记录</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
                         
+                        <!-- 顶部排版模式选择 -->
+                        <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="headerLayoutModal.show = true">
+                            <span class="text-sm">顶部备注显示位置</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-gray-400">{{ (wechatState.activeSession?.headerLayout || 'center') === 'center' ? '顶部中间' : '顶部左侧 (带状态)' }}</span>
+                                <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                            </div>
+                        </div>
+
                         <!-- 本聊专属面具绑定入口 -->
                         <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="openSessionMaskModal">
                             <span class="text-sm">当前身份面具</span>
@@ -4136,12 +4232,12 @@
                             </div>
                             <div v-if="githubConfig.autoBackup" class="animate-fade-in">
                                 <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">备份频率</label>
-                                <select v-model="githubConfig.frequency" @change="saveData" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-medium border border-gray-200 outline-none">
-                                    <option :value="12">每 12 小时</option>
-                                    <option :value="24">每 24 小时</option>
-                                    <option :value="36">每 36 小时</option>
-                                    <option :value="48">每 48 小时</option>
-                                </select>
+                                <!-- 专属UI按钮，点击弹出苹果风列表 -->
+                                <div @click="githubFreqModal.show = true" class="w-full bg-gray-50 p-3.5 rounded-xl text-sm font-medium border border-gray-200 mt-1 cursor-pointer flex justify-between items-center active:bg-gray-100 transition shadow-sm">
+                                    <span class="text-gray-800 font-bold">每 {{ githubConfig.frequency }} 小时</span>
+                                    <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                                </div>
+                                <div class="text-[10px] text-gray-400 mt-2 ml-1">上次备份: {{ formatLastBackupTime(githubConfig.lastBackupTime) }}</div>
                             </div>
                             
                             <div class="flex gap-2 pt-4 border-t border-gray-50 mt-2">
@@ -4200,12 +4296,12 @@
         </div><i class="fas fa-chevron-right text-gray-300 text-sm"></i>
     </div>
     <div @click="navigateThemes('icons')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer">
-        <div class="flex items-center gap-4"><i class="fas fa-shapes text-gray-700 text-[18px] w-6 text-center opacity-80"></i>
+        <div class="flex items-center gap-4"><i class="fas fa-cubes text-gray-700 text-[18px] w-6 text-center opacity-80"></i>
             <div><div class="font-medium text-[15px] text-gray-900 tracking-wide">图标设置</div><div class="text-[11px] text-gray-400 mt-0.5">自定义桌面App名称和图标</div></div>
         </div><i class="fas fa-chevron-right text-gray-300 text-sm"></i>
     </div>
     <div @click="navigateThemes('home_preset')" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer">
-        <div class="flex items-center gap-4"><i class="fas fa-box-archive text-gray-700 text-[18px] w-6 text-center opacity-80"></i>
+        <div class="flex items-center gap-4"><i class="fas fa-mobile-screen text-gray-700 text-[18px] w-6 text-center opacity-80"></i>
             <div><div class="font-medium text-[15px] text-gray-900 tracking-wide">桌面预设</div><div class="text-[11px] text-gray-400 mt-0.5">保存与导入桌面全套配置</div></div>
         </div><i class="fas fa-chevron-right text-gray-300 text-sm"></i>
     </div>
@@ -4467,6 +4563,11 @@ createApp({
             pushConfig: { enabled: false }, // 新增推送设置
             githubConfig: { token: '', repo: '', filename: 'AoveinOS_Backup.json', autoBackup: false, frequency: 24, lastBackupTime: 0 },
             storageStats: { total: '0 KB', items:[] }, showSettingsDisclaimer: false,
+            
+            // 新增弹窗控制变量
+            githubFreqModal: { show: false },
+            headerLayoutModal: { show: false },
+            editStatusModal: { show: false, color: 'online', text: '' },
             
             themeConfig: { wallpaper: '', fontFamily: '', fontUrl: '', fontSize: 1.0, fontColor: '#000000', isDarkMode: false }, fontPresets:[], fontInputUrl: '',
             
@@ -6360,19 +6461,134 @@ createApp({
             if(!this.inputMsg.trim()) return;
             const msg = { content: this.inputMsg, isSelf: true, time: Date.now(), avatar: this.getMaskById(this.wechatState.activeSession.maskId).avatar };
             if(this.replyingTo) { 
-                // 修复：如果是群聊，引用显示对应角色的名字；否则显示当前聊天对象的名字
                 let quoteName = this.replyingTo.isSelf ? '我' : (this.wechatState.activeSession.isGroup ? (this.replyingTo.name || '群成员') : this.wechatState.activeSession.name);
                 msg.quote = { name: quoteName, content: this.replyingTo.content }; 
                 this.replyingTo = null; 
             }
-            this.wechatState.activeSession.messages.push(msg);
-            this.wechatState.activeSession.lastMessage = this.inputMsg;
+            const currentSession = this.wechatState.activeSession;
+            currentSession.messages.push(msg);
+            currentSession.lastMessage = this.inputMsg;
             this.inputMsg = ''; this.scrollToBottom(); this.saveData();
             this.$nextTick(() => {
                 if (this.$refs.chatInputArea) {
                     this.$refs.chatInputArea.style.height = 'auto';
                 }
             });
+
+            // 【新增】判断是否离线/忙碌，并触发自动回复
+            if (!currentSession.isGroup) {
+                const status = currentSession.onlineStatus || 'online';
+                if (status === 'offline' || status === 'busy') {
+                    this.triggerAutoReply(currentSession);
+                }
+            }
+        },
+        // --- 状态排版与自动回复核心逻辑 ---
+        formatLastBackupTime(ts) {
+            if (!ts) return '从未备份';
+            const d = new Date(ts);
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        },
+        setHeaderLayout(layout) {
+            if (this.wechatState.activeSession) {
+                this.wechatState.activeSession.headerLayout = layout;
+                this.saveData();
+            }
+            this.headerLayoutModal.show = false;
+        },
+        getStatusColorClass(status) {
+            if (status === 'offline') return 'bg-gray-400';
+            if (status === 'busy') return 'bg-orange-500';
+            return 'bg-green-500'; // 默认 online
+        },
+        openEditStatusModal() {
+            const session = this.wechatState.activeSession;
+            if(!session) return;
+            this.editStatusModal = {
+                show: true,
+                color: session.onlineStatus || 'online',
+                text: session.statusText || '手机在线'
+            };
+        },
+        saveEditStatus() {
+            const session = this.wechatState.activeSession;
+            session.onlineStatus = this.editStatusModal.color;
+            session.statusText = this.editStatusModal.text;
+            session.autoReplyCache = ''; // 状态改变，清空自动回复缓存
+            this.saveData();
+            this.editStatusModal.show = false;
+            
+            // 产生一条系统旁白
+            session.messages.push({
+                type: 'system',
+                content: `[系统提示] 角色状态已手动更改为: ${session.statusText}`,
+                time: Date.now()
+            });
+            this.scrollToBottom();
+        },
+        async triggerAutoReply(session) {
+            // 如果缓存里有，直接抛出
+            if (session.autoReplyCache) {
+                setTimeout(() => {
+                    session.messages.push({
+                        content: `[自动回复] ${session.autoReplyCache}`,
+                        isSelf: false,
+                        time: Date.now(),
+                        avatar: this.getCurrentSessionAvatar(),
+                        name: session.name,
+                        type: 'text'
+                    });
+                    this.scrollToBottom();
+                    this.saveData();
+                }, 1000);
+                return;
+            }
+            
+            // 如果缓存为空，调用大模型生成一次自动回复
+            if (!this.apiConfig.apiKey) return;
+            const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
+            if (!friend) return;
+            
+            // 拿一点最近聊天记录，让回复更有针对性
+            const recentMsgs = session.messages.slice(-4).map(m => `[${m.isSelf ? '我' : friend.name}]: ${m.content}`).join('\n');
+            
+            try {
+                let url = this.apiConfig.baseUrl.trim().replace(/\/+$/, '');
+                if (!url.endsWith('/v1')) url += '/v1';
+                
+                const prompt = `你是${friend.name}。人设:${friend.bio}。你当前的状态是【${session.onlineStatus === 'offline' ? '离线' : '忙碌中'}】，状态文字是【${session.statusText}】。用户刚刚给你发了消息，但你由于状态原因无法立刻看到手机。请根据你的人设和当前状态文字，写一句简短的微信自动回复（20字以内）。
+要求：直接输出自动回复内容，绝对不要加引号，不要加[自动回复]前缀！
+最近聊天记录参考:\n${recentMsgs}`;
+                
+                const res = await fetch(`${url}/chat/completions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiConfig.apiKey.trim()}` },
+                    body: JSON.stringify({ 
+                        model: this.apiConfig.selectedModel, 
+                        messages: [{ role: 'user', content: prompt }],
+                        temperature: 0.8
+                    })
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    session.autoReplyCache = data.choices[0].message.content.trim();
+                    this.saveData();
+                    
+                    session.messages.push({
+                        content: `[自动回复] ${session.autoReplyCache}`,
+                        isSelf: false,
+                        time: Date.now(),
+                        avatar: this.getCurrentSessionAvatar(),
+                        name: session.name,
+                        type: 'text'
+                    });
+                    this.scrollToBottom();
+                    this.saveData();
+                }
+            } catch (e) {
+                console.error("生成自动回复失败", e);
+            }
         },
         triggerReceive() {
             if (!this.apiConfig.apiKey) { this.showToast('请先配置 API Key'); return; }
@@ -6736,6 +6952,7 @@ Structure:
   "thought": "当前心声(第一人称思考，每轮必须更新)",
   "outfit": "当前穿着(必须更新，贴合此时此地的场景)",
   "note": "随笔日记(OPTIONAL: 看你当前心情决定是否提笔)",
+  "change_online_status": {"color": "online" | "offline" | "busy", "text": "OPTIONAL: 你在干嘛(如: 睡觉了, 吃饭中, 勿扰...)"}, // OPTIONAL: 主动修改你的在线状态与文字
   "change_remark": "OPTIONAL: 强行修改玩家手机里【对你(AI自身)的备注名】（即玩家的微信里怎么称呼你）。例如你如果是男主，可以把自己在玩家手机里的备注改成'老公'、'哥哥'等。绝对不能改成你对玩家的称呼（如改成'老婆'、'妹妹'等是严重错误）！",
   "call_user": true OR false, // OPTIONAL: 如果你想主动打【语音电话】，请设为 true！
   "call_video_user": true OR false, // OPTIONAL: 如果你想主动打【视频通话】，请设为 true！
@@ -6962,6 +7179,21 @@ Structure:
                             content: `[系统提示] ${oldName} 夺取了你的手机控制权，并将你对Ta的备注强行修改为了 "${block.change_remark}"`,
                             time: Date.now()
                         });
+                    }
+                    // === 处理单聊 AI 自主修改在线状态 ===
+                    if (!session.isGroup && block.change_online_status && friend) {
+                        const newColor = block.change_online_status.color;
+                        const newText = block.change_online_status.text;
+                        if (newColor && newText && (session.onlineStatus !== newColor || session.statusText !== newText)) {
+                            session.onlineStatus = newColor;
+                            session.statusText = newText;
+                            session.autoReplyCache = ''; // 状态发生改变，清空旧的自动回复！
+                            session.messages.push({
+                                type: 'system',
+                                content: `[系统提示] 角色将状态更改为了: ${newText}`,
+                                time: Date.now()
+                            });
+                        }
                     }
 
                     // === 处理群聊 AI 作为管理员踢人/禁言 ===
