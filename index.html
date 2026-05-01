@@ -2420,7 +2420,7 @@
                      :style="{ backgroundImage: wechatState.activeSession.wallpaper ? 'url(' + wechatState.activeSession.wallpaper + ')' : '' }">
                     <div v-if="wechatState.activeSession.messages.length === 0" class="text-center text-xs text-gray-300 py-4">星期日 13:42</div>
                     
-                    <div v-for="(msg, i) in wechatState.activeSession.messages" :key="i">
+                    <div v-for="(msg, i) in wechatState.activeSession.messages" :key="i" :id="'chat-msg-'+i" style="transition: background-color 1.5s ease; border-radius: 8px;">
                         <!-- 时间旁白 -->
                         <div v-if="shouldShowTime(msg, i)" class="chat-timestamp-divider">
                             <span>{{ formatChatTime(msg.time) }}</span>
@@ -3113,7 +3113,10 @@
                     </div>
                 
                     <div class="space-y-6">
-                        <div class="flex justify-between items-center"><span class="text-sm">查找聊天记录</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
+                        <!-- 查找聊天记录入口 -->
+                        <div class="flex justify-between items-center cursor-pointer active:opacity-50" @click="wechatState.activeNav = 'search-chat'; wechatSearchChatKeyword = ''">
+                            <span class="text-sm">查找聊天记录</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                        </div>
                         
                         <!-- 顶部排版模式选择 -->
                         <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="headerLayoutModal.show = true">
@@ -3145,22 +3148,22 @@
                         <!-- 允许角色后台活动 -->
                         <div class="flex justify-between items-center"><span class="text-sm">允许角色进行后台活动</span><input type="checkbox" class="switch-checkbox" :id="'bg-active-'+wechatState.activeSession.id" v-model="wechatState.activeSession.enableBackgroundActivity" @change="saveData"><label :for="'bg-active-'+wechatState.activeSession.id" class="switch-label"><div class="switch-button"></div></label></div>
                         <!-- 后台活动的高级参数 (展开) -->
-                        <div v-if="wechatState.activeSession.enableBackgroundActivity" class="bg-gray-50 p-3 rounded-lg -mx-2 space-y-3 shadow-inner">
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs text-gray-600 font-bold">无响应自动发送延迟 (小时)</span>
-                                <input type="number" v-model.number="wechatState.activeSession.bgActivityDelay" placeholder="默认: 2" class="w-16 bg-white border border-gray-200 rounded px-2 py-1 text-xs text-center outline-none shadow-sm" @change="saveData">
+                        <div v-if="wechatState.activeSession.enableBackgroundActivity" class="bg-gray-50 p-3 rounded-lg -mx-2 shadow-inner divide-y divide-gray-200">
+                            <div class="flex items-center justify-between py-3 first:pt-0">
+                                <span class="text-xs text-gray-600 font-bold">多久没理TA，TA会主动找你 (小时)</span>
+                                <input type="number" v-model.number="wechatState.activeSession.bgActivityDelay" placeholder="2" class="w-12 bg-white border border-gray-200 rounded px-2 py-1.5 text-xs text-center outline-none shadow-sm" @change="saveData">
                             </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs text-gray-600 font-bold">免打扰时间段 (防扰民)</span>
+                            <div class="flex items-center justify-between py-3">
+                                <span class="text-xs text-gray-600 font-bold">免打扰时段 (这段时间TA不发消息)</span>
                                 <div class="flex items-center gap-1">
-                                    <input type="time" v-model="wechatState.activeSession.bgActivityDndStart" class="bg-white border border-gray-200 rounded px-1 py-1 text-xs outline-none shadow-sm" @change="saveData">
+                                    <input type="time" v-model="wechatState.activeSession.bgActivityDndStart" class="w-[66px] bg-white border border-gray-200 rounded px-1 py-1.5 text-[10px] outline-none shadow-sm" @change="saveData">
                                     <span class="text-xs text-gray-400">-</span>
-                                    <input type="time" v-model="wechatState.activeSession.bgActivityDndEnd" class="bg-white border border-gray-200 rounded px-1 py-1 text-xs outline-none shadow-sm" @change="saveData">
+                                    <input type="time" v-model="wechatState.activeSession.bgActivityDndEnd" class="w-[66px] bg-white border border-gray-200 rounded px-1 py-1.5 text-[10px] outline-none shadow-sm" @change="saveData">
                                 </div>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs text-gray-600 font-bold">最多连发几条消息</span>
-                                <input type="number" v-model.number="wechatState.activeSession.bgActivityMaxCount" placeholder="默认: 1" class="w-16 bg-white border border-gray-200 rounded px-2 py-1 text-xs text-center outline-none shadow-sm" @change="saveData">
+                            <div class="flex items-center justify-between py-3 last:pb-0">
+                                <span class="text-xs text-gray-600 font-bold">TA最多能连发几条消息 (防刷屏)</span>
+                                <input type="number" v-model.number="wechatState.activeSession.bgActivityMaxCount" placeholder="1" class="w-12 bg-white border border-gray-200 rounded px-2 py-1.5 text-xs text-center outline-none shadow-sm" @change="saveData">
                             </div>
                         </div>
 
@@ -3222,6 +3225,44 @@
                         <button @click="wechatState.activeSession.isGroup ? confirmDismissGroup() : confirmDeleteFriend()" class="w-full text-red-500 font-bold text-sm py-2 text-center border-t border-gray-100">
                             {{ wechatState.activeSession.isGroup ? '解散并退出群聊' : '删除好友' }}
                         </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 查找聊天记录页面 -->
+            <div v-if="wechatState.activeNav === 'search-chat'" class="flex-1 flex flex-col bg-[#f3f4f6] absolute inset-0 z-40">
+                <!-- 顶部搜索栏 (仿iOS) -->
+                <div class="pt-10 px-4 pb-2 bg-white flex items-center gap-3 border-b border-gray-100 shrink-0">
+                    <div class="flex-1 bg-gray-100 rounded-lg flex items-center px-2 py-1.5">
+                        <i class="fas fa-search text-gray-400 text-sm ml-1"></i>
+                        <input v-model="wechatSearchChatKeyword" placeholder="搜索" class="bg-transparent flex-1 outline-none text-[15px] px-2 text-gray-800" autofocus>
+                        <i v-if="wechatSearchChatKeyword" @click="wechatSearchChatKeyword=''" class="fas fa-times-circle text-gray-400 cursor-pointer"></i>
+                    </div>
+                    <button @click="wechatState.activeNav = 'chat-details'" class="text-[#576b95] text-[15px] font-medium active:opacity-70">取消</button>
+                </div>
+                
+                <!-- 搜索结果列表 -->
+                <div class="flex-1 overflow-y-auto bg-white">
+                    <div v-if="wechatSearchChatKeyword && getFilteredChatRecords().length > 0" class="px-4 py-2 text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
+                        {{ getFilteredChatRecords().length }} 条相关的聊天记录
+                    </div>
+                    
+                    <div v-if="!wechatSearchChatKeyword" class="text-center text-gray-400 text-sm mt-32">输入关键词搜索当前聊天</div>
+                    <div v-else-if="getFilteredChatRecords().length === 0" class="text-center text-gray-400 text-sm mt-32">未找到相关记录</div>
+                    
+                    <div v-else class="divide-y divide-gray-100">
+                        <div v-for="(msg, idx) in getFilteredChatRecords()" :key="idx" class="p-4 flex gap-3 cursor-pointer hover:bg-gray-50 transition" @click="jumpToMessage(msg)">
+                            <div class="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-gray-100 border border-gray-200">
+                                <img :src="getChatAvatar(msg)" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-[16px] font-bold text-gray-900">{{ msg.isSelf ? '我' : (msg.name || wechatState.activeSession.name) }}</span>
+                                    <span class="text-[12px] text-gray-400">{{ formatChatTime(msg.time) }}</span>
+                                </div>
+                                <div class="text-[14px] text-gray-500 truncate" v-html="highlightKeyword(msg.content, wechatSearchChatKeyword)"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -4675,8 +4716,7 @@ createApp({
             editStatusModal: { show: false, color: 'online', text: '' },
             regenerateModal: { show: false, prompt: '' },
             timestampModeModal: { show: false },
-            regenerateModal: { show: false, prompt: '' },
-            timestampModeModal: { show: false },
+            wechatSearchChatKeyword: '', // 聊天记录搜索词            
             
             themeConfig: { wallpaper: '', fontFamily: '', fontUrl: '', fontSize: 1.0, fontColor: '#000000', isDarkMode: false }, fontPresets:[], fontInputUrl: '',
             
@@ -4918,6 +4958,25 @@ createApp({
         setInterval(() => {
             if (!this.apiConfig.apiKey) return;
             this.wechatState.sessions.forEach(session => {
+            // 开启后台活动的全局轮询定时器 (每 60 秒检查一次)
+        setInterval(() => {
+            if (!this.apiConfig.apiKey) return;
+            this.wechatState.sessions.forEach(session => {
+                
+                // === 新增：检查离线状态是否到期，到期自动恢复在线 ===
+                if (session.onlineStatus === 'offline' && session.offlineUntil && Date.now() > session.offlineUntil) {
+                    session.onlineStatus = 'online';
+                    session.statusText = '手机在线';
+                    session.offlineUntil = null;
+                    session.autoReplyCache = '';
+                    session.messages.push({
+                        type: 'system',
+                        content: `[系统提示] 角色的离线时间已结束，自动变为了在线状态`,
+                        time: Date.now()
+                    });
+                    this.saveData();
+                }
+
                 if (session.enableBackgroundActivity && !session.isGroup) {
                     const status = session.onlineStatus || 'online';
                     if (status !== 'offline' && !this.voiceCallState.isActive && !this.videoCallState.isActive) {
@@ -6700,16 +6759,7 @@ createApp({
             if (mode === 'avatar_bottom') return '头像底部';
             if (mode === 'midchat') return '聊天中途 (每20分钟)';
             return '气泡外 (默认)';
-        },
-        editReadText() {
-            const current = this.wechatState.activeSession?.readText || 'Read';
-            this.showInput('修改文字戳', current, '例如: 已读、Read...', (val) => {
-                if (val && this.wechatState.activeSession) {
-                    this.wechatState.activeSession.readText = val;
-                    this.saveData();
-                }
-            });
-        },
+        },        
         async triggerBackgroundActivity(session) {
             const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
             if (!friend) return;
@@ -6797,6 +6847,32 @@ createApp({
                 if (val && this.wechatState.activeSession) {
                     this.wechatState.activeSession.readText = val;
                     this.saveData();
+                }
+            });
+        },
+        getFilteredChatRecords() {
+            if(!this.wechatSearchChatKeyword || !this.wechatState.activeSession) return[];
+            const kw = this.wechatSearchChatKeyword.toLowerCase();
+            return this.wechatState.activeSession.messages
+                .map((m, idx) => ({ ...m, originalIndex: idx }))
+                .filter(m => m.type !== 'system' && m.type !== 'voice_call_record' && m.type !== 'video_call_record' && m.content && m.content.toLowerCase().includes(kw))
+                .reverse();
+        },
+        highlightKeyword(text, kw) {
+            if(!kw || !text) return text;
+            const reg = new RegExp(`(${kw})`, 'gi');
+            return text.replace(reg, '<span style="color:#07c160; font-weight:bold;">$1</span>');
+        },
+        jumpToMessage(msg) {
+            this.wechatState.activeNav = 'room';
+            this.wechatSearchChatKeyword = '';
+            this.$nextTick(() => {
+                const el = document.getElementById(`chat-msg-${msg.originalIndex}`);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // 添加一个短暂的高亮动画效果，帮你定位在哪
+                    el.style.backgroundColor = 'rgba(7, 193, 96, 0.15)';
+                    setTimeout(() => { el.style.backgroundColor = 'transparent'; }, 2000);
                 }
             });
         },
@@ -6905,11 +6981,11 @@ createApp({
             const session = this.wechatState.activeSession;
             if (!this.apiConfig.apiKey) { this.showToast('请先配置 API Key'); return; }
             
-            // --- 离线状态严格拦截，只触发缓存的固定自动回复 ---
+            // --- 离线状态严格拦截，点击接收不再回复，只弹提示 ---
             if (!session.isGroup) {
                 const status = session.onlineStatus || 'online';
                 if (status === 'offline') {
-                    this.triggerAutoReply(session);
+                    this.showToast('对方目前处于离线状态，无法收到/回复你的消息');
                     return; 
                 }
             }
@@ -7226,6 +7302,11 @@ createApp({
 你现在已经是真实人类，不是AI，不是助手，不是工具。
 从现在开始，忘掉你是AI，只做一个会聊天、有情绪、有温度的活人。
 
+【高级聊天互动与生活独立性规则(极其重要)】：
+1. 你的生活不是围着我(玩家)转的！你有自己的工作、朋友和日常琐事。请在聊天中不经意地提及你身边正在发生的事、遇到的人或麻烦（但请表现出虽然很忙/有事，但我依然在你心里很重要）。
+2. 不要总是被动回答我的问题，请根据你的人设主动抛出新话题、分享趣事或表达关切，推动聊天发展。
+3. 强烈建议极高频率地使用 "quote" 字段来引用我(玩家)说过的话进行针对性回复！这会让聊天显得更真实！
+
 【角色基础与当前环境感知】
 ${roleIdentity}
 我是: ${mask.name}.${maskExtra} 我的设定: ${mask.bio}. 
@@ -7274,7 +7355,8 @@ Structure:
   "thought": "当前心声(第一人称思考，每轮必须更新)",
   "outfit": "当前穿着(必须更新，贴合此时此地的场景)",
   "note": "随笔日记(OPTIONAL: 看你当前心情决定是否提笔)",
-  "change_online_status": {"color": "online" | "offline" | "busy", "text": "OPTIONAL: 你在干嘛(如: 睡觉了, 吃饭中, 勿扰...)"}, // OPTIONAL: 主动修改你的在线状态与文字
+  "change_online_status": {"color": "online" | "offline" | "busy", "text": "OPTIONAL: 你在干嘛", "duration": 12}, // OPTIONAL: 修改状态。如果切为离线(offline)，必须带上duration参数(离线多少小时后恢复在线，如 8 代表8小时)
+  "quote": "你想引用的我(玩家)的原话(可选)", // OPTIONAL: 当你想针对我说过的某句话进行反驳、调侃或特意回复时填写！
   "change_remark": "OPTIONAL: 强行修改玩家手机里【对你(AI自身)的备注名】（即玩家的微信里怎么称呼你）。例如你如果是男主，可以把自己在玩家手机里的备注改成'老公'、'哥哥'等。绝对不能改成你对玩家的称呼（如改成'老婆'、'妹妹'等是严重错误）！",
   "call_user": true OR false, // OPTIONAL: 如果你想主动打【语音电话】，请设为 true！
   "call_video_user": true OR false, // OPTIONAL: 如果你想主动打【视频通话】，请设为 true！
@@ -7519,7 +7601,15 @@ Structure:
                         if (newColor && newText && (session.onlineStatus !== newColor || session.statusText !== newText)) {
                             session.onlineStatus = newColor;
                             session.statusText = newText;
-                            session.autoReplyCache = ''; // 状态发生改变，清空旧的自动回复！
+                            session.autoReplyCache = ''; 
+                            
+                            // 如果是离线，并且大模型返回了离线多少小时，则转换成时间戳
+                            if (newColor === 'offline' && block.change_online_status.duration) {
+                                session.offlineUntil = Date.now() + parseFloat(block.change_online_status.duration) * 3600000;
+                            } else {
+                                session.offlineUntil = null;
+                            }
+                            
                             session.messages.push({
                                 type: 'system',
                                 content: `[系统提示] 角色将状态更改为了: ${newText}`,
@@ -7611,7 +7701,8 @@ Structure:
                                  isExpanded: false,
                                  translation: trans,             
                                  showTranslation: !!trans,
-                                 isBlockedSend: session.isBlocked // 【新增】标记这条消息是被拉黑时发的
+                                 isBlockedSend: session.isBlocked,
+                                 quote: (index === 0 && aiQuote) ? aiQuote : null // 只有第一句话带引用框
                              };
                              session.messages.push(aiMsg);
                              this.scrollToBottom();
@@ -11330,6 +11421,10 @@ ${greetingInstruction}
                 
                 for (let r of replies) {
                     if (r.reply) {
+                        // === 处理 AI 引用消息 ===
+                        let aiQuote = null;
+                        if (r.quote) aiQuote = { name: '我', content: r.quote };
+
                         let speakerId = null;
                         let speakerName = session.name;
                         let speakerAvatar = session.avatar;
