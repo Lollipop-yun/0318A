@@ -1908,24 +1908,7 @@
             </div>
         </transition>
         <input type="file" ref="groupAvatarInput2" accept="image/*" class="hidden" @change="handleGroupAvatarChange2">
-        
-        <!-- 重回消息风格走向弹窗 -->
-        <transition name="scale">
-            <div v-if="regenerateModal.show" class="fixed inset-0 z-[105000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl p-6 flex flex-col gap-4">
-                    <h3 class="text-lg font-bold text-center mb-2">重回消息风格走向</h3>
-                    <div>
-                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">你想让TA怎样回复？(选填)</label>
-                        <input v-model="regenerateModal.prompt" placeholder="例如: 傲娇一点、吃醋、转移话题..." class="w-full bg-gray-50 p-3.5 rounded-xl text-sm border border-gray-200 outline-none">
-                    </div>
-                    <div class="flex gap-2 mt-2">
-                        <button @click="regenerateModal.show = false" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold text-sm active:scale-95 transition">取消</button>
-                        <button @click="confirmRegenerate" class="flex-1 bg-black text-white py-3 rounded-xl font-bold text-sm active:scale-95 transition">确定重回</button>
-                    </div>
-                </div>
-            </div>
-        </transition>
-
+ 
         <!-- 时间戳显示位置弹窗 -->
         <transition name="app-slide">
             <div v-if="timestampModeModal.show" class="fixed inset-0 z-[105000]">
@@ -1983,7 +1966,7 @@
                             <i v-if="(wechatState.activeSession?.headerLayout || 'center') === 'center'" class="fas fa-check text-blue-500"></i>
                         </div>
                         <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setHeaderLayout('left')">
-                            <div><div class="font-bold text-gray-900">顶部左侧 (带状态)</div><div class="text-xs text-gray-500 mt-1">显示头像与在线/离线/忙碌状态</div></div>
+                            <div><div class="font-bold text-gray-900">顶部左侧</div><div class="text-xs text-gray-500 mt-1">显示头像与在线/离线/忙碌状态</div></div>
                             <i v-if="wechatState.activeSession?.headerLayout === 'left'" class="fas fa-check text-blue-500"></i>
                         </div>
                     </div>
@@ -2028,7 +2011,7 @@
                     <h3 class="text-lg font-bold text-center mb-2">重回消息风格走向</h3>
                     <div>
                         <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">你想让TA怎样回复？(选填)</label>
-                        <input v-model="regenerateModal.prompt" placeholder="例如: 傲娇一点、吃醋、转移话题..." class="w-full bg-gray-50 p-3.5 rounded-xl text-sm border border-gray-200 outline-none">
+                        <textarea v-model="regenerateModal.prompt" placeholder="例如: 傲娇一点、吃醋、转移话题、详细动作描写..." class="w-full h-24 bg-gray-50 p-3.5 rounded-xl text-sm border border-gray-200 outline-none resize-none"></textarea>
                     </div>
                     <div class="flex gap-2 mt-2">
                         <button @click="regenerateModal.show = false" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold text-sm active:scale-95 transition">取消</button>
@@ -2412,13 +2395,17 @@
                         </div>
                     </div>
 
-                    <!-- 中间排版模式 (原版) -->
+                    <!-- 中间排版模式 -->
                     <div v-if="(wechatState.activeSession?.headerLayout || 'center') === 'center'" class="flex flex-col items-center cursor-pointer active:opacity-50 absolute left-1/2 -translate-x-1/2" @click="!wechatState.activeSession.isGroup && openStatusModal()">
                         <h1 class="font-medium text-[16px] text-gray-900 flex items-center gap-1">
                             <span v-if="isTyping">对方正在输入中<span class="typing-dot">.</span><span class="typing-dot">.</span><span class="typing-dot">.</span></span>
                             <span v-else>{{ getCurrentChatTitle() }}</span>
                         </h1>
-                        <span class="text-[10px] text-gray-300 tracking-wider">Only You.</span>
+                        <!-- 状态显示替代了原本的 Only You -->
+                        <div class="flex items-center gap-1.5 mt-[2px]" @dblclick.stop="openEditStatusModal()">
+                            <div class="w-1.5 h-1.5 rounded-full shadow-sm" :class="getStatusColorClass(wechatState.activeSession?.onlineStatus)"></div>
+                            <span class="text-[10px] text-gray-400 font-medium tracking-wider">{{ wechatState.activeSession?.statusText || '手机在线' }}</span>
+                        </div>
                     </div>
 
                     <div class="flex items-center gap-1 shrink-0">
@@ -2634,10 +2621,10 @@
                                 <div v-if="msg.type === 'voice' && msg.isExpanded" class="voice-transcription">{{ msg.content }}</div>
                                 
                                 <!-- 气泡外部底部显示 -->
-                                <span class="chat-timestamp-small" :class="wechatState.activeSession.wallpaper ? 'text-white/60 drop-shadow-sm' : 'text-gray-300'">
-                                    <!-- 只有 outside 模式下，才在外部显示时间 -->
-                                    <span v-if="(wechatState.activeSession?.timestampMode || 'outside') === 'outside'">{{ formatChatTime(msg.time) }} </span>
-                                    <!-- Read 文字戳独立于时间，永远在气泡下方显示 -->
+                                <span class="chat-timestamp-small flex items-center" :class="wechatState.activeSession.wallpaper ? 'text-white/60 drop-shadow-sm' : 'text-gray-300'">
+                                    <!-- 只有 outside 模式下，才在外部显示时间，加入 mr-1.5 控制间距 -->
+                                    <span v-if="(wechatState.activeSession?.timestampMode || 'outside') === 'outside'" class="mr-1.5">{{ formatChatTime(msg.time) }}</span>
+                                    <!-- Read 文字戳 -->
                                     <span>{{ wechatState.activeSession?.readText || 'Read' }}</span>
                                 </span>
                             </div>
@@ -3132,7 +3119,7 @@
                         <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="headerLayoutModal.show = true">
                             <span class="text-sm">顶部备注显示位置</span>
                             <div class="flex items-center gap-2">
-                                <span class="text-xs text-gray-400">{{ (wechatState.activeSession?.headerLayout || 'center') === 'center' ? '顶部中间' : '顶部左侧 (带状态)' }}</span>
+                                <span class="text-xs text-gray-400">{{ (wechatState.activeSession?.headerLayout || 'center') === 'center' ? '顶部中间' : '顶部左侧' }}</span>
                                 <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
                             </div>
                         </div>
@@ -3157,6 +3144,25 @@
 
                         <!-- 允许角色后台活动 -->
                         <div class="flex justify-between items-center"><span class="text-sm">允许角色进行后台活动</span><input type="checkbox" class="switch-checkbox" :id="'bg-active-'+wechatState.activeSession.id" v-model="wechatState.activeSession.enableBackgroundActivity" @change="saveData"><label :for="'bg-active-'+wechatState.activeSession.id" class="switch-label"><div class="switch-button"></div></label></div>
+                        <!-- 后台活动的高级参数 (展开) -->
+                        <div v-if="wechatState.activeSession.enableBackgroundActivity" class="bg-gray-50 p-3 rounded-lg -mx-2 space-y-3 shadow-inner">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-gray-600 font-bold">无响应自动发送延迟 (小时)</span>
+                                <input type="number" v-model.number="wechatState.activeSession.bgActivityDelay" placeholder="默认: 2" class="w-16 bg-white border border-gray-200 rounded px-2 py-1 text-xs text-center outline-none shadow-sm" @change="saveData">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-gray-600 font-bold">免打扰时间段 (防扰民)</span>
+                                <div class="flex items-center gap-1">
+                                    <input type="time" v-model="wechatState.activeSession.bgActivityDndStart" class="bg-white border border-gray-200 rounded px-1 py-1 text-xs outline-none shadow-sm" @change="saveData">
+                                    <span class="text-xs text-gray-400">-</span>
+                                    <input type="time" v-model="wechatState.activeSession.bgActivityDndEnd" class="bg-white border border-gray-200 rounded px-1 py-1 text-xs outline-none shadow-sm" @change="saveData">
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-gray-600 font-bold">最多连发几条消息</span>
+                                <input type="number" v-model.number="wechatState.activeSession.bgActivityMaxCount" placeholder="默认: 1" class="w-16 bg-white border border-gray-200 rounded px-2 py-1 text-xs text-center outline-none shadow-sm" @change="saveData">
+                            </div>
+                        </div>
 
                         <!-- 本聊专属面具绑定入口 -->
                         <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="openSessionMaskModal">
@@ -4914,17 +4920,55 @@ createApp({
             this.wechatState.sessions.forEach(session => {
                 if (session.enableBackgroundActivity && !session.isGroup) {
                     const status = session.onlineStatus || 'online';
-                    // 只有角色在线或忙碌，且不是正在视频/语音中，且过去3分钟没动静，才有几率活动
                     if (status !== 'offline' && !this.voiceCallState.isActive && !this.videoCallState.isActive) {
+                        
+                        // 1. 独立的状态改变几率（依然保留，丰富后台生命力）
+                        if (Math.random() < 0.03) {
+                            this.randomChangeStatus(session);
+                        }
+
+                        // 2. 检查发消息触发条件
+                        if (!session.messages || session.messages.length === 0) return;
+                        
+                        // 计算连发次数 (从最后一条往前数，连续多少条是AI发的)
+                        let aiConsecutiveCount = 0;
+                        for (let i = session.messages.length - 1; i >= 0; i--) {
+                            if (session.messages[i].isSelf) break;
+                            aiConsecutiveCount++;
+                        }
+
+                        // 读取用户的自定义配置，如果没有设置就使用默认值
+                        const maxCount = parseInt(session.bgActivityMaxCount) || 1;
+                        if (aiConsecutiveCount >= maxCount) return; // 已经发够次数了，停止触发
+
+                        const delayHours = parseFloat(session.bgActivityDelay) || 2; // 默认 2 小时
+                        const delayMs = delayHours * 60 * 60 * 1000;
+                        
                         const lastMsg = session.messages[session.messages.length - 1];
-                        if (lastMsg && (Date.now() - lastMsg.time > 180000)) {
-                            // 5%的概率主动发消息
-                            if (Math.random() < 0.05) {
-                                this.triggerBackgroundActivity(session);
+                        if (Date.now() - lastMsg.time >= delayMs) {
+                            
+                            // 检查免打扰时间段
+                            let dndStart = session.bgActivityDndStart || "23:00";
+                            let dndEnd = session.bgActivityDndEnd || "08:00";
+                            const now = new Date();
+                            const currentMins = now.getHours() * 60 + now.getMinutes();
+                            
+                            const parseTime = (tStr) => { const parts = tStr.split(':'); return parseInt(parts[0])*60 + parseInt(parts[1]); };
+                            const sMins = parseTime(dndStart);
+                            const eMins = parseTime(dndEnd);
+
+                            let isDnd = false;
+                            if (sMins < eMins) {
+                                isDnd = (currentMins >= sMins && currentMins <= eMins);
+                            } else {
+                                // 跨天，例如 23:00 到 08:00
+                                isDnd = (currentMins >= sMins || currentMins <= eMins);
                             }
-                            // 10%的概率自己改变状态（如下线或变忙碌）
-                            else if (Math.random() < 0.10) {
-                                this.randomChangeStatus(session);
+
+                            if (!isDnd) {
+                                // 触发发送消息后，给这最后一条消息打个假的时间戳标记防止60秒后重复触发
+                                lastMsg.time = Date.now(); 
+                                this.triggerBackgroundActivity(session);
                             }
                         }
                     }
