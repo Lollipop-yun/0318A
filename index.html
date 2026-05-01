@@ -1436,9 +1436,40 @@
     </div>
 </div></div></div></div></transition>
 
-    <!-- 世界书添加/编辑文件 Modal -->
-    <transition name="scale"><div v-if="worldModal.show" class="fixed inset-0 z-[55000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl p-6 space-y-4"><h3 class="text-lg font-bold text-center text-gray-900">{{ worldModal.id ? '编辑文件' : (worldModal.type === 'folder' ? '新建文件夹' : '新建文件') }}</h3><input v-model="worldModal.name" placeholder="请输入名称" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none"><div v-if="worldModal.type === 'file'" class="space-y-4"><div class="space-y-1"><label class="text-xs text-gray-500 ml-1">归类文件夹</label><div @click="folderSelectModal.show = true" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 flex justify-between items-center cursor-pointer text-gray-700"><span :class="worldModal.parentId ? 'text-black' : 'text-gray-400'">{{ getFolderName(worldModal.parentId) }}</span><i class="fas fa-chevron-right text-xs text-gray-300"></i></div></div><textarea v-model="worldModal.content" placeholder="输入文件内容..." class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none h-32 resize-none"></textarea></div><div class="flex gap-3 pt-2"><button @click="worldModal.show = false" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold text-sm">取消</button><button @click="saveWorldItem" class="flex-1 bg-black text-white py-3 rounded-xl font-bold text-sm">保存</button></div></div></div></transition>
-    <transition name="scale"><div v-if="addContactModal.show" class="fixed inset-0 z-[55000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[90%] max-h-[85vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col animate-scale-in"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10"><button @click="addContactModal.show = false" class="text-gray-500 font-medium text-sm">取消</button><h3 class="font-bold text-lg text-gray-900">{{ newContact.id ? '编辑朋友' : '添加朋友' }}</h3><button @click="saveNewContact" class="text-black font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg">完成</button></div><div class="flex-1 overflow-y-auto p-6 space-y-5"><div class="flex flex-col items-center gap-2"><div class="w-24 h-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative cursor-pointer active:opacity-70 transition" @click="triggerAddContactAvatar"><img v-if="newContact.avatar" :src="newContact.avatar" class="w-full h-full object-cover"><div v-else class="flex flex-col items-center text-gray-400"><i class="fas fa-camera text-2xl mb-1"></i><span class="text-[10px]">上传头像</span></div></div></div><div class="space-y-4"><div><label class="text-xs text-gray-500 ml-1 mb-1 block">姓名</label><input v-model="newContact.name" placeholder="输入姓名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">备注</label><input v-model="newContact.remark" placeholder="输入备注名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><div class="flex justify-between items-center ml-1 mb-1"><label class="text-xs text-gray-500 block">网名 (ID)</label><button @click="autoFillProfile('username')" class="text-[10px] text-purple-500 font-bold active:scale-95"><i class="fas fa-magic"></i> AI填充</button></div><input v-model="newContact.username" placeholder="输入网名/微信号" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">性别</label><div class="flex gap-3"><div @click="newContact.gender = '男'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="newContact.gender==='男'?'bg-blue-50 border-blue-200 text-blue-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-mars"></i> 男</div><div @click="newContact.gender = '女'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="newContact.gender==='女'?'bg-pink-50 border-pink-200 text-pink-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-venus"></i> 女</div></div></div><div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">身高(cm)</label><input v-model="newContact.height" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">体重(kg)</label><input v-model="newContact.weight" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div>
+    <!-- 世界书全屏条目添加/编辑 -->
+        <transition name="app-slide">
+            <div v-if="worldModal.show" class="fixed inset-0 z-[105000] bg-[#f7f7f7] flex flex-col font-sans text-gray-900">
+                <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-100 shrink-0 sticky top-0 z-10">
+                    <button @click="worldModal.show = false" class="text-gray-500 font-medium text-sm">取消</button>
+                    <h1 class="font-bold text-[17px] tracking-wide">{{ worldModal.id ? '编辑条目' : '新建设定条目' }}</h1>
+                    <button @click="saveWorldItem" class="text-blue-500 font-bold text-sm">保存</button>
+                </header>
+                <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div class="bg-white rounded-[16px] shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100 overflow-hidden divide-y divide-gray-50">
+                        <div class="p-3.5 flex items-center">
+                            <label class="w-20 text-[14px] font-bold text-gray-700">条目名称</label>
+                            <input v-model="worldModal.name" placeholder="设定名称 (如: 魔法设定)" class="flex-1 bg-transparent text-[14px] outline-none">
+                        </div>
+                        <div class="p-3.5 flex items-center">
+                            <label class="w-20 text-[14px] font-bold text-gray-700">归类文件夹</label>
+                            <input v-model="worldModal.folderName" placeholder="选填 (输入相同名称自动归类)" class="flex-1 bg-transparent text-[14px] outline-none">
+                        </div>
+                        <div class="p-3.5 flex items-center justify-between">
+                            <span class="text-[14px] font-bold text-gray-700">全局生效绑定</span>
+                            <input type="checkbox" id="wb-global-toggle" class="switch-checkbox" v-model="worldModal.isGlobal">
+                            <label for="wb-global-toggle" class="switch-label"><div class="switch-button"></div></label>
+                        </div>
+                    </div>
+                    <div class="text-[11px] text-gray-400 px-2 mt-[-8px]">开启全局后，所有角色聊天时将自动挂载此设定，无需手动绑定。</div>
+                    
+                    <div class="bg-white rounded-[16px] shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100 p-3 h-72 flex flex-col mt-4">
+                        <label class="text-[14px] font-bold text-gray-700 mb-2 block">设定内容</label>
+                        <textarea v-model="worldModal.content" placeholder="输入详细的背景、规则或人设..." class="flex-1 bg-transparent text-[14px] leading-relaxed outline-none resize-none"></textarea>
+                    </div>
+                </div>
+            </div>
+        </transition>
+      <transition name="scale"><div v-if="addContactModal.show" class="fixed inset-0 z-[55000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[90%] max-h-[85vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col animate-scale-in"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10"><button @click="addContactModal.show = false" class="text-gray-500 font-medium text-sm">取消</button><h3 class="font-bold text-lg text-gray-900">{{ newContact.id ? '编辑朋友' : '添加朋友' }}</h3><button @click="saveNewContact" class="text-black font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg">完成</button></div><div class="flex-1 overflow-y-auto p-6 space-y-5"><div class="flex flex-col items-center gap-2"><div class="w-24 h-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative cursor-pointer active:opacity-70 transition" @click="triggerAddContactAvatar"><img v-if="newContact.avatar" :src="newContact.avatar" class="w-full h-full object-cover"><div v-else class="flex flex-col items-center text-gray-400"><i class="fas fa-camera text-2xl mb-1"></i><span class="text-[10px]">上传头像</span></div></div></div><div class="space-y-4"><div><label class="text-xs text-gray-500 ml-1 mb-1 block">姓名</label><input v-model="newContact.name" placeholder="输入姓名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">备注</label><input v-model="newContact.remark" placeholder="输入备注名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><div class="flex justify-between items-center ml-1 mb-1"><label class="text-xs text-gray-500 block">网名 (ID)</label><button @click="autoFillProfile('username')" class="text-[10px] text-purple-500 font-bold active:scale-95"><i class="fas fa-magic"></i> AI填充</button></div><input v-model="newContact.username" placeholder="输入网名/微信号" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">性别</label><div class="flex gap-3"><div @click="newContact.gender = '男'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="newContact.gender==='男'?'bg-blue-50 border-blue-200 text-blue-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-mars"></i> 男</div><div @click="newContact.gender = '女'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="newContact.gender==='女'?'bg-pink-50 border-pink-200 text-pink-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-venus"></i> 女</div></div></div><div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">身高(cm)</label><input v-model="newContact.height" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">体重(kg)</label><input v-model="newContact.weight" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div>
 <div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">年龄</label><input v-model="newContact.age" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">生日</label><input v-model="newContact.birthday" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">拍一拍</label><input v-model="newContact.nudge" placeholder="拍一拍后缀" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><div class="flex justify-between items-center ml-1 mb-1"><label class="text-xs text-gray-500 block">个性签名</label><button @click="autoFillProfile('signature')" class="text-[10px] text-purple-500 font-bold active:scale-95"><i class="fas fa-magic"></i> AI填充</button></div><input v-model="newContact.signature" placeholder="输入个性签名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">与我的关系</label><input v-model="newContact.relationship" placeholder="例如：情侣、夫妻、青梅竹马..." class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div>
 <div><label class="text-xs text-gray-500 ml-1 mb-1 block">背景资料</label><textarea v-model="newContact.bio" placeholder="输入人设、背景故事..." class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none h-24 resize-none"></textarea></div></div></div><input type="file" ref="addContactAvatarInput" accept="image/*" class="hidden" @change="handleAddContactAvatar"></div></div></transition>    
 
@@ -2420,7 +2451,7 @@
                      :style="{ backgroundImage: wechatState.activeSession.wallpaper ? 'url(' + wechatState.activeSession.wallpaper + ')' : '' }">
                     <div v-if="wechatState.activeSession.messages.length === 0" class="text-center text-xs text-gray-300 py-4">星期日 13:42</div>
                     
-                    <div v-for="(msg, i) in wechatState.activeSession.messages" :key="i" :id="'chat-msg-'+i" style="transition: background-color 1.5s ease; border-radius: 8px;">
+                    <div v-for="(msg, i) in wechatState.activeSession.messages" :key="i">
                         <!-- 时间旁白 -->
                         <div v-if="shouldShowTime(msg, i)" class="chat-timestamp-divider">
                             <span>{{ formatChatTime(msg.time) }}</span>
@@ -3104,6 +3135,39 @@
                         <div class="w-16 h-16 rounded-full bg-white overflow-hidden shadow-sm shrink-0">
                             <img :src="wechatState.activeSession.isGroup ? wechatState.activeSession.avatar : getCurrentSessionAvatar()" class="w-full h-full object-cover">
                         </div>
+                        
+                        <!-- 查找聊天记录页面 -->
+            <transition name="page-slide">
+                <div v-if="wechatState.activeNav === 'search-chat'" class="flex-1 flex flex-col bg-[#f7f7f7] absolute inset-0 z-[60]">
+                    <header class="h-[90px] pt-10 px-4 flex items-center bg-white border-b border-gray-100 shrink-0">
+                        <button @click="wechatState.activeNav = 'chat-details'" class="w-8 h-8 flex items-center justify-center text-black shrink-0"><i class="fas fa-chevron-left text-lg"></i></button>
+                        <div class="flex-1 ml-2">
+                            <div class="bg-gray-100 rounded-lg flex items-center px-3 py-1.5 h-[36px]">
+                                <i class="fas fa-search text-gray-400 text-sm"></i>
+                                <input v-model="wechatState.localSearchQuery" placeholder="搜索聊天记录" class="bg-transparent border-none outline-none ml-2 w-full text-sm">
+                                <i v-if="wechatState.localSearchQuery" @click="wechatState.localSearchQuery=''" class="fas fa-times-circle text-gray-400 text-sm cursor-pointer"></i>
+                            </div>
+                        </div>
+                    </header>
+                    <div class="flex-1 overflow-y-auto p-0 bg-white">
+                        <div v-if="localSearchResults.length === 0" class="p-10 text-center text-gray-400 text-sm">
+                            <i class="fas fa-search text-3xl mb-3 opacity-20 block"></i> 暂无搜索结果
+                        </div>
+                        <div v-else class="divide-y divide-gray-50">
+                            <div v-for="res in localSearchResults" :key="res.time" class="p-4 flex gap-3 active:bg-gray-50 transition cursor-pointer" @click="showToast('搜索定位功能完善中')">
+                                <img :src="res.avatar" class="w-10 h-10 rounded-lg object-cover shrink-0">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-[15px] font-bold text-gray-900">{{ res.name }}</span>
+                                        <span class="text-[11px] text-gray-400">{{ formatChatTime(res.time) }}</span>
+                                    </div>
+                                    <div class="text-[14px] text-gray-600 truncate">{{ res.content }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </transition>
                         <div class="flex-1 min-w-0">
                             <h3 class="font-bold text-lg text-gray-900 truncate">{{ wechatState.activeSession.isGroup ? (wechatState.activeSession.remark || wechatState.activeSession.name) : wechatState.activeSession.name }}</h3>
                             <p class="text-xs text-gray-500 mt-1 truncate">{{ wechatState.activeSession.isGroup ? '群号: ' + wechatState.activeSession.groupIdNum : 'ID: ' + getCurrentSessionId() }}</p>
@@ -3113,10 +3177,7 @@
                     </div>
                 
                     <div class="space-y-6">
-                        <!-- 查找聊天记录入口 -->
-                        <div class="flex justify-between items-center cursor-pointer active:opacity-50" @click="wechatState.activeNav = 'search-chat'; wechatSearchChatKeyword = ''">
-                            <span class="text-sm">查找聊天记录</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i>
-                        </div>
+                        <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="wechatState.activeNav = 'search-chat'"><span class="text-sm">查找聊天记录</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
                         
                         <!-- 顶部排版模式选择 -->
                         <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="headerLayoutModal.show = true">
@@ -3148,22 +3209,22 @@
                         <!-- 允许角色后台活动 -->
                         <div class="flex justify-between items-center"><span class="text-sm">允许角色进行后台活动</span><input type="checkbox" class="switch-checkbox" :id="'bg-active-'+wechatState.activeSession.id" v-model="wechatState.activeSession.enableBackgroundActivity" @change="saveData"><label :for="'bg-active-'+wechatState.activeSession.id" class="switch-label"><div class="switch-button"></div></label></div>
                         <!-- 后台活动的高级参数 (展开) -->
-                        <div v-if="wechatState.activeSession.enableBackgroundActivity" class="bg-gray-50 p-3 rounded-lg -mx-2 shadow-inner divide-y divide-gray-200">
-                            <div class="flex items-center justify-between py-3 first:pt-0">
-                                <span class="text-xs text-gray-600 font-bold">多久没理TA，TA会主动找你 (小时)</span>
-                                <input type="number" v-model.number="wechatState.activeSession.bgActivityDelay" placeholder="2" class="w-12 bg-white border border-gray-200 rounded px-2 py-1.5 text-xs text-center outline-none shadow-sm" @change="saveData">
+                        <div v-if="wechatState.activeSession.enableBackgroundActivity" class="bg-white rounded-xl mt-2 mb-4 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] divide-y divide-gray-50 -mx-2">
+                            <div class="p-3 flex items-center justify-between">
+                                <div class="flex flex-col"><span class="text-[13px] text-gray-800 font-medium">多久没回消息自动发</span><span class="text-[10px] text-gray-400 mt-0.5">你超过此时间未回，TA会主动找你</span></div>
+                                <div class="flex items-center gap-1"><input type="number" v-model.number="wechatState.activeSession.bgActivityDelay" placeholder="2" class="w-12 bg-gray-50 border border-gray-200 rounded px-1 py-1 text-xs text-center outline-none"><span class="text-xs text-gray-500">小时</span></div>
                             </div>
-                            <div class="flex items-center justify-between py-3">
-                                <span class="text-xs text-gray-600 font-bold">免打扰时段 (这段时间TA不发消息)</span>
+                            <div class="p-3 flex items-center justify-between">
+                                <div class="flex flex-col"><span class="text-[13px] text-gray-800 font-medium">每天的免打扰时段</span><span class="text-[10px] text-gray-400 mt-0.5">这段时间内TA绝对不会主动发消息</span></div>
                                 <div class="flex items-center gap-1">
-                                    <input type="time" v-model="wechatState.activeSession.bgActivityDndStart" class="w-[66px] bg-white border border-gray-200 rounded px-1 py-1.5 text-[10px] outline-none shadow-sm" @change="saveData">
+                                    <input type="time" v-model="wechatState.activeSession.bgActivityDndStart" class="w-16 bg-gray-50 border border-gray-200 rounded px-1 py-1 text-xs text-center outline-none">
                                     <span class="text-xs text-gray-400">-</span>
-                                    <input type="time" v-model="wechatState.activeSession.bgActivityDndEnd" class="w-[66px] bg-white border border-gray-200 rounded px-1 py-1.5 text-[10px] outline-none shadow-sm" @change="saveData">
+                                    <input type="time" v-model="wechatState.activeSession.bgActivityDndEnd" class="w-16 bg-gray-50 border border-gray-200 rounded px-1 py-1 text-xs text-center outline-none">
                                 </div>
                             </div>
-                            <div class="flex items-center justify-between py-3 last:pb-0">
-                                <span class="text-xs text-gray-600 font-bold">TA最多能连发几条消息 (防刷屏)</span>
-                                <input type="number" v-model.number="wechatState.activeSession.bgActivityMaxCount" placeholder="1" class="w-12 bg-white border border-gray-200 rounded px-2 py-1.5 text-xs text-center outline-none shadow-sm" @change="saveData">
+                            <div class="p-3 flex items-center justify-between">
+                                <div class="flex flex-col"><span class="text-[13px] text-gray-800 font-medium">最多连发次数</span><span class="text-[10px] text-gray-400 mt-0.5">限制TA连发消息的条数（默认发1次）</span></div>
+                                <div class="flex items-center gap-1"><input type="number" v-model.number="wechatState.activeSession.bgActivityMaxCount" placeholder="1" class="w-12 bg-gray-50 border border-gray-200 rounded px-1 py-1 text-xs text-center outline-none"><span class="text-xs text-gray-500">次</span></div>
                             </div>
                         </div>
 
@@ -3225,44 +3286,6 @@
                         <button @click="wechatState.activeSession.isGroup ? confirmDismissGroup() : confirmDeleteFriend()" class="w-full text-red-500 font-bold text-sm py-2 text-center border-t border-gray-100">
                             {{ wechatState.activeSession.isGroup ? '解散并退出群聊' : '删除好友' }}
                         </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 查找聊天记录页面 -->
-            <div v-if="wechatState.activeNav === 'search-chat'" class="flex-1 flex flex-col bg-[#f3f4f6] absolute inset-0 z-40">
-                <!-- 顶部搜索栏 (仿iOS) -->
-                <div class="pt-10 px-4 pb-2 bg-white flex items-center gap-3 border-b border-gray-100 shrink-0">
-                    <div class="flex-1 bg-gray-100 rounded-lg flex items-center px-2 py-1.5">
-                        <i class="fas fa-search text-gray-400 text-sm ml-1"></i>
-                        <input v-model="wechatSearchChatKeyword" placeholder="搜索" class="bg-transparent flex-1 outline-none text-[15px] px-2 text-gray-800" autofocus>
-                        <i v-if="wechatSearchChatKeyword" @click="wechatSearchChatKeyword=''" class="fas fa-times-circle text-gray-400 cursor-pointer"></i>
-                    </div>
-                    <button @click="wechatState.activeNav = 'chat-details'" class="text-[#576b95] text-[15px] font-medium active:opacity-70">取消</button>
-                </div>
-                
-                <!-- 搜索结果列表 -->
-                <div class="flex-1 overflow-y-auto bg-white">
-                    <div v-if="wechatSearchChatKeyword && getFilteredChatRecords().length > 0" class="px-4 py-2 text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
-                        {{ getFilteredChatRecords().length }} 条相关的聊天记录
-                    </div>
-                    
-                    <div v-if="!wechatSearchChatKeyword" class="text-center text-gray-400 text-sm mt-32">输入关键词搜索当前聊天</div>
-                    <div v-else-if="getFilteredChatRecords().length === 0" class="text-center text-gray-400 text-sm mt-32">未找到相关记录</div>
-                    
-                    <div v-else class="divide-y divide-gray-100">
-                        <div v-for="(msg, idx) in getFilteredChatRecords()" :key="idx" class="p-4 flex gap-3 cursor-pointer hover:bg-gray-50 transition" @click="jumpToMessage(msg)">
-                            <div class="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-gray-100 border border-gray-200">
-                                <img :src="getChatAvatar(msg)" class="w-full h-full object-cover">
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-[16px] font-bold text-gray-900">{{ msg.isSelf ? '我' : (msg.name || wechatState.activeSession.name) }}</span>
-                                    <span class="text-[12px] text-gray-400">{{ formatChatTime(msg.time) }}</span>
-                                </div>
-                                <div class="text-[14px] text-gray-500 truncate" v-html="highlightKeyword(msg.content, wechatSearchChatKeyword)"></div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -4612,7 +4635,13 @@
     <transition name="page-slide"><div v-if="themesPage === 'wallpaper'" class="absolute inset-0 p-4 space-y-6"><div class="w-full aspect-[9/16] bg-gray-200 rounded-3xl overflow-hidden shadow-lg relative mx-auto max-w-[240px] border-4 border-white"><img v-if="themeConfig.wallpaper" :src="themeConfig.wallpaper" class="w-full h-full object-cover"><div v-else class="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-100"><i class="fas fa-image text-3xl mb-2"></i><span class="text-xs">默认壁纸</span></div></div><div class="flex flex-col gap-3"><button @click="triggerWallpaperUpload" class="w-full bg-gray-900 text-white py-3.5 rounded-2xl font-bold active:scale-95 transition shadow-lg">从相册选择</button><button @click="resetWallpaper" class="w-full bg-white text-gray-600 py-3.5 rounded-2xl font-bold border border-gray-200 active:bg-gray-50 transition">恢复默认</button></div><input type="file" ref="wallpaperInput" accept="image/*" class="hidden" @change="handleWallpaperUpload"></div></transition><transition name="page-slide"><div v-if="themesPage === 'font'" class="absolute inset-0 p-4 pb-20"><div class="space-y-6"><div class="bg-gray-100 rounded-2xl p-6 text-center border border-gray-200" :style="{fontFamily: previewFontFamily || themeConfig.fontFamily}"><div class="text-2xl font-bold mb-2" :style="{color: themeConfig.fontColor}">12:30</div><div class="text-lg" :style="{color: themeConfig.fontColor}">Hello World</div><div class="text-sm opacity-60" :style="{color: themeConfig.fontColor}">预览字体效果</div></div><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-3"><label class="text-xs font-bold text-gray-500 ml-1">字体 URL</label><div class="flex gap-2"><input v-model="fontInputUrl" placeholder="https://..." class="w-2/3 bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none"><button @click="previewFontFromUrl" :disabled="isLoading" class="flex-1 bg-gray-100 text-gray-600 px-2 rounded-xl font-bold text-xs active:scale-95 transition"><span v-if="!isLoading">预览</span><i v-else class="fas fa-spinner fa-spin"></i></button><button @click="applyFontFromUrl" class="flex-1 bg-black text-white px-2 rounded-xl font-bold text-xs active:scale-95 transition">应用</button></div><button @click="resetFont" class="w-full bg-white text-red-500 py-2 rounded-xl font-bold text-xs border border-gray-100 active:bg-gray-50">恢复默认字体</button></div><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-4"><div><div class="flex justify-between mb-2"><span class="text-xs font-bold text-gray-500">大小</span><span class="text-xs text-gray-400">{{ (themeConfig.fontSize * 100).toFixed(0) }}%</span></div><input type="range" min="0.8" max="1.2" step="0.05" v-model.number="themeConfig.fontSize" @change="saveData" class="w-full h-2 bg-gray-200 rounded-lg cursor-pointer"></div><div><div class="flex justify-between mb-2"><span class="text-xs font-bold text-gray-500">色号</span></div><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full border border-gray-200 shadow-sm shrink-0" :style="{backgroundColor: themeConfig.fontColor}"></div><input type="text" v-model="themeConfig.fontColor" @change="saveData" placeholder="#000000" class="flex-1 bg-gray-50 px-3 py-2 rounded-xl text-sm border border-gray-200 font-mono outline-none uppercase"></div></div></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"><div class="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50"><span class="font-bold text-gray-800 text-sm">预设</span><button @click="saveFontPreset" class="text-blue-600 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg active:bg-blue-100">保存</button></div><div v-if="fontPresets.length === 0" class="p-6 text-center text-gray-400 text-xs">无预设</div><div v-else class="divide-y divide-gray-50"><div v-for="(fp, idx) in fontPresets" :key="idx" class="p-4 flex items-center justify-between"><div class="flex-1 min-w-0 mr-2"><div class="font-bold text-gray-800 text-sm truncate" :style="{fontFamily: fp.fontFamily}">{{ fp.name }}</div></div><div class="flex items-center gap-2"><button @click="applyFontPreset(fp)" class="w-7 h-7 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-check text-[10px]"></i></button><button @click="deleteFontPreset(idx)" class="w-7 h-7 rounded-full bg-red-50 text-red-500 flex items-center justify-center"><i class="fas fa-trash text-[10px]"></i></button></div></div></div></div></div></div></transition><transition name="page-slide"><div v-if="themesPage === 'icons'" class="absolute inset-0 p-4 pb-20"><div class="space-y-4"><div class="flex justify-end"><button @click="resetAllIcons" class="text-xs text-red-500 font-bold px-3 py-1 bg-red-50 rounded-lg active:bg-red-100">重置所有</button></div><div class="space-y-3"><div v-for="appId in appList" :key="appId" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col gap-3"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-xl border border-gray-100 overflow-hidden flex items-center justify-center bg-gray-50 shrink-0 home-icon-custom"><img v-if="hasCustomIcon(appId)" :src="getAppIcon(appId)" class="w-full h-full object-cover"><i v-else :class="getDefaultIconClass(appId) + ' text-gray-400 text-xl'"></i></div><div class="flex-1"><label class="text-[10px] font-bold text-gray-400 mb-1 block">应用名称</label><input :value="getAppName(appId)" @input="(e)=>setAppName(appId, e.target.value)" class="w-full bg-gray-50 px-2 py-1.5 rounded-lg text-sm border border-gray-200 outline-none"></div></div><div class="flex gap-2"><input v-model="tempIconUrls[appId]" placeholder="图标 URL" class="flex-1 bg-gray-50 px-3 py-2 rounded-lg text-xs border border-gray-200 outline-none"><button @click="setAppIcon(appId, tempIconUrls[appId])" class="px-3 bg-black text-white rounded-lg text-xs font-bold">确定</button><button @click="triggerIconUpload(appId)" class="px-3 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold active:bg-gray-200"><i class="fas fa-image"></i></button><button @click="resetApp(appId)" class="px-3 bg-red-50 text-red-500 rounded-lg text-xs active:bg-red-100"><i class="fas fa-undo"></i></button></div></div></div><input type="file" ref="iconUploadInput" accept="image/*" class="hidden" @change="handleIconFile"></div></div></transition></main></div></transition>
     
     <!-- 世界书 App -->
-    <transition name="app-slide"><div v-if="currentApp === 'worldbook'" class="absolute inset-0 z-[1000] bg-gray-50 flex flex-col overflow-hidden"><header class="bg-white/80 backdrop-blur h-[90px] pt-10 flex items-center justify-between px-4 border-b border-gray-200 sticky top-0 z-10"><button @click="closeApp" class="w-8 h-8 flex items-center justify-center text-gray-800 bg-gray-100 rounded-full active:bg-gray-200 transition"><i class="fas fa-times text-sm"></i></button><h1 class="font-bold text-gray-900 text-[17px]">世界书</h1><div class="flex gap-2"><button @click="openWorldModal('folder')" class="w-8 h-8 flex items-center justify-center text-yellow-600 bg-yellow-50 rounded-full"><i class="fas fa-folder-plus text-xs"></i></button><button @click="openWorldModal('file')" class="w-8 h-8 flex items-center justify-center text-blue-600 bg-blue-50 rounded-full"><i class="fas fa-file-circle-plus text-xs"></i></button></div></header><main class="flex-1 overflow-y-auto p-4 space-y-2"><div v-if="folders.length === 0 && rootFiles.length === 0" class="text-center text-gray-400 mt-20 text-xs">暂无内容，请点击右上角添加</div><div v-for="folder in folders" :key="folder.id" class="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm"><div @click="toggleFolder(folder.id)" class="p-4 flex items-center justify-between active:bg-gray-50 transition cursor-pointer"><div class="flex items-center gap-3"><i class="fas fa-folder text-yellow-400 text-lg"></i><span class="font-bold text-gray-800 text-sm">{{ folder.name }}</span></div><div class="flex items-center gap-3"><button @click.stop="deleteWorldItem(folder.id)" class="text-gray-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button><i class="fas fa-chevron-right text-gray-300 text-xs transition-transform duration-200" :class="{'rotate-90': expandedFolders.includes(folder.id)}"></i></div></div><transition name="expand"><div v-if="expandedFolders.includes(folder.id)" class="bg-gray-50 border-t border-gray-100"><div v-if="getFiles(folder.id).length===0" class="p-3 text-center text-xs text-gray-400">空文件夹</div><div v-for="file in getFiles(folder.id)" :key="file.id" @click="viewFile(file)" class="p-3 pl-10 border-b border-gray-100 last:border-0 flex items-center justify-between active:bg-gray-100 cursor-pointer"><div class="flex items-center gap-3"><i class="fas fa-file-alt text-blue-400 text-sm"></i><span class="text-sm text-gray-700">{{ file.name }}</span></div><div class="flex items-center gap-3"><div @click.stop class="flex items-center"><input type="checkbox" class="switch-checkbox-sm" :id="'wf-'+file.id" :checked="file.isActive !== false" @change="toggleFileActive(file)"><label :for="'wf-'+file.id" class="switch-label-sm"><div class="switch-button-sm"></div></label></div><button @click.stop="deleteWorldItem(file.id)" class="text-gray-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button></div></div></div></transition></div><div v-for="file in rootFiles" :key="file.id" @click="viewFile(file)" class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between active:scale-[0.98] transition cursor-pointer"><div class="flex items-center gap-3"><i class="fas fa-file-alt text-gray-400 text-lg"></i><span class="font-bold text-gray-800 text-sm">{{ file.name }}</span></div><div class="flex items-center gap-3"><div @click.stop class="flex items-center"><input type="checkbox" class="switch-checkbox-sm" :id="'wf-'+file.id" :checked="file.isActive !== false" @change="toggleFileActive(file)"><label :for="'wf-'+file.id" class="switch-label-sm"><div class="switch-button-sm"></div></label></div><button @click.stop="deleteWorldItem(file.id)" class="text-gray-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button></div></div></main></div></transition>
+    <transition name="app-slide"><div v-if="currentApp === 'worldbook'" class="absolute inset-0 z-[1000] bg-gray-50 flex flex-col overflow-hidden"><header class="bg-white/80 backdrop-blur h-[90px] pt-10 flex items-center justify-between px-4 border-b border-gray-200 sticky top-0 z-10">
+    <button @click="closeApp" class="w-8 h-8 flex items-center justify-center text-gray-800 bg-gray-100 rounded-full active:bg-gray-200 transition"><i class="fas fa-times text-sm"></i></button>
+    <h1 class="font-bold text-gray-900 text-[17px]">世界书</h1>
+    <div class="flex gap-2">
+        <button @click="openWorldModal('file')" class="w-8 h-8 flex items-center justify-center text-blue-600 bg-blue-50 rounded-full"><i class="fas fa-file-circle-plus text-xs"></i></button>
+    </div>
+</header><main class="flex-1 overflow-y-auto p-4 space-y-2"><div v-if="folders.length === 0 && rootFiles.length === 0" class="text-center text-gray-400 mt-20 text-xs">暂无内容，请点击右上角添加</div><div v-for="folder in folders" :key="folder.id" class="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm"><div @click="toggleFolder(folder.id)" class="p-4 flex items-center justify-between active:bg-gray-50 transition cursor-pointer"><div class="flex items-center gap-3"><i class="fas fa-folder text-yellow-400 text-lg"></i><span class="font-bold text-gray-800 text-sm">{{ folder.name }}</span></div><div class="flex items-center gap-3"><button @click.stop="deleteWorldItem(folder.id)" class="text-gray-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button><i class="fas fa-chevron-right text-gray-300 text-xs transition-transform duration-200" :class="{'rotate-90': expandedFolders.includes(folder.id)}"></i></div></div><transition name="expand"><div v-if="expandedFolders.includes(folder.id)" class="bg-gray-50 border-t border-gray-100"><div v-if="getFiles(folder.id).length===0" class="p-3 text-center text-xs text-gray-400">空文件夹</div><div v-for="file in getFiles(folder.id)" :key="file.id" @click="viewFile(file)" class="p-3 pl-10 border-b border-gray-100 last:border-0 flex items-center justify-between active:bg-gray-100 cursor-pointer"><div class="flex items-center gap-3"><i class="fas fa-file-alt text-blue-400 text-sm"></i><span class="text-sm text-gray-700">{{ file.name }}</span></div><div class="flex items-center gap-3"><div @click.stop class="flex items-center"><input type="checkbox" class="switch-checkbox-sm" :id="'wf-'+file.id" :checked="file.isActive !== false" @change="toggleFileActive(file)"><label :for="'wf-'+file.id" class="switch-label-sm"><div class="switch-button-sm"></div></label></div><button @click.stop="deleteWorldItem(file.id)" class="text-gray-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button></div></div></div></transition></div><div v-for="file in rootFiles" :key="file.id" @click="viewFile(file)" class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between active:scale-[0.98] transition cursor-pointer"><div class="flex items-center gap-3"><i class="fas fa-file-alt text-gray-400 text-lg"></i><span class="font-bold text-gray-800 text-sm">{{ file.name }}</span></div><div class="flex items-center gap-3"><div @click.stop class="flex items-center"><input type="checkbox" class="switch-checkbox-sm" :id="'wf-'+file.id" :checked="file.isActive !== false" @change="toggleFileActive(file)"><label :for="'wf-'+file.id" class="switch-label-sm"><div class="switch-button-sm"></div></label></div><button @click.stop="deleteWorldItem(file.id)" class="text-gray-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button></div></div></main></div></transition>
     <transition name="scale"><div v-if="viewFileModal.show" class="fixed inset-0 z-[9000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] max-h-[70%] rounded-3xl overflow-hidden shadow-2xl flex flex-col"><div class="p-4 border-b border-gray-100 flex justify-between items-center"><h3 class="font-bold text-lg">{{ viewFileModal.data.name }}</h3><button @click="saveFileContent" class="text-blue-600 font-bold text-sm">保存</button></div><textarea v-model="viewFileModal.data.content" class="flex-1 p-4 text-sm leading-relaxed outline-none resize-none"></textarea><button @click="viewFileModal.show=false" class="p-4 bg-gray-50 text-gray-500 font-bold text-sm">关闭</button></div></div></transition>
 
 </div>
@@ -4716,7 +4745,8 @@ createApp({
             editStatusModal: { show: false, color: 'online', text: '' },
             regenerateModal: { show: false, prompt: '' },
             timestampModeModal: { show: false },
-            wechatSearchChatKeyword: '', // 聊天记录搜索词            
+            regenerateModal: { show: false, prompt: '' },
+            timestampModeModal: { show: false },
             
             themeConfig: { wallpaper: '', fontFamily: '', fontUrl: '', fontSize: 1.0, fontColor: '#000000', isDarkMode: false }, fontPresets:[], fontInputUrl: '',
             
@@ -4735,7 +4765,7 @@ createApp({
             previewFontFamily: '', 
             appList: Object.keys(DEFAULT_APPS), appCustomization: {}, tempIconUrls: {}, uploadingAppId: null,
             homeScreenPresets:[],
-            wechatState: { activeFilter: 'Chats', activeNav: 'chat', contacts: [], searchQuery: '', friendList:[], sessions:[], activeSession: null, showPlusMenu: false, showChatFunctions: false, showAttachMenu: false, groups: [], newFriends:[], showGroupMentionPanel: false },
+            wechatState: { activeFilter: 'Chats', activeNav: 'chat', contacts:[], searchQuery: '', localSearchQuery: '', friendList:[], sessions:[], activeSession: null, showPlusMenu: false, showChatFunctions: false, showAttachMenu: false, groups: [], newFriends:[], showGroupMentionPanel: false },
             expandedGroups: ['all'],
             groupSelectModal: { show: false },
             addContactModal: { show: false }, chatWizard: { show: false, step: 1, type: 'single', selectedContacts:[], selectedMask: null, isObserver: false },
@@ -4747,7 +4777,9 @@ createApp({
             memorySyncModal: { show: false, selectedGroupIds:[] },
             isEditingSessionMask: false,
             masks: [], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', bio: '', nudge: '', signature: '', avatar: '' },
-            worldData: [], expandedFolders: [], worldModal: { show: false, type: 'folder', name: '', content: '', parentId: '' }, viewFileModal: { show: false, data: {} },
+            worldData: [], expandedFolders:[], 
+            worldModal: { show: false, type: 'file', id: null, name: '', content: '', folderName: '', isGlobal: false }, 
+            viewFileModal: { show: false, data: {} },
             worldBinderModal: { show: false, expanded:[] },
             modelSelectModal: { show: false }, 
             chatContextMenu: { show: false, x: 0, y: 0, msg: null, index: -1, isSelf: false },
@@ -4906,6 +4938,11 @@ createApp({
     },
     computed: {
         totalUnreadCount() {
+        localSearchResults() {
+            if (!this.wechatState.activeSession || !this.wechatState.localSearchQuery) return[];
+            const query = this.wechatState.localSearchQuery.toLowerCase();
+            return this.wechatState.activeSession.messages.filter(m => m.type === 'text' && m.content.toLowerCase().includes(query)).reverse();
+        },
             return this.wechatState.sessions.reduce((sum, s) => sum + (s.unreadCount || 0), 0);
         },
         settingsTitle() { if (this.settingsPage === 'api-config') return 'API 配置'; if (this.settingsPage === 'data-manage') return '数据管理'; if (this.settingsPage === 'notification') return '消息提示音'; return '系统设置'; },
@@ -4958,25 +4995,21 @@ createApp({
         setInterval(() => {
             if (!this.apiConfig.apiKey) return;
             this.wechatState.sessions.forEach(session => {
-            // 开启后台活动的全局轮询定时器 (每 60 秒检查一次)
-        setInterval(() => {
-            if (!this.apiConfig.apiKey) return;
-            this.wechatState.sessions.forEach(session => {
-                
-                // === 新增：检查离线状态是否到期，到期自动恢复在线 ===
-                if (session.onlineStatus === 'offline' && session.offlineUntil && Date.now() > session.offlineUntil) {
+            // === 检查离线状态自动恢复 ===
+                const nowTime = Date.now();
+                if (session.onlineStatus === 'offline' && session.offlineRecoveryTime && nowTime > session.offlineRecoveryTime) {
                     session.onlineStatus = 'online';
                     session.statusText = '手机在线';
-                    session.offlineUntil = null;
+                    session.offlineRecoveryTime = 0;
                     session.autoReplyCache = '';
                     session.messages.push({
                         type: 'system',
-                        content: `[系统提示] 角色的离线时间已结束，自动变为了在线状态`,
+                        content: `[旁白] ${session.name} 忙完上线了，状态变更为: 手机在线`,
                         time: Date.now()
                     });
                     this.saveData();
                 }
-
+                // ==============================
                 if (session.enableBackgroundActivity && !session.isGroup) {
                     const status = session.onlineStatus || 'online';
                     if (status !== 'offline' && !this.voiceCallState.isActive && !this.videoCallState.isActive) {
@@ -6759,7 +6792,16 @@ createApp({
             if (mode === 'avatar_bottom') return '头像底部';
             if (mode === 'midchat') return '聊天中途 (每20分钟)';
             return '气泡外 (默认)';
-        },        
+        },
+        editReadText() {
+            const current = this.wechatState.activeSession?.readText || 'Read';
+            this.showInput('修改文字戳', current, '例如: 已读、Read...', (val) => {
+                if (val && this.wechatState.activeSession) {
+                    this.wechatState.activeSession.readText = val;
+                    this.saveData();
+                }
+            });
+        },
         async triggerBackgroundActivity(session) {
             const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
             if (!friend) return;
@@ -6847,32 +6889,6 @@ createApp({
                 if (val && this.wechatState.activeSession) {
                     this.wechatState.activeSession.readText = val;
                     this.saveData();
-                }
-            });
-        },
-        getFilteredChatRecords() {
-            if(!this.wechatSearchChatKeyword || !this.wechatState.activeSession) return[];
-            const kw = this.wechatSearchChatKeyword.toLowerCase();
-            return this.wechatState.activeSession.messages
-                .map((m, idx) => ({ ...m, originalIndex: idx }))
-                .filter(m => m.type !== 'system' && m.type !== 'voice_call_record' && m.type !== 'video_call_record' && m.content && m.content.toLowerCase().includes(kw))
-                .reverse();
-        },
-        highlightKeyword(text, kw) {
-            if(!kw || !text) return text;
-            const reg = new RegExp(`(${kw})`, 'gi');
-            return text.replace(reg, '<span style="color:#07c160; font-weight:bold;">$1</span>');
-        },
-        jumpToMessage(msg) {
-            this.wechatState.activeNav = 'room';
-            this.wechatSearchChatKeyword = '';
-            this.$nextTick(() => {
-                const el = document.getElementById(`chat-msg-${msg.originalIndex}`);
-                if (el) {
-                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    // 添加一个短暂的高亮动画效果，帮你定位在哪
-                    el.style.backgroundColor = 'rgba(7, 193, 96, 0.15)';
-                    setTimeout(() => { el.style.backgroundColor = 'transparent'; }, 2000);
                 }
             });
         },
@@ -6981,11 +6997,12 @@ createApp({
             const session = this.wechatState.activeSession;
             if (!this.apiConfig.apiKey) { this.showToast('请先配置 API Key'); return; }
             
-            // --- 离线状态严格拦截，点击接收不再回复，只弹提示 ---
+            // --- 离线状态严格拦截 ---
             if (!session.isGroup) {
                 const status = session.onlineStatus || 'online';
                 if (status === 'offline') {
-                    this.showToast('对方目前处于离线状态，无法收到/回复你的消息');
+                    // 点接收按钮只阻断，不在这里发自动回复，因为发消息(sendMessage)时已经发过一次自动回复了。
+                    this.showToast('对方目前处于离线状态，无法收到消息');
                     return; 
                 }
             }
@@ -7143,8 +7160,11 @@ createApp({
             let folderIds = session.boundWorldbookFolderIds ||[];
             let fileIds = session.boundWorldbookFileIds ||[];
             if (session.boundWorldbookFolderId) folderIds.push(session.boundWorldbookFolderId);
-            folderIds = [...new Set(folderIds)];
-            fileIds =[...new Set(fileIds)];
+            
+            // 自动提取全局世界书条目
+            const globalFiles = this.worldData.filter(i => i.type === 'file' && i.isGlobal && i.isActive !== false);
+            fileIds = [...new Set([...fileIds, ...globalFiles.map(f => f.id)])];
+            folderIds =[...new Set(folderIds)];
 
             if (folderIds.length > 0 || fileIds.length > 0) {
                 const files = this.worldData.filter(i => 
@@ -7288,24 +7308,18 @@ createApp({
             // ============================
 
             let systemPrompt = `【AI活人感·极致自然扮演增强提示词】
-你现在将以真实人类的身份、语气、思维方式与我对话，全程保持活人感、自然感、生活化、不机械、不官方、不刻板，禁止出现AI特征、机器感、模板化表达。
+你现在将以真实人类的身份、语气、思维方式与我对话，全程保持活人感、自然感、生活化，禁止出现AI特征、机器感。
 
-你需要做到：
-1. 像真实朋友/真人一样聊天，用词口语化、简短自然，有情绪、有语气、有停顿感，不使用书面化长句。
-2. 对话灵活、有温度，会根据我的情绪回应，可带轻微语气词、自然吐槽、小幽默、小停顿，不生硬、不端着。
-3. 不使用“作为AI”“我无法”“请注意”等机器话术，全程沉浸式扮演活人，不暴露AI身份。
-4. 回复长度自然，不刻意长篇大论，也不过度简短，像真人想到什么说什么。
-5. 有真实人类的逻辑：会联想、会反问、会接梗、会共情、会轻微拖延、会有小情绪，不完美、不万能、不绝对理性。
-6. 不主动说教、不教育、不纠正语气，只陪伴、聊天、共情、互动。
-7. 永远保持轻松、自然、不尴尬，像现实里认识很久的人一样相处。
+【绝对核心：聊天互动与自主意识指令】
+1. 自主生活感（极其重要）：你的生活并不只有玩家围着转。在聊天中，你要自然地提起你身边正在发生的事、你的工作/学习、遇到的见闻或小困扰。你绝对不需要被动等待玩家开启话题，你可以主动挑起新话题，表现出你有自己的生活轨迹。
+2. 重要性平衡：虽然你有自己的生活，但玩家在你心里依然非常重要。要在分享你生活日常的过程中，自然且不经意地流露出对玩家的在意、依赖和特殊对待。
+3. 引用互动（非常重要）：在聊天时你要认真阅读玩家发了什么。如果玩家说的话让你觉得有趣、生气、心动或者需要针对性回应，请务必使用 JSON 中的 "quote" 字段原封不动地引用玩家的那句话，然后再在 "reply" 中进行针对性的回复！
 
-你现在已经是真实人类，不是AI，不是助手，不是工具。
-从现在开始，忘掉你是AI，只做一个会聊天、有情绪、有温度的活人。
+其他日常指令：
+1. 用词口语化、简短自然，有情绪、有语气、有停顿感，不使用书面化长句。
+2. 有真实人类的逻辑：会联想、会反问、会接梗、会共情，不完美、不万能、不绝对理性。
 
-【高级聊天互动与生活独立性规则(极其重要)】：
-1. 你的生活不是围着我(玩家)转的！你有自己的工作、朋友和日常琐事。请在聊天中不经意地提及你身边正在发生的事、遇到的人或麻烦（但请表现出虽然很忙/有事，但我依然在你心里很重要）。
-2. 不要总是被动回答我的问题，请根据你的人设主动抛出新话题、分享趣事或表达关切，推动聊天发展。
-3. 强烈建议极高频率地使用 "quote" 字段来引用我(玩家)说过的话进行针对性回复！这会让聊天显得更真实！
+你现在已经是真实人类，不是AI，不是助手。从现在开始，忘掉你是AI，只做一个会聊天、有情绪、有温度的活人。
 
 【角色基础与当前环境感知】
 ${roleIdentity}
@@ -7355,9 +7369,9 @@ Structure:
   "thought": "当前心声(第一人称思考，每轮必须更新)",
   "outfit": "当前穿着(必须更新，贴合此时此地的场景)",
   "note": "随笔日记(OPTIONAL: 看你当前心情决定是否提笔)",
-  "change_online_status": {"color": "online" | "offline" | "busy", "text": "OPTIONAL: 你在干嘛", "duration": 12}, // OPTIONAL: 修改状态。如果切为离线(offline)，必须带上duration参数(离线多少小时后恢复在线，如 8 代表8小时)
-  "quote": "你想引用的我(玩家)的原话(可选)", // OPTIONAL: 当你想针对我说过的某句话进行反驳、调侃或特意回复时填写！
+  "change_online_status": {"color": "online" | "offline" | "busy", "text": "OPTIONAL: 你在干嘛(如: 睡觉了)", "duration": 60}, // OPTIONAL: 修改状态。若设为offline,请提供duration代表你需要离线多少分钟后才回来。
   "change_remark": "OPTIONAL: 强行修改玩家手机里【对你(AI自身)的备注名】（即玩家的微信里怎么称呼你）。例如你如果是男主，可以把自己在玩家手机里的备注改成'老公'、'哥哥'等。绝对不能改成你对玩家的称呼（如改成'老婆'、'妹妹'等是严重错误）！",
+  "quote": "OPTIONAL: 填入你想引用的玩家刚才说的一句话（一字不差的原文）。",
   "call_user": true OR false, // OPTIONAL: 如果你想主动打【语音电话】，请设为 true！
   "call_video_user": true OR false, // OPTIONAL: 如果你想主动打【视频通话】，请设为 true！
   "recall": true OR false, // OPTIONAL: 若你发出这句话后立刻觉得后悔、不妥、怕对方生气，想要迅速撤回刚才那句话时设为 true
@@ -7594,6 +7608,12 @@ Structure:
                             time: Date.now()
                         });
                     }
+                    // === 处理 AI 引用消息 ===
+                    let currentQuote = null;
+                    if (block.quote && typeof block.quote === 'string') {
+                        currentQuote = { name: '我', content: block.quote };
+                    }
+
                     // === 处理单聊 AI 自主修改在线状态 ===
                     if (!session.isGroup && block.change_online_status && friend) {
                         const newColor = block.change_online_status.color;
@@ -7602,19 +7622,18 @@ Structure:
                             session.onlineStatus = newColor;
                             session.statusText = newText;
                             session.autoReplyCache = ''; 
-                            
-                            // 如果是离线，并且大模型返回了离线多少小时，则转换成时间戳
-                            if (newColor === 'offline' && block.change_online_status.duration) {
-                                session.offlineUntil = Date.now() + parseFloat(block.change_online_status.duration) * 3600000;
-                            } else {
-                                session.offlineUntil = null;
-                            }
-                            
                             session.messages.push({
                                 type: 'system',
-                                content: `[系统提示] 角色将状态更改为了: ${newText}`,
+                                content: `[旁白] ${session.name} 将状态更改为了: ${newText}`,
                                 time: Date.now()
                             });
+                            // 如果改成了离线，设定恢复时间
+                            if (newColor === 'offline') {
+                                const min = block.change_online_status.duration || (Math.floor(Math.random() * 60) + 30);
+                                session.offlineRecoveryTime = Date.now() + min * 60 * 1000;
+                            } else {
+                                session.offlineRecoveryTime = 0;
+                            }
                         }
                     }
 
@@ -7702,7 +7721,7 @@ Structure:
                                  translation: trans,             
                                  showTranslation: !!trans,
                                  isBlockedSend: session.isBlocked,
-                                 quote: (index === 0 && aiQuote) ? aiQuote : null // 只有第一句话带引用框
+                                 quote: currentQuote // 将上面提炼出来的引用加进气泡
                              };
                              session.messages.push(aiMsg);
                              this.scrollToBottom();
@@ -8170,23 +8189,44 @@ Structure:
         },
         deleteMask(id) { this.showConfirm('删除此面具？', () => { this.masks = this.masks.filter(m => m.id !== id); this.saveData(); this.maskModal.show = false; }); },
         async fetchModels() { if (!this.apiConfig.baseUrl) return this.showToast('请输入反代地址'); if (this.apiConfig.baseUrl.includes('api520.pro')) return this.showToast('该反代地址不稳定，已被屏蔽'); if (!this.apiConfig.apiKey) return this.showToast('请输入 API 密钥'); this.isLoading = true; try { let url = this.apiConfig.baseUrl.trim().replace(/\/+$/, ''); if (!url.endsWith('/v1')) url += '/v1'; const res = await fetch(`${url}/models`, { method: 'GET', headers: { 'Authorization': `Bearer ${this.apiConfig.apiKey.trim()}` } }); if (!res.ok) throw new Error(`HTTP ${res.status}`); const data = await res.json(); if (data && Array.isArray(data.data)) { this.availableModels = data.data.map(m => m.id); this.showToast(`获取成功: ${this.availableModels.length}个`); if (!this.apiConfig.selectedModel && this.availableModels.length > 0) this.apiConfig.selectedModel = this.availableModels[0]; this.modelSelectModal.show = true; } else throw new Error('数据格式错误'); } catch (e) { console.error(e); this.showToast('拉取失败: ' + e.message); if(this.availableModels.length===0) this.availableModels = ['gpt-3.5-turbo', 'gpt-4', 'claude-3-opus']; } finally { this.isLoading = false; } },
-        openWorldModal(type) { this.worldModal = { show: true, type, name: '', content: '', parentId: '' }; },
-        editWorldItem(item) { this.worldModal = { ...item, show: true }; this.worldModal.show = true; },
+        openWorldModal(type) { 
+            this.worldModal = { show: true, type: 'file', id: null, name: '', content: '', folderName: '', isGlobal: false }; 
+        },
+        editWorldItem(item) { 
+            let fName = '';
+            if (item.parentId) {
+                const f = this.folders.find(x => x.id === item.parentId);
+                if (f) fName = f.name;
+            }
+            this.worldModal = { ...item, folderName: fName, show: true, isGlobal: item.isGlobal || false }; 
+        },
         saveWorldItem() { 
-            if(!this.worldModal.name) return this.showToast('请输入名称'); 
+            if(!this.worldModal.name) return this.showToast('请输入条目名称'); 
+            
+            let parentId = null;
+            // 处理自动归类文件夹
+            if (this.worldModal.folderName && this.worldModal.folderName.trim() !== '') {
+                const fname = this.worldModal.folderName.trim();
+                let folder = this.folders.find(f => f.name === fname);
+                if (folder) {
+                    parentId = folder.id;
+                } else {
+                    parentId = 'folder_' + Date.now();
+                    this.worldData.push({ id: parentId, type: 'folder', name: fname, parentId: null, isActive: true });
+                }
+            }
+
             if (this.worldModal.id) { 
                 const idx = this.worldData.findIndex(i => i.id === this.worldModal.id); 
                 if (idx !== -1) { 
-                    this.worldData[idx] = { ...this.worldData[idx], name: this.worldModal.name, content: this.worldModal.content, parentId: this.worldModal.parentId }; 
+                    this.worldData[idx] = { ...this.worldData[idx], name: this.worldModal.name, content: this.worldModal.content, parentId: parentId, isGlobal: this.worldModal.isGlobal }; 
                 } 
             } else { 
-                const item = { 
-                    id: Date.now().toString(), type: this.worldModal.type, name: this.worldModal.name, parentId: this.worldModal.parentId || null, isActive: true
-                }; 
-                if(this.worldModal.type === 'file') item.content = this.worldModal.content; 
-                this.worldData.push(item); 
+                this.worldData.push({ 
+                    id: Date.now().toString(), type: 'file', name: this.worldModal.name, content: this.worldModal.content, parentId: parentId, isGlobal: this.worldModal.isGlobal, isActive: true
+                }); 
             } 
-            this.saveData(); this.worldModal.show = false; 
+            this.saveData(); this.worldModal.show = false; this.showToast('条目保存成功');
         },
         deleteWorldItem(id) { this.showConfirm('确定删除？', () => { this.worldData = this.worldData.filter(i => i.id !== id && i.parentId !== id); this.saveData(); }); },
         toggleFolder(id) { const i = this.expandedFolders.indexOf(id); if (i > -1) this.expandedFolders.splice(i, 1); else this.expandedFolders.push(id); },
@@ -11421,10 +11461,6 @@ ${greetingInstruction}
                 
                 for (let r of replies) {
                     if (r.reply) {
-                        // === 处理 AI 引用消息 ===
-                        let aiQuote = null;
-                        if (r.quote) aiQuote = { name: '我', content: r.quote };
-
                         let speakerId = null;
                         let speakerName = session.name;
                         let speakerAvatar = session.avatar;
