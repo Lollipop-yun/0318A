@@ -1439,7 +1439,7 @@
     <!-- 世界书添加/编辑文件 Modal -->
     <transition name="scale"><div v-if="worldModal.show" class="fixed inset-0 z-[55000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl p-6 space-y-4"><h3 class="text-lg font-bold text-center text-gray-900">{{ worldModal.id ? '编辑文件' : (worldModal.type === 'folder' ? '新建文件夹' : '新建文件') }}</h3><input v-model="worldModal.name" placeholder="请输入名称" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none"><div v-if="worldModal.type === 'file'" class="space-y-4"><div class="space-y-1"><label class="text-xs text-gray-500 ml-1">归类文件夹</label><div @click="folderSelectModal.show = true" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 flex justify-between items-center cursor-pointer text-gray-700"><span :class="worldModal.parentId ? 'text-black' : 'text-gray-400'">{{ getFolderName(worldModal.parentId) }}</span><i class="fas fa-chevron-right text-xs text-gray-300"></i></div></div><textarea v-model="worldModal.content" placeholder="输入文件内容..." class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none h-32 resize-none"></textarea></div><div class="flex gap-3 pt-2"><button @click="worldModal.show = false" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold text-sm">取消</button><button @click="saveWorldItem" class="flex-1 bg-black text-white py-3 rounded-xl font-bold text-sm">保存</button></div></div></div></transition>
     <transition name="scale"><div v-if="addContactModal.show" class="fixed inset-0 z-[55000] flex items-center justify-center bg-black/40 backdrop-blur-sm"><div class="bg-white w-[90%] max-h-[85vh] rounded-[24px] overflow-hidden shadow-2xl flex flex-col animate-scale-in"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10"><button @click="addContactModal.show = false" class="text-gray-500 font-medium text-sm">取消</button><h3 class="font-bold text-lg text-gray-900">{{ newContact.id ? '编辑朋友' : '添加朋友' }}</h3><button @click="saveNewContact" class="text-black font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg">完成</button></div><div class="flex-1 overflow-y-auto p-6 space-y-5"><div class="flex flex-col items-center gap-2"><div class="w-24 h-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative cursor-pointer active:opacity-70 transition" @click="triggerAddContactAvatar"><img v-if="newContact.avatar" :src="newContact.avatar" class="w-full h-full object-cover"><div v-else class="flex flex-col items-center text-gray-400"><i class="fas fa-camera text-2xl mb-1"></i><span class="text-[10px]">上传头像</span></div></div></div><div class="space-y-4"><div><label class="text-xs text-gray-500 ml-1 mb-1 block">姓名</label><input v-model="newContact.name" placeholder="输入姓名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">备注</label><input v-model="newContact.remark" placeholder="输入备注名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><div class="flex justify-between items-center ml-1 mb-1"><label class="text-xs text-gray-500 block">网名 (ID)</label><button @click="autoFillProfile('username')" class="text-[10px] text-purple-500 font-bold active:scale-95"><i class="fas fa-magic"></i> AI填充</button></div><input v-model="newContact.username" placeholder="输入网名/微信号" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">性别</label><div class="flex gap-3"><div @click="newContact.gender = '男'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="newContact.gender==='男'?'bg-blue-50 border-blue-200 text-blue-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-mars"></i> 男</div><div @click="newContact.gender = '女'" class="flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition" :class="newContact.gender==='女'?'bg-pink-50 border-pink-200 text-pink-600':'bg-white border-gray-200 text-gray-500'"><i class="fas fa-venus"></i> 女</div></div></div><div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">身高(cm)</label><input v-model="newContact.height" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">体重(kg)</label><input v-model="newContact.weight" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div>
-<div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">年龄</label><input v-model="newContact.age" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">生日</label><input v-model="newContact.birthday" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">拍一拍</label><input v-model="newContact.nudge" placeholder="拍一拍后缀" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><div class="flex justify-between items-center ml-1 mb-1"><label class="text-xs text-gray-500 block">个性签名</label><button @click="autoFillProfile('signature')" class="text-[10px] text-purple-500 font-bold active:scale-95"><i class="fas fa-magic"></i> AI填充</button></div><input v-model="newContact.signature" placeholder="输入个性签名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">与我的关系</label><input v-model="newContact.relationship" placeholder="例如：情侣、夫妻、青梅竹马、死对头..." class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div>
+<div class="flex gap-2"><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">年龄</label><input v-model="newContact.age" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div class="flex-1"><label class="text-xs text-gray-500 ml-1 mb-1 block">生日</label><input v-model="newContact.birthday" placeholder="选填" class="w-full bg-gray-50 px-3 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">拍一拍</label><input v-model="newContact.nudge" placeholder="拍一拍后缀" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><div class="flex justify-between items-center ml-1 mb-1"><label class="text-xs text-gray-500 block">个性签名</label><button @click="autoFillProfile('signature')" class="text-[10px] text-purple-500 font-bold active:scale-95"><i class="fas fa-magic"></i> AI填充</button></div><input v-model="newContact.signature" placeholder="输入个性签名" class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div><div><label class="text-xs text-gray-500 ml-1 mb-1 block">与我的关系</label><input v-model="newContact.relationship" placeholder="例如：情侣、夫妻、青梅竹马..." class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none"></div>
 <div><label class="text-xs text-gray-500 ml-1 mb-1 block">背景资料</label><textarea v-model="newContact.bio" placeholder="输入人设、背景故事..." class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none h-24 resize-none"></textarea></div></div></div><input type="file" ref="addContactAvatarInput" accept="image/*" class="hidden" @change="handleAddContactAvatar"></div></div></transition>    
 
     <!-- 面具编辑/添加弹窗 -->
@@ -1908,6 +1908,51 @@
             </div>
         </transition>
         <input type="file" ref="groupAvatarInput2" accept="image/*" class="hidden" @change="handleGroupAvatarChange2">
+        
+        <!-- 重回消息风格走向弹窗 -->
+        <transition name="scale">
+            <div v-if="regenerateModal.show" class="fixed inset-0 z-[105000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl p-6 flex flex-col gap-4">
+                    <h3 class="text-lg font-bold text-center mb-2">重回消息风格走向</h3>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">你想让TA怎样回复？(选填)</label>
+                        <input v-model="regenerateModal.prompt" placeholder="例如: 傲娇一点、吃醋、转移话题..." class="w-full bg-gray-50 p-3.5 rounded-xl text-sm border border-gray-200 outline-none">
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <button @click="regenerateModal.show = false" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold text-sm active:scale-95 transition">取消</button>
+                        <button @click="confirmRegenerate" class="flex-1 bg-black text-white py-3 rounded-xl font-bold text-sm active:scale-95 transition">确定重回</button>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- 时间戳显示位置弹窗 -->
+        <transition name="app-slide">
+            <div v-if="timestampModeModal.show" class="fixed inset-0 z-[105000]">
+                <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="timestampModeModal.show = false"></div>
+                <div class="ios-list-modal">
+                    <div class="ios-list-header">时间戳排版模式 <button class="absolute right-4 text-blue-500 font-normal text-sm" @click="timestampModeModal.show = false">取消</button></div>
+                    <div class="ios-list-content p-0 bg-white">
+                        <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setTimestampMode('outside')">
+                            <div><div class="font-bold text-gray-900">气泡外 (默认)</div><div class="text-xs text-gray-500 mt-1">显示在每条气泡外部的下方</div></div>
+                            <i v-if="(wechatState.activeSession?.timestampMode || 'outside') === 'outside'" class="fas fa-check text-blue-500"></i>
+                        </div>
+                        <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setTimestampMode('inside')">
+                            <div><div class="font-bold text-gray-900">气泡内</div><div class="text-xs text-gray-500 mt-1">将时间嵌入到气泡内部靠边</div></div>
+                            <i v-if="wechatState.activeSession?.timestampMode === 'inside'" class="fas fa-check text-blue-500"></i>
+                        </div>
+                        <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setTimestampMode('avatar_bottom')">
+                            <div><div class="font-bold text-gray-900">头像底部</div><div class="text-xs text-gray-500 mt-1">显示在聊天界面头像的正下方</div></div>
+                            <i v-if="wechatState.activeSession?.timestampMode === 'avatar_bottom'" class="fas fa-check text-blue-500"></i>
+                        </div>
+                        <div class="p-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setTimestampMode('midchat')">
+                            <div><div class="font-bold text-gray-900">聊天中途</div><div class="text-xs text-gray-500 mt-1">关闭单条时间，每隔20分钟在中间显示一次</div></div>
+                            <i v-if="wechatState.activeSession?.timestampMode === 'midchat'" class="fas fa-check text-blue-500"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
 
     <!-- ================= 微信 (WeChat) App ================= -->
     <!-- 频率选择弹窗 (GitHub) -->
@@ -2007,9 +2052,6 @@
                         <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setTimestampMode('inside')">
                             <div><div class="font-bold text-gray-900">气泡内</div><div class="text-xs text-gray-500 mt-1">将时间嵌入到气泡内部底端</div></div>
                             <i v-if="wechatState.activeSession?.timestampMode === 'inside'" class="fas fa-check text-blue-500"></i>
-                            <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setTimestampMode('avatar')">
-                            <div><div class="font-bold text-gray-900">头像底部</div><div class="text-xs text-gray-500 mt-1">显示在发言者头像的正下方</div></div>
-                            <i v-if="wechatState.activeSession?.timestampMode === 'avatar'" class="fas fa-check text-blue-500"></i>
                         </div>
                         <div class="p-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setTimestampMode('midchat')">
                             <div><div class="font-bold text-gray-900">聊天中途</div><div class="text-xs text-gray-500 mt-1">关闭单条时间，每隔20分钟在中间显示一次</div></div>
@@ -2435,14 +2477,16 @@
                                 </div>
                             </div>
                             
-                            <!-- 头像及下方时间戳 -->
+                            <!-- 头像与头像下方时间戳 (包裹容器) -->
                             <div v-if="getAvatarVisibility(msg, i) !== 'remove'" class="flex flex-col items-center shrink-0">
+                                <!-- 头像 (双击触发拍一拍) -->
                                 <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 transition-opacity cursor-pointer" 
                                      :class="getAvatarVisibility(msg, i) === 'invisible' ? 'opacity-0 pointer-events-none' : ''"
                                      @click="handleAvatarClick(msg)" @dblclick="handleAvatarDblClick(msg)" @contextmenu.prevent="showChatContextMenu($event, msg, i)">
                                     <img :src="getChatAvatar(msg)" class="w-full h-full object-cover">
                                 </div>
-                                <span v-if="(wechatState.activeSession?.timestampMode || 'outside') === 'avatar' && getAvatarVisibility(msg, i) === 'show'" class="text-[8px] text-gray-400 mt-1 origin-top" :class="wechatState.activeSession.wallpaper ? 'text-white/80 drop-shadow-sm' : ''" style="transform: scale(0.85);">{{ formatChatTime(msg.time) }}</span>
+                                <!-- 头像下方时间戳 -->
+                                <div v-if="(wechatState.activeSession?.timestampMode) === 'avatar_bottom' && getAvatarVisibility(msg, i) === 'show'" class="text-[8px] text-gray-400 mt-1 scale-90 whitespace-nowrap">{{ formatChatTime(msg.time) }}</div>
                             </div>
                             
                             <div class="flex flex-col max-w-[70%]" :class="msg.isSelf ? 'items-end' : 'items-start'">
@@ -2605,17 +2649,19 @@
                                         </transition>
                                     </div>
                                     
-                                    <!-- 气泡内时间戳 (设置为inside时显示，我的在左，对方在右) -->
-                                    <div v-if="(wechatState.activeSession?.timestampMode || 'outside') === 'inside'" class="text-[10px] opacity-60 mt-1.5 font-mono tracking-wide flex items-center" :class="msg.isSelf ? 'justify-start text-gray-500' : 'justify-end text-gray-400'">
+                                    <!-- 气泡内时间戳 (仅在设置为inside时显示，排版动态靠左或右) -->
+                                    <div v-if="(wechatState.activeSession?.timestampMode || 'outside') === 'inside'" class="text-[9px] opacity-60 mt-1 font-mono flex w-full" :class="msg.isSelf ? 'justify-start text-gray-500' : 'justify-end text-gray-400'">
                                         <span>{{ formatChatTime(msg.time) }}</span>
                                     </div>
                                 </div>
                                 <!-- 语音转文字展开 -->
                                 <div v-if="msg.type === 'voice' && msg.isExpanded" class="voice-transcription">{{ msg.content }}</div>
                                 
-                                <!-- 外部文字戳与时间戳的合并容器 -->
-                                <span class="chat-timestamp-small flex gap-1 items-center" :class="wechatState.activeSession.wallpaper ? 'text-white/60 drop-shadow-sm' : 'text-gray-300'">
-                                    <span v-if="(wechatState.activeSession?.timestampMode || 'outside') === 'outside'">{{ formatChatTime(msg.time) }}</span>
+                                <!-- 气泡外部底部显示 -->
+                                <span class="chat-timestamp-small" :class="wechatState.activeSession.wallpaper ? 'text-white/60 drop-shadow-sm' : 'text-gray-300'">
+                                    <!-- 只有 outside 模式下，才在外部显示时间 -->
+                                    <span v-if="(wechatState.activeSession?.timestampMode || 'outside') === 'outside'">{{ formatChatTime(msg.time) }} </span>
+                                    <!-- Read 文字戳独立于时间，永远在气泡下方显示 -->
                                     <span>{{ wechatState.activeSession?.readText || 'Read' }}</span>
                                 </span>
                             </div>
@@ -3133,15 +3179,8 @@
                             </div>
                         </div>
 
-                        <!-- 后台活动(自主行动) 开关 -->
-                        <div v-if="!wechatState.activeSession.isGroup" class="flex justify-between items-center p-2 -mx-2">
-                            <div class="flex flex-col">
-                                <span class="text-sm">允许后台活动</span>
-                                <span class="text-[10px] text-gray-400 mt-0.5">TA会在你不发消息时自主找你或修改状态</span>
-                            </div>
-                            <input type="checkbox" class="switch-checkbox" :id="'bg-act-toggle'" v-model="wechatState.activeSession.backgroundActivity" @change="saveData">
-                            <label :for="'bg-act-toggle'" class="switch-label"><div class="switch-button"></div></label>
-                        </div>
+                        <!-- 允许角色后台活动 -->
+                        <div class="flex justify-between items-center"><span class="text-sm">允许角色进行后台活动</span><input type="checkbox" class="switch-checkbox" :id="'bg-active-'+wechatState.activeSession.id" v-model="wechatState.activeSession.enableBackgroundActivity" @change="saveData"><label :for="'bg-active-'+wechatState.activeSession.id" class="switch-label"><div class="switch-button"></div></label></div>
 
                         <!-- 本聊专属面具绑定入口 -->
                         <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="openSessionMaskModal">
@@ -4654,6 +4693,8 @@ createApp({
             editStatusModal: { show: false, color: 'online', text: '' },
             regenerateModal: { show: false, prompt: '' },
             timestampModeModal: { show: false },
+            regenerateModal: { show: false, prompt: '' },
+            timestampModeModal: { show: false },
             
             themeConfig: { wallpaper: '', fontFamily: '', fontUrl: '', fontSize: 1.0, fontColor: '#000000', isDarkMode: false }, fontPresets:[], fontInputUrl: '',
             
@@ -4676,7 +4717,7 @@ createApp({
             expandedGroups: ['all'],
             groupSelectModal: { show: false },
             addContactModal: { show: false }, chatWizard: { show: false, step: 1, type: 'single', selectedContacts:[], selectedMask: null, isObserver: false },
-            newContact: { name: '', remark: '', username: '', gender: '男', height: '', weight: '', age: '', birthday: '', bio: '', nudge: '', signature: '', avatar: 'https://pic1.imgdb.cn/item/69d5d388fe07599d0e204634.jpg', relationship: '' },
+            newContact: { name: '', remark: '', username: '', gender: '男', height: '', weight: '', age: '', birthday: '', bio: '', relationship: '', nudge: '', signature: '', avatar: 'https://pic1.imgdb.cn/item/69d5d388fe07599d0e204634.jpg' },
             masks:[], showMaskManager: false, maskModal: { show: false }, maskForm: { id: null, name: '', remark: '', username: '', gender: '女', bio: '', nudge: '', signature: '', avatar: 'https://pic1.imgdb.cn/item/69d5d388fe07599d0e204634.jpg' },
             groupProfileModal: { show: false, name: '', remark: '', bio: '', avatar: '' },
             groupAddMemberModal: { show: false, selectedIds:[] },
@@ -4880,21 +4921,42 @@ createApp({
         this.imageUploadInput.onchange = this.handleImageUploadForChat;
         
         // 设定 2000ms (2秒) 的等待时间
-            setTimeout(() => {
+        setTimeout(() => {
             const loader = document.getElementById('loading-screen');
             if (loader) loader.style.opacity = '0';
-            
-            // 调用 activation.js 中的跨浏览器指纹验证逻辑
             if (typeof window.checkActivationState === 'function') {
                 window.checkActivationState();
             }
-            
             setTimeout(() => { if (loader) loader.style.display = 'none'; }, 800);
         }, 2000);
 
         this.updateTime(); this.timer = setInterval(this.updateTime, 1000); this.initBattery(); this.fetchWeather();
+        
+        // 开启后台活动的全局轮询定时器 (每 60 秒检查一次)
+        setInterval(() => {
+            if (!this.apiConfig.apiKey) return;
+            this.wechatState.sessions.forEach(session => {
+                if (session.enableBackgroundActivity && !session.isGroup) {
+                    const status = session.onlineStatus || 'online';
+                    // 只有角色在线或忙碌，且不是正在视频/语音中，且过去3分钟没动静，才有几率活动
+                    if (status !== 'offline' && !this.voiceCallState.isActive && !this.videoCallState.isActive) {
+                        const lastMsg = session.messages[session.messages.length - 1];
+                        if (lastMsg && (Date.now() - lastMsg.time > 180000)) {
+                            // 5%的概率主动发消息
+                            if (Math.random() < 0.05) {
+                                this.triggerBackgroundActivity(session);
+                            }
+                            // 10%的概率自己改变状态（如下线或变忙碌）
+                            else if (Math.random() < 0.10) {
+                                this.randomChangeStatus(session);
+                            }
+                        }
+                    }
+                }
+            });
+        }, 60000);
+
         document.addEventListener("fullscreenchange", () => { this.isFullScreen = !!document.fullscreenElement; });
-        this.bgActivityTimer = setInterval(this.checkBackgroundActivity, 15000); // 后台活动每15秒一跳
         if(this.themeConfig.fontUrl && this.themeConfig.fontFamily) { 
             this.loadFont(this.themeConfig.fontUrl, this.themeConfig.fontFamily); 
             document.body.style.fontFamily = this.themeConfig.fontFamily;
@@ -6594,6 +6656,109 @@ createApp({
             // 带着用户的风格走向要求，重新请求大模型
             this.triggerReceive(this.regenerateModal.prompt);
         },
+        confirmRegenerate() {
+            const session = this.wechatState.activeSession;
+            let i = session.messages.length - 1;
+            while (i >= 0) {
+                const m = session.messages[i];
+                if (!m.isSelf) { session.messages.splice(i, 1); } else { break; } 
+                i--;
+            }
+            this.saveData();
+            this.regenerateModal.show = false;
+            this.triggerReceive(this.regenerateModal.prompt);
+        },
+        setTimestampMode(mode) {
+            if (this.wechatState.activeSession) {
+                this.wechatState.activeSession.timestampMode = mode;
+                this.saveData();
+            }
+            this.timestampModeModal.show = false;
+        },
+        getTimestampModeName(mode) {
+            if (mode === 'inside') return '气泡内';
+            if (mode === 'avatar_bottom') return '头像底部';
+            if (mode === 'midchat') return '聊天中途 (每20分钟)';
+            return '气泡外 (默认)';
+        },
+        editReadText() {
+            const current = this.wechatState.activeSession?.readText || 'Read';
+            this.showInput('修改文字戳', current, '例如: 已读、Read...', (val) => {
+                if (val && this.wechatState.activeSession) {
+                    this.wechatState.activeSession.readText = val;
+                    this.saveData();
+                }
+            });
+        },
+        async triggerBackgroundActivity(session) {
+            const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
+            if (!friend) return;
+            try {
+                let url = this.apiConfig.baseUrl.trim().replace(/\/+$/, '');
+                if (!url.endsWith('/v1')) url += '/v1';
+                
+                const recentContext = session.messages.slice(-5).map(m => `[${m.isSelf ? '我' : friend.name}]: ${m.content}`).join('\n');
+                
+                const systemPrompt = `你是 ${friend.name}。人设: ${friend.bio || '无'}。你在忙自己的事情时，突然想到我，决定主动给我发一条微信。
+请根据你的人设以及我们的关系（${friend.relationship || '未知'}），像真人一样简短随意地发一条消息。可以是分享日常、抛梗、调侃或是表达关心。
+参考最近聊天：\n${recentContext}
+要求：绝对不带引号，直接输出要发的一句话，10字到30字以内。`;
+
+                const res = await fetch(`${url}/chat/completions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiConfig.apiKey.trim()}` },
+                    body: JSON.stringify({ 
+                        model: this.apiConfig.selectedModel, 
+                        messages:[{ role: 'user', content: systemPrompt }],
+                        temperature: 0.8
+                    })
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    const msgContent = data.choices[0].message.content.trim();
+                    session.messages.push({
+                        content: msgContent,
+                        isSelf: false,
+                        time: Date.now(),
+                        avatar: this.getCurrentSessionAvatar(),
+                        type: 'text'
+                    });
+                    
+                    if (this.currentApp !== 'wechat' || this.wechatState.activeNav !== 'room' || this.wechatState.activeSession?.id !== session.id || document.hidden) {
+                        session.unreadCount = (session.unreadCount || 0) + 1;
+                        if (!document.hidden) {
+                            this.showGlobalNotification(session, msgContent);
+                        }
+                        this.sendPushNotification('微信新消息', session.name, msgContent, session.avatar);
+                    } else {
+                        this.scrollToBottom();
+                    }
+                    if(this.notificationConfig.currentSound) new Audio(this.notificationConfig.currentSound).play();
+                    this.saveData();
+                }
+            } catch(e) {}
+        },
+        randomChangeStatus(session) {
+            const statuses =['online', 'busy', 'offline'];
+            let targetStatus = statuses[Math.floor(Math.random() * statuses.length)];
+            let text = '手机在线';
+            if (targetStatus === 'offline') text = ['睡觉了', '出门没带手机', '离线'].sort(()=>0.5-Math.random())[0];
+            if (targetStatus === 'busy') text =['在忙勿扰', '打游戏中', '开会中', '上课中'].sort(()=>0.5-Math.random())[0];
+            
+            if (session.onlineStatus !== targetStatus || session.statusText !== text) {
+                session.onlineStatus = targetStatus;
+                session.statusText = text;
+                session.autoReplyCache = ''; 
+                session.messages.push({
+                    type: 'system',
+                    content: `[系统提示] 角色突然将状态更改为了: ${text}`,
+                    time: Date.now()
+                });
+                if (this.wechatState.activeSession?.id === session.id) this.scrollToBottom();
+                this.saveData();
+            }
+        },
         setTimestampMode(mode) {
             if (this.wechatState.activeSession) {
                 this.wechatState.activeSession.timestampMode = mode;
@@ -6720,24 +6885,26 @@ createApp({
             const session = this.wechatState.activeSession;
             if (!this.apiConfig.apiKey) { this.showToast('请先配置 API Key'); return; }
             
-            if (session.isBlocked) {
-                if (Math.random() < 0.3) {
-                     this.triggerReAddRequest(session);
-                     return;
-                }
-            }
-
-            // --- 离线状态拦截 ---
+            // --- 离线状态严格拦截，只触发缓存的固定自动回复 ---
             if (!session.isGroup) {
                 const status = session.onlineStatus || 'online';
                 if (status === 'offline') {
-                    // 离线状态下，不调用正式生成，只触发自动回复
                     this.triggerAutoReply(session);
                     return; 
                 }
             }
+
+            // --- 离线状态严格拦截 ---
+            if (!session.isGroup) {
+                const status = session.onlineStatus || 'online';
+                if (status === 'offline') {
+                    this.showToast('对方目前处于离线状态，无法收到/回复你的消息');
+                    return; // 只要离线，绝对不让AI正常说话
+                }
+            }
             
             this.isTyping = true; 
+            // 兼容点击事件传过来的异常参数
             const prompt = typeof directionPrompt === 'string' ? directionPrompt : '';
             this.generateAiReply(prompt);
         },
@@ -6911,23 +7078,14 @@ createApp({
 【时差感知提醒】：如果你的人设目前位于国外，请根据北京时间自行推算你的当地时间（如：日本/韩国+1小时；英国-8小时；美国东部-13小时，美国西部-16小时；澳洲东部+2小时等），请务必在对话中符合你所在地的作息时间（如北京时间中午时，美国可能是深夜）！`;
             
             // Music Sense Logic (NEW)
-            // --- 提取 AI 和 User 的关系 ---
-            let relationshipContext = "";
-            if (!session.isGroup && friend && friend.relationship) {
-                relationshipContext = `你与我(玩家)目前的关系是：【${friend.relationship}】。请严格根据这一层关系来调整你对我的称呼、说话的分寸感与态度。`;
-            }
-
             // --- 强化音乐感知与 AI 主动切歌 ---
             let musicContext = "";
             if (this.musicModal.isPlaying && this.musicModal.currentId) {
                 const playingSong = this.musicPlaylist.find(s => s.id === this.musicModal.currentId);
                 const currentLyric = this.getCurrentLyricText();
-                
-                // 将本地的前 20 首歌抽出来让大模型选（防止库太大撑爆 Token）
-                const availableSongs = this.musicPlaylist.slice(0, 20).map(s => `[ID:${s.id} 歌名:${s.title} 歌手:${s.artist}]`).join(', ');
-
+                const availableSongs = this.musicPlaylist.map(s => s.title).join(', ');
                 if (playingSong) {
-                    musicContext = `\n[一起听歌中]: 你们正在一起听 ${playingSong.artist} 的《${playingSong.title}》。当前歌词: "${currentLyric}"。如果你觉得这首歌不符合现在的聊天氛围，或者你更想听其他的歌，你可以输出 "music_control": "你想切的歌的ID" 来主动切歌。可供选择的歌曲列表有: ${availableSongs || '无'}。如果不切歌，此字段保留为空。`;
+                    musicContext = `\n[一起听歌中]: 你们正在一起听 ${playingSong.artist} 的《${playingSong.title}》。当前歌词: "${currentLyric}"。如果你想切歌挑选你喜欢的，可以在 "music_control" 字段填入你想听的歌曲名，或者填 "next" 切换！你本地音乐库中有这些歌: ${availableSongs}`;
                 }
             }
             
@@ -6942,6 +7100,7 @@ createApp({
             // --- 提取 AI 和 User 的身体信息与年龄 ---
             let friendExtra = '';
             if (friend) {
+                if(friend.relationship) friendExtra += ` 【与我的关系是:${friend.relationship}】`;
                 if(friend.height) friendExtra += ` 身高:${friend.height}cm`;
                 if(friend.weight) friendExtra += ` 体重:${friend.weight}kg`;
                 if(friend.age) friendExtra += ` 年龄:${friend.age}岁`;
@@ -7028,7 +7187,7 @@ createApp({
 【艾特特别提示】：如果用户在最新消息中包含了“@全体成员”，说明在对所有人说话，所有相关角色都可以积极发言！如果包含了“@某个网名ID”或“@角色名”，请被点名的那个角色务必优先回复！
 群内拥有的NPC成员名单及设定如下：\n${membersInfo}`;
             } else {
-                roleIdentity = `你是: ${friend ? friend.name : session.name}.${friendExtra} 你的设定: ${friend ? friend.bio : '无'}.\n${relationshipContext}`;
+                roleIdentity = `你是: ${friend ? friend.name : session.name}.${friendExtra} 你的设定: ${friend ? friend.bio : '无'}.`;
             }
             // ============================
 
@@ -7118,6 +7277,11 @@ Structure:
 你必须模拟真人说话的真实节奏，按句号、叹号或呼吸停顿，把长段落切分成多个短句，填入数组！
 ❌ 错误示范：["怎么了？你怎么不说话，别生闷气了行不行，我真的很担心你。"]
 ✅ 正确示范：["怎么了？", "你怎么不说话", "别生闷气了行不行", "我真的很担心你。"]`;
+
+            // 如果用户在“重回”时提出了具体的走向要求，强行注入最高优先级的提示词
+            if (directionPrompt && directionPrompt.trim() !== '') {
+                systemPrompt += `\n\n【！！！极其重要的剧情走向指令！！！】：\n我(玩家)对你接下来的回复提出了特殊的剧情走向/风格要求：“${directionPrompt}”。请你必须严格按照这个风格/情绪/剧情走向来回复我这一轮的消息！`;
+            }
 
             // 如果用户在“重回”时提出了具体的走向要求，强行注入最高优先级的提示词
             if (directionPrompt && directionPrompt.trim() !== '') {
@@ -7466,43 +7630,26 @@ Structure:
                 // --- 绝对安全追加：等上面所有文字都发完后，再出音乐卡片和切歌 ---
                 setTimeout(() => {
                     // 1. 解析切歌指令
-                    if (parsed.music_control && parsed.music_control !== 'stop' && parsed.music_control !== 'next' && parsed.music_control !== 'prev') {
-                        // AI 返回了指定的音乐 ID
-                        const targetSong = this.musicPlaylist.find(s => s.id === parsed.music_control);
-                        if (targetSong) {
-                            this.playSong(targetSong);
-                            this.showToast(`${session.name} 切换了一首Ta喜欢的歌: ${targetSong.title}`);
+                    if (parsed.music_control) {
+                        if (parsed.music_control === 'next') {
+                            this.nextSong();
+                            this.showToast(`${session.name} 切换了下一首歌`);
+                        } else if (parsed.music_control === 'prev') {
+                            this.prevSong();
+                        } else if (parsed.music_control === 'stop') {
+                            this.stopListenTogether();
+                        } else {
+                            // 当作歌曲名查找
+                            const targetSong = this.musicPlaylist.find(s => s.title.includes(parsed.music_control) || parsed.music_control.includes(s.title));
+                            if (targetSong) {
+                                this.playSong(targetSong);
+                                this.showToast(`${session.name} 点播了 ${targetSong.title}`);
+                            } else {
+                                this.nextSong();
+                                this.showToast(`${session.name} 切换了下一首歌`);
+                            }
                         }
-                    } else if (parsed.music_control === 'next') {
-                        this.nextSong();
-                        this.showToast(`${session.name} 切换了下一首歌`);
-                    } else if (parsed.music_control === 'prev') {
-                        this.prevSong();
-                    } else if (parsed.music_control === 'stop') {
-                        this.stopListenTogether();
                     }
-                    
-                    // 2. 解析音乐邀请卡 (附带关键词兜底)
-                    let isInvitingMusic = parsed.invite_music === true || parsed.invite_music === "true";
-                    const replyText = (parsed.reply ||[]).join("");
-                    if (!isInvitingMusic && (replyText.includes("一起听") || replyText.includes("听歌") || replyText.includes("放首") || replyText.includes("音乐"))) {
-                        isInvitingMusic = true;
-                    }
-                    
-                    // 3. 压轴弹出卡片
-                    if (isInvitingMusic) {
-                        session.messages.push({
-                            type: 'music_invite',
-                            isSelf: false,
-                            time: Date.now(),
-                            avatar: session.avatar,
-                            isAccepted: false
-                        });
-                        session.lastMessage = '[音乐邀请]';
-                        this.scrollToBottom();
-                        this.saveDataNow(); // 强制存盘
-                    }
-                }, delay + 300); // 这里的 delay 是上面文字循环累加出来的时间，+300 保证卡片绝对在最底下！
                     
                     // 2. 解析音乐邀请卡 (附带关键词兜底)
                     let isInvitingMusic = parsed.invite_music === true || parsed.invite_music === "true";
@@ -11694,86 +11841,6 @@ ${greetingInstruction}`;
             this.showToast('已加入一起听');
         }
     }
-    checkBackgroundActivity() {
-            if (!this.apiConfig.apiKey) return;
-            this.wechatState.sessions.forEach(session => {
-                if (session.backgroundActivity && !session.isGroup) {
-                    const status = session.onlineStatus || 'online';
-                    if (status !== 'offline') {
-                        // 每次轮询 3% 的概率触发（大概相当于每 10 分钟一次）
-                        if (Math.random() < 0.03) {
-                            this.generateBackgroundAiReply(session);
-                        }
-                    }
-                }
-            });
-        },
-        async generateBackgroundAiReply(session) {
-            const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
-            if (!friend) return;
-
-            try {
-                let url = this.apiConfig.baseUrl.trim().replace(/\/+$/, '');
-                if (!url.endsWith('/v1')) url += '/v1';
-                
-                const res = await fetch(`${url}/chat/completions`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiConfig.apiKey.trim()}` },
-                    body: JSON.stringify({ 
-                        model: this.apiConfig.selectedModel, 
-                        messages:[
-                            { role: 'system', content: `你是 ${friend.name}。这是你的人设: ${friend.bio}。玩家并没有理你，但你开启了后台活动模式。请主动给玩家发一条消息，可能是你在忙什么想起了他，或者是分享日常。纯文本，一句话，不要带引号。OPTIONAL: 你也可以仅返回一段 JSON 包含 "change_online_status" 改变你的状态而不说话。` },
-                            { role: 'user', content: '请执行后台自主行动。如果想说话就直接输出文字；如果只想改状态请输出类似 {"change_online_status": {"color":"busy", "text":"洗澡中"}}。' }
-                        ],
-                        temperature: 0.9
-                    })
-                });
-                
-                if (res.ok) {
-                    const data = await res.json();
-                    let content = data.choices[0].message.content.trim();
-                    
-                    try {
-                        let parsed = JSON.parse(content);
-                        if (parsed.change_online_status) {
-                            session.onlineStatus = parsed.change_online_status.color;
-                            session.statusText = parsed.change_online_status.text;
-                            session.autoReplyCache = '';
-                            session.messages.push({
-                                type: 'system',
-                                content: `[系统提示] 角色自主将状态更改为了: ${session.statusText}`,
-                                time: Date.now()
-                            });
-                            if (this.wechatState.activeSession?.id === session.id) this.scrollToBottom();
-                            this.saveData();
-                            return;
-                        }
-                    } catch(e) {
-                        // 如果不是 JSON，说明它只想说话
-                        session.messages.push({
-                            content: content,
-                            isSelf: false,
-                            time: Date.now(),
-                            avatar: session.avatar,
-                            type: 'text'
-                        });
-                        session.lastMessage = content;
-                        
-                        if (this.currentApp !== 'wechat' || this.wechatState.activeNav !== 'room' || this.wechatState.activeSession?.id !== session.id || document.hidden) {
-                            session.unreadCount = (session.unreadCount || 0) + 1;
-                            if (!document.hidden) {
-                                this.showGlobalNotification(session, content);
-                            }
-                            this.sendPushNotification('微信新消息', session.name, content, session.avatar);
-                        } else {
-                            this.scrollToBottom();
-                        }
-                        if(this.notificationConfig.currentSound) new Audio(this.notificationConfig.currentSound).play();
-                        this.saveData();
-                    }
-                }
-            } catch (e) { console.error("Background AI Action Error", e); }
-        },
 }).mount('#app');
 </script>
 <script>
