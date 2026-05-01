@@ -2036,31 +2036,7 @@
                     </div>
                 </div>
             </div>
-        </transition>
-
-        <!-- 时间戳显示位置弹窗 -->
-        <transition name="app-slide">
-            <div v-if="timestampModeModal.show" class="fixed inset-0 z-[105000]">
-                <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="timestampModeModal.show = false"></div>
-                <div class="ios-list-modal">
-                    <div class="ios-list-header">时间戳排版模式 <button class="absolute right-4 text-blue-500 font-normal text-sm" @click="timestampModeModal.show = false">取消</button></div>
-                    <div class="ios-list-content p-0 bg-white">
-                        <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setTimestampMode('outside')">
-                            <div><div class="font-bold text-gray-900">气泡外 (默认)</div><div class="text-xs text-gray-500 mt-1">显示在每条气泡外部的下方</div></div>
-                            <i v-if="(wechatState.activeSession?.timestampMode || 'outside') === 'outside'" class="fas fa-check text-blue-500"></i>
-                        </div>
-                        <div class="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setTimestampMode('inside')">
-                            <div><div class="font-bold text-gray-900">气泡内</div><div class="text-xs text-gray-500 mt-1">将时间嵌入到气泡内部底端</div></div>
-                            <i v-if="wechatState.activeSession?.timestampMode === 'inside'" class="fas fa-check text-blue-500"></i>
-                        </div>
-                        <div class="p-4 flex items-center justify-between cursor-pointer active:bg-gray-50" @click="setTimestampMode('midchat')">
-                            <div><div class="font-bold text-gray-900">聊天中途</div><div class="text-xs text-gray-500 mt-1">关闭单条时间，每隔20分钟在中间显示一次</div></div>
-                            <i v-if="wechatState.activeSession?.timestampMode === 'midchat'" class="fas fa-check text-blue-500"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </transition>
+        </transition>        
     <transition name="app-slide">
         <div v-if="currentApp === 'wechat'" class="absolute inset-0 z-[1000] bg-[#f7f7f7] flex flex-col overflow-hidden text-black" @click="closeChatMenus">
             
