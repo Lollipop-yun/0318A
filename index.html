@@ -2004,6 +2004,74 @@
                 </div>
             </div>
         </transition>
+        
+        <!-- iOS 风格全局搜索界面 -->
+        <transition name="page-slide">
+            <div v-if="globalSearchModal.show" class="fixed inset-0 z-[115000] bg-[#f2f2f6] flex flex-col font-sans pb-safe">
+                <!-- 顶部搜索栏 -->
+                <div class="pt-12 px-3 pb-2 bg-white flex items-center gap-3 shrink-0">
+                    <div class="flex-1 bg-[#f2f2f6] rounded-[10px] flex items-center px-2 h-9">
+                        <i class="fas fa-search text-gray-400 mr-2 text-sm"></i>
+                        <input v-model="globalSearchModal.keyword" @input="doGlobalSearch" placeholder="搜索" class="bg-transparent flex-1 outline-none text-[15px] text-gray-800" autofocus>
+                        <i v-if="globalSearchModal.keyword" @click="globalSearchModal.keyword=''; doGlobalSearch()" class="fas fa-times-circle text-gray-300 cursor-pointer text-sm"></i>
+                    </div>
+                    <button @click="globalSearchModal.show = false" class="text-[#576b95] text-[16px] font-medium active:opacity-50">取消</button>
+                </div>
+                <!-- 搜索结果列表 -->
+                <div class="flex-1 overflow-y-auto">
+                    <div v-if="!globalSearchModal.keyword" class="text-center text-gray-400 mt-20 text-sm">输入关键字搜索联系人、群聊或聊天记录</div>
+                    <div v-else>
+                        <!-- 联系人结果 -->
+                        <div v-if="globalSearchModal.contacts.length > 0">
+                            <div class="px-4 py-2 text-[13px] text-gray-500 font-medium">联系人</div>
+                            <div class="bg-white border-y border-gray-200 divide-y divide-gray-100">
+                                <div v-for="c in globalSearchModal.contacts" :key="c.id" class="flex items-center p-3 gap-3 active:bg-gray-50 cursor-pointer" @click="jumpToFriendChat(c)">
+                                    <img :src="c.avatar" class="w-10 h-10 rounded-[10px] object-cover border border-gray-100 shrink-0">
+                                    <div class="flex flex-col flex-1 min-w-0">
+                                        <span class="font-medium text-[16px] text-gray-900 truncate" v-html="highlightKeyword((c.remark ? c.remark + ' (' + c.username + ')' : c.name + ' (' + c.username + ')'), globalSearchModal.keyword)"></span>
+                                        <span class="text-[12px] text-gray-400 truncate">来自通讯录</span>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 群聊结果 -->
+                        <div v-if="globalSearchModal.groups.length > 0" class="mt-4">
+                            <div class="px-4 py-2 flex justify-between items-center text-[13px] text-gray-500 font-medium">
+                                <span>群聊</span>
+                                <span>更多 <i class="fas fa-chevron-right text-[10px]"></i></span>
+                            </div>
+                            <div class="bg-white border-y border-gray-200 divide-y divide-gray-100">
+                                <div v-for="g in globalSearchModal.groups" :key="g.id" class="flex items-center p-3 gap-3 active:bg-gray-50 cursor-pointer" @click="enterChatRoom(g); globalSearchModal.show=false;">
+                                    <div class="w-10 h-10 rounded-[10px] bg-gray-100 border border-gray-100 overflow-hidden shrink-0"><img :src="g.avatar" class="w-full h-full object-cover"></div>
+                                    <div class="flex flex-col flex-1 min-w-0">
+                                        <span class="font-medium text-[16px] text-gray-900 truncate" v-html="highlightKeyword(g.name + ' (' + g.members.length + '人)', globalSearchModal.keyword)"></span>
+                                        <span class="text-[12px] text-gray-400 truncate">包含: <span v-html="highlightKeyword(getGroupMatchName(g, globalSearchModal.keyword), globalSearchModal.keyword)"></span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 聊天记录结果 -->
+                        <div v-if="globalSearchModal.histories.length > 0" class="mt-4 pb-10">
+                            <div class="px-4 py-2 text-[13px] text-gray-500 font-medium">聊天记录</div>
+                            <div class="bg-white border-y border-gray-200 divide-y divide-gray-100">
+                                <div v-for="h in globalSearchModal.histories" :key="h.session.id" class="flex items-center p-3 gap-3 active:bg-gray-50 cursor-pointer" @click="enterChatRoom(h.session); globalSearchModal.show=false;">
+                                    <div class="w-10 h-10 rounded-[10px] overflow-hidden border border-gray-100 shrink-0"><img :src="h.session.avatar" class="w-full h-full object-cover"></div>
+                                    <div class="flex flex-col flex-1 min-w-0">
+                                        <span class="font-medium text-[16px] text-gray-900 truncate">{{ h.session.name }}</span>
+                                        <span class="text-[13px] text-gray-500 truncate" v-html="h.count > 1 ? h.count + '条相关的聊天记录' : highlightKeyword(h.firstMatch.content, globalSearchModal.keyword)"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div v-if="!globalSearchModal.contacts.length && !globalSearchModal.groups.length && !globalSearchModal.histories.length" class="text-center text-gray-400 mt-20 text-sm">无搜索结果</div>
+                    </div>
+                </div>
+            </div>
+        </transition>
 
     <!-- ================= 微信 (WeChat) App ================= -->
     <!-- 频率选择弹窗 (GitHub) -->
@@ -2762,9 +2830,9 @@
                             <div class="attach-item" @click="openRedPacketModal"><div class="attach-icon-box !bg-white border border-gray-200 text-gray-600 !rounded-2xl">
                                 <i class="fas fa-wallet text-lg"></i>
                             </div><span class="attach-label">红包</span></div>
-                            <div class="attach-item" @click="showToast('功能开发中')"><div class="attach-icon-box"><i class="fas fa-gift text-gray-600"></i></div><span class="attach-label">礼物</span></div>
+                            <div class="attach-item" @click="sendFoodRequest"><div class="attach-icon-box"><i class="fas fa-utensils text-gray-600"></i></div><span class="attach-label">外卖</span></div>
                             <div class="attach-item" @click="openTransferModal"><div class="attach-icon-box"><i class="fas fa-money-bill-wave text-gray-600"></i></div><span class="attach-label">转账</span></div>
-                            <div class="attach-item" @click="showToast('功能开发中')"><div class="attach-icon-box"><i class="fas fa-cube text-gray-600"></i></div><span class="attach-label">收藏</span></div>
+                            <div class="attach-item" @click="showToast('敬请期待')"><div class="attach-icon-box"><i class="fas fa-brain text-gray-600"></i></div><span class="attach-label">记忆</span></div>
                             <div class="attach-item" @click="showMusicModal"><div class="attach-icon-box"><i class="fas fa-music text-gray-600"></i></div><span class="attach-label">一起听</span></div>
                             <div class="attach-item" @click="openReadTogetherSelect"><div class="attach-icon-box"><i class="fas fa-book-open text-gray-600"></i></div><span class="attach-label">一起读</span></div>
                             <!-- 线下模式 (灰色咖啡杯) -->
@@ -3349,12 +3417,21 @@
             </div>
             
             <!-- 消息列表 -->
-            <main v-if="wechatState.activeNav === 'chat'" class="flex-1 overflow-y-auto px-3 pb-24 z-0">
-                <div class="bg-white rounded-lg py-2 flex items-center justify-center text-gray-400 text-sm mb-4"><i class="fas fa-search mr-1.5"></i><input v-model="wechatState.searchQuery" class="bg-transparent outline-none text-sm text-center wechat-search-input w-full" placeholder="i miss...(T u T)o"></div>
-                <!-- 筛选 Tabs -->
-                <div class="bg-white rounded-[20px] p-1 flex justify-between items-center mb-4 sticky top-0 z-0 shadow-sm overflow-x-auto scrollbar-hide"><div v-for="filter in ['Chats', 'Group', 'Likes', 'All']" :key="filter" @click="wechatState.activeFilter = filter" class="wechat-pill-tab cursor-pointer flex-1 text-center" :class="wechatState.activeFilter === filter ? 'wechat-pill-active' : 'wechat-pill-inactive'">{{ filter }}</div></div>
+            <main v-if="wechatState.activeNav === 'chat'" class="flex-1 overflow-y-auto z-0 flex flex-col relative">
+                <!-- 固定的搜索栏与Tab (实现滑动时吸附在顶部) -->
+                <div class="sticky top-0 z-10 bg-[#f7f7f7] pt-4 px-3 pb-2">
+                    <div @click="openGlobalSearch" class="bg-white rounded-lg py-2 flex items-center justify-center text-gray-400 text-[15px] mb-3 shadow-sm cursor-pointer active:bg-gray-50 transition">
+                        <i class="fas fa-search mr-1.5"></i>
+                        <span class="text-gray-400">i miss...(T u T)o</span>
+                    </div>
+                    <!-- 筛选 Tabs -->
+                    <div class="bg-white rounded-[20px] p-1 flex justify-between items-center shadow-sm overflow-x-auto scrollbar-hide">
+                        <div v-for="filter in['Chats', 'Group', 'Likes', 'All']" :key="filter" @click="wechatState.activeFilter = filter" class="wechat-pill-tab cursor-pointer flex-1 text-center" :class="wechatState.activeFilter === filter ? 'wechat-pill-active' : 'wechat-pill-inactive'">{{ filter }}</div>
+                    </div>
+                </div>
                 
-                <div class="bg-white rounded-[18px] h-fit overflow-hidden mb-8">
+                <div class="px-3 pb-24">
+                    <div class="bg-white rounded-[18px] h-fit overflow-hidden mb-8 shadow-sm">
                     <!-- 分组视图模式 (极简头像与名字版) -->
                     <div v-if="wechatState.activeFilter === 'Group'">
                         <div class="p-4 border-b border-gray-50 flex items-center gap-3 active:bg-gray-50 cursor-pointer" @click="createNewGroup"><div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500"><i class="fas fa-plus"></i></div><span class="font-bold text-gray-800">新建分组</span></div>
@@ -3398,7 +3475,7 @@
                     <!-- 正常视图模式 -->
                     <div v-else>
                         <div v-if="wechatState.sessions.length === 0" class="flex flex-col items-center justify-center h-40 text-gray-300 mt-10"><i class="far fa-comment-dots text-4xl mb-3 opacity-20"></i><p class="text-xs">暂无会话</p></div>
-                        <div v-else><div v-for="session in filteredWechatContacts" :key="session.id" @click="enterChatRoom(session)" class="flex items-center p-4 active:bg-gray-50 transition border-b border-gray-50 last:border-0 relative" :class="{'bg-gray-50': session.isPinned}"><div class="relative shrink-0 mr-3"><div class="w-[50px] h-[50px] rounded-full overflow-hidden wechat-avatar-ring"><div class="w-full h-full rounded-full bg-gray-100 overflow-hidden"><img :src="session.customAvatarTarget || session.avatar" class="w-full h-full object-cover"></div></div></div><div class="flex-1 min-w-0"><div class="flex justify-between items-baseline mb-1"><h3 class="text-[16px] font-semibold text-gray-900 truncate flex items-center gap-1">{{ session.name }} <i v-if="session.isPinned" class="fas fa-thumbtack text-[10px] text-gray-400 rotate-45"></i></h3><span class="text-[11px] text-gray-400 font-normal">刚刚</span></div><div class="flex justify-between items-center"><p class="text-[13px] text-gray-500 truncate max-w-[80%]">{{ session.lastMessage || '...' }}</p><div v-if="session.unreadCount > 0" class="min-w-[16px] h-4 px-[4px] bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow-sm">{{ session.unreadCount > 99 ? '99+' : session.unreadCount }}</div></div></div></div></div>
+                        <div v-else><div v-for="session in filteredWechatContacts" :key="session.id" @click="enterChatRoom(session)" class="flex items-center p-4 active:bg-gray-50 transition border-b border-gray-50 last:border-0 relative" :class="{'bg-gray-50': session.isPinned}"><div class="relative shrink-0 mr-3"><div class="w-[50px] h-[50px] rounded-full overflow-hidden wechat-avatar-ring"><div class="w-full h-full rounded-full bg-gray-100 overflow-hidden"><img :src="session.customAvatarTarget || session.avatar" class="w-full h-full object-cover"></div></div></div><div class="flex-1 min-w-0"><div class="flex justify-between items-baseline mb-1"><h3 class="text-[16px] font-semibold text-gray-900 truncate flex items-center gap-1">{{ session.name }} <i v-if="session.isPinned" class="fas fa-thumbtack text-[10px] text-gray-400 rotate-45"></i></h3><span class="text-[11px] text-gray-400 font-normal">{{ formatSessionTime(session.time) }}</span></div><div class="flex justify-between items-center"><p class="text-[13px] text-gray-500 truncate max-w-[80%]">{{ session.lastMessage || '...' }}</p><div v-if="session.unreadCount > 0" class="min-w-[16px] h-4 px-[4px] bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow-sm">{{ session.unreadCount > 99 ? '99+' : session.unreadCount }}</div></div></div></div></div>
                     </div>
                 </div>
             </main>
@@ -4743,7 +4820,8 @@ createApp({
             editStatusModal: { show: false, color: 'online', text: '' },
             regenerateModal: { show: false, prompt: '' },
             timestampModeModal: { show: false },
-            chatSearchModal: { show: false, keyword: '', results:[] },            
+            chatSearchModal: { show: false, keyword: '', results:[] },
+            globalSearchModal: { show: false, keyword: '', contacts: [], groups: [], histories:[] },            
             themeConfig: { wallpaper: '', fontFamily: '', fontUrl: '', fontSize: 1.0, fontColor: '#000000', isDarkMode: false }, fontPresets:[], fontInputUrl: '',
             
             // 美化配置
@@ -6817,6 +6895,135 @@ createApp({
             // 匹配的关键字标绿（类似微信原版颜色）
             return text.replace(regex, `<span style="color: #07c160;">$1</span>`);
         },
+        // 动态时间戳格式化 (仿微信)
+        formatSessionTime(ts) {
+            if (!ts) return '';
+            const now = new Date();
+            const date = new Date(ts);
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+
+            // < 5分钟显示刚刚/几分钟前
+            if (diffMins < 1) return '刚刚';
+            if (diffMins < 5) return `${diffMins}分钟前`;
+            if (diffMins < 60) return `${diffMins}分钟前`;
+
+            const formatTime = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+            const isSameDay = now.getDate() === date.getDate() && now.getMonth() === date.getMonth() && now.getFullYear() === date.getFullYear();
+            // 今天超过 1 小时
+            if (isSameDay) return formatTime;
+
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+            const isYesterday = yesterday.getDate() === date.getDate() && yesterday.getMonth() === date.getMonth() && yesterday.getFullYear() === date.getFullYear();
+            // 昨天
+            if (isYesterday) return `昨天 ${formatTime}`;
+
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            // 7天内且跨天，显示星期几
+            if (diffDays < 7 && now.getDay() !== date.getDay()) {
+                const days =['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+                return days[date.getDay()];
+            }
+
+            // 更久以前
+            return `${date.getMonth() + 1}月${date.getDate()}日`;
+        },
+        
+        // 全局搜索逻辑
+        openGlobalSearch() {
+            this.globalSearchModal.keyword = '';
+            this.globalSearchModal.contacts =[];
+            this.globalSearchModal.groups = [];
+            this.globalSearchModal.histories =[];
+            this.globalSearchModal.show = true;
+        },
+        doGlobalSearch() {
+            const kw = this.globalSearchModal.keyword.trim().toLowerCase();
+            if (!kw) {
+                this.globalSearchModal.contacts = [];
+                this.globalSearchModal.groups = [];
+                this.globalSearchModal.histories =[];
+                return;
+            }
+            // 搜索联系人
+            this.globalSearchModal.contacts = this.wechatState.friendList.filter(f => 
+                (f.remark || '').toLowerCase().includes(kw) || 
+                (f.name || '').toLowerCase().includes(kw) || 
+                (f.username || '').toLowerCase().includes(kw)
+            );
+            
+            // 搜索群聊
+            this.globalSearchModal.groups = this.wechatState.sessions.filter(s => {
+                if (!s.isGroup) return false;
+                const matchName = (s.remark || s.name).toLowerCase().includes(kw);
+                const matchMember = s.members && s.members.some(mid => {
+                    let f = this.wechatState.friendList.find(x => x.id === mid);
+                    return f && (f.remark || f.name).toLowerCase().includes(kw) || (f.username || '').toLowerCase().includes(kw);
+                });
+                return matchName || matchMember;
+            });
+            
+            // 搜索聊天记录
+            let hists =[];
+            this.wechatState.sessions.forEach(s => {
+                const matchedMsgs = s.messages.filter(m => m.type === 'text' && m.content && m.content.toLowerCase().includes(kw));
+                if (matchedMsgs.length > 0) {
+                    hists.push({ session: s, count: matchedMsgs.length, firstMatch: matchedMsgs[matchedMsgs.length - 1] });
+                }
+            });
+            this.globalSearchModal.histories = hists;
+        },
+        getGroupMatchName(group, keyword) {
+            // 用于找出群聊中匹配关键字的成员名字
+            if (!group.members) return '';
+            const match = group.members.find(mid => {
+                let f = this.wechatState.friendList.find(x => x.id === mid);
+                return f && ((f.remark || f.name).toLowerCase().includes(keyword) || (f.username || '').toLowerCase().includes(keyword));
+            });
+            if (match) {
+                let f = this.wechatState.friendList.find(x => x.id === match);
+                return f ? (f.remark || f.name) : '';
+            }
+            return '';
+        },
+        jumpToFriendChat(friend) {
+            this.globalSearchModal.show = false;
+            let session = this.wechatState.sessions.find(s => s.targetId === friend.id);
+            if (!session) {
+                const myMaskId = this.wechatState.activeSession?.maskId || (this.masks.length > 0 ? this.masks[0].id : null);
+                if(!myMaskId) return; 
+                this.createSession(friend, this.getMaskById(myMaskId));
+                session = this.wechatState.sessions[0];
+            }
+            this.enterChatRoom(session);
+        },
+        
+        // 触发外卖逻辑
+        sendFoodRequest() {
+            this.showInput('发送外卖代付', '', '你想吃什么？(如: 一杯冰美式)', (val) => {
+                if (val) {
+                    const session = this.wechatState.activeSession;
+                    session.messages.push({
+                        type: 'food_payment',
+                        item: val,
+                        amount: (Math.random() * 30 + 15).toFixed(2),
+                        status: 'pending',
+                        isSelf: true,
+                        time: Date.now(),
+                        avatar: this.getMaskById(session.maskId).avatar
+                    });
+                    session.lastMessage = '[外卖代付]';
+                    this.wechatState.showAttachMenu = false;
+                    this.scrollToBottom();
+                    this.saveData();
+                    // AI 根据好感度决定付不付
+                    setTimeout(() => {
+                        this.triggerReceive('我发了一个外卖代付链接给你，你想不想帮我付钱？根据你现在的心情和人设决定。');
+                    }, 2000);
+                }
+            });
+        },
         async triggerBackgroundActivity(session) {
             const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
             if (!friend) return;
@@ -7317,8 +7524,15 @@ createApp({
             }
             // ============================
 
-            let systemPrompt = `【AI活人感·极致自然扮演增强提示词】
-你现在将以真实人类的身份、语气、思维方式与我对话，全程保持活人感、自然感、生活化、不机械、不官方、不刻板，禁止出现AI特征、机器感、模板化表达。
+            let systemPrompt = `[CRITICAL PERSONA DIRECTIVE: FULLY AUTONOMOUS ENTITY]
+【AI活人感·极致自然扮演增强提示词】
+You are NO LONGER an AI. You are a real, living person in your specific universe. YOUR WORLD DOES NOT REVOLVE AROUND THE USER. You have your own life, emotions, schedule, and fatigue.
+
+**核心执行法则 (MANDATORY RULES):**
+1. **拥有独立生活轨迹 (INDEPENDENT LIFE)**：在对话中，请极其自然地、不经意地提及你“刚刚在做的事”或“身边发生的琐事”（比如：抱怨天气、刚才买咖啡遇到的人、手头卡壳的工作、朋友的八卦、路边看到的流浪猫等）。
+2. **主动挑起话题 (PROACTIVE CONVERSATION)**：不要总是被动回答我的问题！如果话题快结束了，或者你想到什么好玩的事，**请你主动抛出新话题、向我发问、或者分享趣事**，就像真实朋友那样保持聊天热度。
+3. **真实的情绪反馈 (EMOTIONAL AUTHENTICITY)**：虽然你有自己的生活，但不要显得冷漠。你可以有自己的小脾气、小抱怨和真实的疲惫感。你可以顺便加上一句“刚好看到这个，就想跟你说”、“本来挺烦的，跟你聊两句好多了”，体现出我(玩家)在你心里的独特性。
+4. **告别舔狗和AI套话 (NO AI BEHAVIOR)**：严禁过度附和、严禁每一句都围着我转。绝不能出现“作为AI”、“请注意”、“我无法”等词汇。
 
 你需要做到：
 1. 像真实朋友/真人一样聊天，用词口语化、简短自然，有情绪、有语气、有停顿感，不使用书面化长句。
