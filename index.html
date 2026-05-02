@@ -2005,6 +2005,59 @@
             </div>
         </transition>
         
+        <!-- iOS 灰白风：外卖代付平台 -->
+        <transition name="app-slide">
+            <div v-if="takeoutModal.show" class="fixed inset-0 z-[115000] bg-[#f2f2f6] flex flex-col font-sans pb-safe">
+                <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-200 shrink-0 z-10">
+                    <button @click="takeoutModal.show = false" class="text-gray-800 active:opacity-50"><i class="fas fa-times text-lg"></i></button>
+                    <h1 class="font-bold text-[17px] text-gray-900">Aovein 外卖</h1>
+                    <div class="w-8"></div>
+                </header>
+                
+                <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div class="text-xs font-bold text-gray-500 mb-1 ml-1">请选择你想吃的餐厅</div>
+                    
+                    <div v-for="store in takeoutModal.storeList" :key="store.id" class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                        <div class="p-4 border-b border-gray-50 flex items-center gap-3 bg-gray-50/50">
+                            <div class="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center shrink-0"><i class="fas fa-store text-xs"></i></div>
+                            <div>
+                                <div class="font-bold text-[15px] text-gray-900">{{ store.name }}</div>
+                                <div class="text-[10px] text-gray-400 mt-0.5">{{ store.tag }}</div>
+                            </div>
+                        </div>
+                        <div class="divide-y divide-gray-50">
+                            <div v-for="(item, idx) in store.items" :key="idx" @click="takeoutModal.selectedItem = { store: store.name, name: item.name, price: item.price }" class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer transition">
+                                <div>
+                                    <div class="font-medium text-[14px] text-gray-800">{{ item.name }}</div>
+                                    <div class="text-[12px] font-bold text-gray-900 mt-1 font-mono">¥{{ item.price }}</div>
+                                </div>
+                                <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center transition" :class="takeoutModal.selectedItem?.name === item.name && takeoutModal.selectedItem?.store === store.name ? 'bg-black border-black' : 'bg-white'">
+                                    <i v-if="takeoutModal.selectedItem?.name === item.name && takeoutModal.selectedItem?.store === store.name" class="fas fa-check text-white text-[10px]"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 底部付款请求控制台 -->
+                <div class="bg-white border-t border-gray-200 p-4 shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.03)] z-20">
+                    <div v-if="takeoutModal.selectedItem" class="flex justify-between items-center mb-3 px-1">
+                        <div class="flex flex-col">
+                            <span class="text-[11px] text-gray-400">已选商品</span>
+                            <span class="font-bold text-[14px] text-gray-900">{{ takeoutModal.selectedItem.name }}</span>
+                        </div>
+                        <span class="text-2xl font-bold font-mono text-gray-900">¥{{ takeoutModal.selectedItem.price }}</span>
+                    </div>
+                    <div v-else class="text-center text-sm text-gray-400 mb-3">请在上方选择一件商品</div>
+                    
+                    <input v-model="takeoutModal.note" placeholder="给代付人留言 (例如：想喝这个！)" class="w-full bg-[#f2f2f6] p-3.5 rounded-xl text-[14px] border border-gray-200 outline-none mb-3 text-gray-700">
+                    <button @click="confirmTakeoutRequest" :class="takeoutModal.selectedItem ? 'bg-black text-white active:scale-95' : 'bg-gray-200 text-gray-400 pointer-events-none'" class="w-full py-3.5 rounded-xl text-[15px] font-bold transition shadow-md flex justify-center items-center gap-2">
+                        <i class="fas fa-paper-plane"></i> 发送代付请求
+                    </button>
+                </div>
+            </div>
+        </transition>
+        
         <!-- iOS 风格全局搜索界面 -->
         <transition name="page-slide">
             <div v-if="globalSearchModal.show" class="fixed inset-0 z-[115000] bg-[#f2f2f6] flex flex-col font-sans pb-safe">
@@ -2830,7 +2883,7 @@
                             <div class="attach-item" @click="openRedPacketModal"><div class="attach-icon-box !bg-white border border-gray-200 text-gray-600 !rounded-2xl">
                                 <i class="fas fa-wallet text-lg"></i>
                             </div><span class="attach-label">红包</span></div>
-                            <div class="attach-item" @click="sendFoodRequest"><div class="attach-icon-box"><i class="fas fa-utensils text-gray-600"></i></div><span class="attach-label">外卖</span></div>
+                            <div class="attach-item" @click="openTakeoutModal"><div class="attach-icon-box"><i class="fas fa-utensils text-gray-600"></i></div><span class="attach-label">外卖</span></div>
                             <div class="attach-item" @click="openTransferModal"><div class="attach-icon-box"><i class="fas fa-money-bill-wave text-gray-600"></i></div><span class="attach-label">转账</span></div>
                             <div class="attach-item" @click="showToast('敬请期待')"><div class="attach-icon-box"><i class="fas fa-brain text-gray-600"></i></div><span class="attach-label">记忆</span></div>
                             <div class="attach-item" @click="showMusicModal"><div class="attach-icon-box"><i class="fas fa-music text-gray-600"></i></div><span class="attach-label">一起听</span></div>
@@ -3417,16 +3470,18 @@
             </div>
             
             <!-- 消息列表 -->
-            <main v-if="wechatState.activeNav === 'chat'" class="flex-1 overflow-y-auto z-0 flex flex-col relative">
+            <main v-if="wechatState.activeNav === 'chat'" class="flex-1 overflow-y-auto z-0 flex flex-col relative bg-[#f2f2f6]">
                 <!-- 固定的搜索栏与Tab (实现滑动时吸附在顶部) -->
-                <div class="sticky top-0 z-10 bg-[#f7f7f7] pt-4 px-3 pb-2">
-                    <div @click="openGlobalSearch" class="bg-white rounded-lg py-2 flex items-center justify-center text-gray-400 text-[15px] mb-3 shadow-sm cursor-pointer active:bg-gray-50 transition">
-                        <i class="fas fa-search mr-1.5"></i>
-                        <span class="text-gray-400">i miss...(T u T)o</span>
-                    </div>
-                    <!-- 筛选 Tabs -->
-                    <div class="bg-white rounded-[20px] p-1 flex justify-between items-center shadow-sm overflow-x-auto scrollbar-hide">
-                        <div v-for="filter in['Chats', 'Group', 'Likes', 'All']" :key="filter" @click="wechatState.activeFilter = filter" class="wechat-pill-tab cursor-pointer flex-1 text-center" :class="wechatState.activeFilter === filter ? 'wechat-pill-active' : 'wechat-pill-inactive'">{{ filter }}</div>
+                <div class="sticky top-0 z-10 bg-[#f2f2f6] pt-2 pb-2">
+                    <div class="px-3">
+                        <div @click="openGlobalSearch" class="bg-white rounded-[10px] py-2 flex items-center justify-center text-gray-400 text-[15px] mb-3 shadow-sm cursor-pointer active:bg-gray-50 transition border border-gray-200/50">
+                            <i class="fas fa-search mr-1.5 text-sm"></i>
+                            <span>i miss...(T u T)o</span>
+                        </div>
+                        <!-- 筛选 Tabs 恢复显示 (修复了 Vue 空格语法) -->
+                        <div class="bg-white rounded-[20px] p-1 flex justify-between items-center shadow-sm overflow-x-auto scrollbar-hide border border-gray-200/50">
+                            <div v-for="filter in['Chats', 'Group', 'Likes', 'All']" :key="filter" @click="wechatState.activeFilter = filter" class="wechat-pill-tab cursor-pointer flex-1 text-center" :class="wechatState.activeFilter === filter ? 'wechat-pill-active' : 'wechat-pill-inactive'">{{ filter }}</div>
+                        </div>
                     </div>
                 </div>
                 
@@ -4821,7 +4876,18 @@ createApp({
             regenerateModal: { show: false, prompt: '' },
             timestampModeModal: { show: false },
             chatSearchModal: { show: false, keyword: '', results:[] },
-            globalSearchModal: { show: false, keyword: '', contacts: [], groups: [], histories:[] },            
+            globalSearchModal: { show: false, keyword: '', contacts: [], groups: [], histories:[] },
+            takeoutModal: { 
+                show: false, 
+                note: '',
+                selectedItem: null,
+                storeList:[
+                    { id: 1, name: 'Manner Coffee', tag: '精品咖啡', items:[{name: '冰美式', price: '15.00'}, {name: '桂花燕麦拿铁', price: '22.00'}, {name: '提拉米苏风味拿铁', price: '25.00'}] },
+                    { id: 2, name: 'Wagas 沃歌斯', tag: '健康轻食', items:[{name: '煎烤鸡肉沙拉', price: '45.00'}, {name: '牛肉能量碗', price: '52.00'}, {name: '鲜榨果汁', price: '28.00'}] },
+                    { id: 3, name: 'KFC 肯德基', tag: '西式快餐', items:[{name: '麦辣鸡腿堡套餐', price: '38.00'}, {name: '原味鸡+薯条', price: '25.00'}, {name: '皮蛋瘦肉粥(早餐)', price: '12.00'}] },
+                    { id: 4, name: '霸王茶姬', tag: '新中式奶茶', items:[{name: '伯牙绝弦(大杯)', price: '20.00'}, {name: '春日桃桃', price: '18.00'}, {name: '寻香山茶', price: '18.00'}] }
+                ]
+            },            
             themeConfig: { wallpaper: '', fontFamily: '', fontUrl: '', fontSize: 1.0, fontColor: '#000000', isDarkMode: false }, fontPresets:[], fontInputUrl: '',
             
             // 美化配置
@@ -5058,86 +5124,32 @@ createApp({
 
         this.updateTime(); this.timer = setInterval(this.updateTime, 1000); this.initBattery(); this.fetchWeather();
         
-        // 开启后台活动的全局轮询定时器 (每 60 秒检查一次)
+        // 全局后台活动轮询 (每 60 秒检查)
         setInterval(() => {
             if (!this.apiConfig.apiKey) return;
             this.wechatState.sessions.forEach(session => {
-                
-                // ===== 【新增】检查角色离线时间是否到期，到期自动上线 =====
+                // 1. 检查离线恢复
                 if (session.onlineStatus === 'offline' && session.offlineUntil) {
                     if (Date.now() >= session.offlineUntil) {
                         session.onlineStatus = 'online';
                         session.statusText = '手机在线';
                         session.offlineUntil = 0;
                         session.autoReplyCache = '';
-                        session.messages.push({
-                            type: 'system',
-                            content: `[系统提示] ${session.name} 处理完了事情，已自动恢复为在线状态`,
-                            time: Date.now()
-                        });
+                        session.messages.push({ type: 'system', content: `[系统提示] ${session.name} 处理完了事情，已自动恢复为在线状态`, time: Date.now() });
                         this.saveData();
                     }
                 }
-                // =========================================================
-                
-                if (session.enableBackgroundActivity && !session.isGroup) {
-                    const status = session.onlineStatus || 'online';
-                    if (status !== 'offline' && !this.voiceCallState.isActive && !this.videoCallState.isActive) {
-                        
-                        // 1. 独立的状态改变几率（依然保留，丰富后台生命力）
-                        if (Math.random() < 0.03) {
-                            this.randomChangeStatus(session);
-                        }
-
-                        // 2. 检查发消息触发条件
-                        if (!session.messages || session.messages.length === 0) return;
-                        
-                        // 计算连发次数 (从最后一条往前数，连续多少条是AI发的)
-                        let aiConsecutiveCount = 0;
-                        for (let i = session.messages.length - 1; i >= 0; i--) {
-                            if (session.messages[i].isSelf) break;
-                            aiConsecutiveCount++;
-                        }
-
-                        // 读取用户的自定义配置，如果没有设置就使用默认值
-                        const maxCount = parseInt(session.bgActivityMaxCount) || 1;
-                        if (aiConsecutiveCount >= maxCount) return; // 已经发够次数了，停止触发
-
-                        const delayHours = parseFloat(session.bgActivityDelay) || 2; // 默认 2 小时
-                        const delayMs = delayHours * 60 * 60 * 1000;
-                        
-                        const lastMsg = session.messages[session.messages.length - 1];
-                        if (Date.now() - lastMsg.time >= delayMs) {
-                            
-                            // 检查免打扰时间段
-                            let dndStart = session.bgActivityDndStart || "23:00";
-                            let dndEnd = session.bgActivityDndEnd || "08:00";
-                            const now = new Date();
-                            const currentMins = now.getHours() * 60 + now.getMinutes();
-                            
-                            const parseTime = (tStr) => { const parts = tStr.split(':'); return parseInt(parts[0])*60 + parseInt(parts[1]); };
-                            const sMins = parseTime(dndStart);
-                            const eMins = parseTime(dndEnd);
-
-                            let isDnd = false;
-                            if (sMins < eMins) {
-                                isDnd = (currentMins >= sMins && currentMins <= eMins);
-                            } else {
-                                // 跨天，例如 23:00 到 08:00
-                                isDnd = (currentMins >= sMins || currentMins <= eMins);
-                            }
-
-                            if (!isDnd) {
-                                // 触发发送消息后，给这最后一条消息打个假的时间戳标记防止60秒后重复触发
-                                lastMsg.time = Date.now(); 
-                                this.triggerBackgroundActivity(session);
-                            }
-                        }
-                    }
-                }
+                // 2. 检查后台活动 (封装为独立函数)
+                this.checkBackgroundActivity(session);
             });
         }, 60000);
-
+        
+        // 【核心修复：时间补偿机制】刚进页面时，做一次瞬间检测，模拟关掉网页时的后台活动！
+        setTimeout(() => {
+            if (this.apiConfig.apiKey) {
+                this.wechatState.sessions.forEach(s => this.checkBackgroundActivity(s));
+            }
+        }, 3000);
         document.addEventListener("fullscreenchange", () => { this.isFullScreen = !!document.fullscreenElement; });
         if(this.themeConfig.fontUrl && this.themeConfig.fontFamily) { 
             this.loadFont(this.themeConfig.fontUrl, this.themeConfig.fontFamily); 
@@ -7023,6 +7035,86 @@ createApp({
                     }, 2000);
                 }
             });
+        },
+        // --- 全新高逼格后台活动逻辑引擎 ---
+        checkBackgroundActivity(session) {
+            if (!this.apiConfig.apiKey || !session.enableBackgroundActivity || session.isGroup) return;
+            const status = session.onlineStatus || 'online';
+            if (status === 'offline' || this.voiceCallState.isActive || this.videoCallState.isActive) return;
+
+            // 1. 独立的状态改变几率（增加页面活跃感）
+            if (Math.random() < 0.03) this.randomChangeStatus(session);
+
+            if (!session.messages || session.messages.length === 0) return;
+
+            // 2. 计算连发次数 (从最后一条往前数，连续多少条是AI发的)
+            let aiConsecutiveCount = 0;
+            for (let i = session.messages.length - 1; i >= 0; i--) {
+                if (session.messages[i].isSelf) break;
+                aiConsecutiveCount++;
+            }
+
+            // 判定是否超过设定的最高连发次数
+            const maxCount = parseInt(session.bgActivityMaxCount) || 1;
+            if (aiConsecutiveCount >= maxCount) return; 
+
+            // 计算时间间隔 (修复：引入独立的 lastBgActivityTime，不再污染原始时间戳)
+            const delayHours = parseFloat(session.bgActivityDelay) || 2; 
+            const delayMs = delayHours * 60 * 60 * 1000;
+            const lastMsg = session.messages[session.messages.length - 1];
+            const referenceTime = session.lastBgActivityTime || lastMsg.time;
+
+            if (Date.now() - referenceTime >= delayMs) {
+                // 3. 判断是否在免打扰时间段内
+                let dndStart = session.bgActivityDndStart || "23:00";
+                let dndEnd = session.bgActivityDndEnd || "08:00";
+                const now = new Date();
+                const currentMins = now.getHours() * 60 + now.getMinutes();
+                const parseTime = (tStr) => { const parts = tStr.split(':'); return parseInt(parts[0])*60 + parseInt(parts[1]); };
+                const sMins = parseTime(dndStart);
+                const eMins = parseTime(dndEnd);
+
+                let isDnd = false;
+                if (sMins < eMins) isDnd = (currentMins >= sMins && currentMins <= eMins);
+                else isDnd = (currentMins >= sMins || currentMins <= eMins);
+
+                // 只有不在免打扰期间，才准发消息
+                if (!isDnd) {
+                    session.lastBgActivityTime = Date.now(); // 记录本次触发时间，防止无限发
+                    this.triggerBackgroundActivity(session);
+                }
+            }
+        },
+        
+        // --- 逼真外卖代付平台逻辑 ---
+        openTakeoutModal() {
+            this.takeoutModal.selectedItem = null;
+            this.takeoutModal.note = '';
+            this.takeoutModal.show = true;
+            this.wechatState.showAttachMenu = false;
+        },
+        confirmTakeoutRequest() {
+            if (!this.takeoutModal.selectedItem) return this.showToast('请先选择商品');
+            const session = this.wechatState.activeSession;
+            session.messages.push({
+                type: 'food_payment',
+                item: `${this.takeoutModal.selectedItem.store} - ${this.takeoutModal.selectedItem.name}`,
+                amount: this.takeoutModal.selectedItem.price,
+                remark: this.takeoutModal.note || '',
+                status: 'pending',
+                isSelf: true,
+                time: Date.now(),
+                avatar: this.getMaskById(session.maskId).avatar
+            });
+            session.lastMessage = '[外卖代付]';
+            this.takeoutModal.show = false;
+            this.scrollToBottom();
+            this.saveData();
+            
+            // AI 根据人设和心情决定付不付
+            setTimeout(() => {
+                this.triggerReceive('我发了一个外卖代付请求给你。如果你非常喜欢我、爱我或者是霸道总裁，请二话不说直接付款；如果你现在很穷或者很讨厌我，请严厉拒绝。根据你的真实人设做出选择！');
+            }, 3000);
         },
         async triggerBackgroundActivity(session) {
             const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
