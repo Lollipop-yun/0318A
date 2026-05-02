@@ -1936,6 +1936,40 @@
                 </div>
             </div>
         </transition>
+        
+        <!-- 查找聊天记录界面 -->
+        <transition name="page-slide">
+            <div v-if="chatSearchModal.show" class="fixed inset-0 z-[110000] bg-[#f2f2f6] flex flex-col font-sans pb-safe">
+                <!-- 顶部搜索栏 -->
+                <div class="pt-12 px-3 pb-2 bg-[#f2f2f6] border-b border-gray-200 flex items-center gap-3 shrink-0">
+                    <div class="flex-1 bg-white rounded-[10px] flex items-center px-2 h-9 border border-gray-200">
+                        <i class="fas fa-search text-gray-400 mr-2 text-sm"></i>
+                        <input v-model="chatSearchModal.keyword" @input="doChatSearch" placeholder="搜索聊天记录" class="bg-transparent flex-1 outline-none text-[15px] text-gray-800">
+                        <i v-if="chatSearchModal.keyword" @click="chatSearchModal.keyword=''; doChatSearch()" class="fas fa-times-circle text-gray-300 cursor-pointer text-sm"></i>
+                    </div>
+                    <button @click="chatSearchModal.show = false" class="text-[#576b95] text-[16px] font-medium active:opacity-50">取消</button>
+                </div>
+                <!-- 搜索结果列表 -->
+                <div class="flex-1 overflow-y-auto">
+                   <div v-if="chatSearchModal.keyword" class="px-4 py-2.5 text-[13px] text-gray-500 bg-[#f2f2f6]">{{ chatSearchModal.results.length }}条相关的聊天记录</div>
+                   <div v-if="chatSearchModal.results.length > 0" class="bg-white border-y border-gray-200 divide-y divide-gray-100">
+                       <div v-for="(res, idx) in chatSearchModal.results" :key="idx" class="flex items-center p-3 gap-3 active:bg-gray-50 cursor-pointer">
+                           <img :src="res.avatar" class="w-11 h-11 rounded-[10px] object-cover border border-gray-100 shrink-0">
+                           <div class="flex-1 min-w-0">
+                               <div class="flex justify-between items-center mb-0.5">
+                                   <span class="font-medium text-[16px] text-gray-900 truncate">{{ res.name }}</span>
+                                   <span class="text-[12px] text-gray-400">{{ formatChatTime(res.time) }}</span>
+                               </div>
+                               <div class="text-[14px] text-gray-500 truncate" v-html="highlightKeyword(res.content, chatSearchModal.keyword)"></div>
+                           </div>
+                       </div>
+                   </div>
+                   <div v-else-if="chatSearchModal.keyword && chatSearchModal.results.length === 0" class="text-center text-gray-400 mt-20 text-sm">
+                       未找到相关结果
+                   </div>
+                </div>
+            </div>
+        </transition>
 
     <!-- ================= 微信 (WeChat) App ================= -->
     <!-- 频率选择弹窗 (GitHub) -->
@@ -3113,10 +3147,7 @@
                     </div>
                 
                     <div class="space-y-6">
-                        <div @click="openSearchHistory" class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg">
-                            <span class="text-sm">查找聊天记录</span>
-                            <i class="fas fa-search text-gray-400 text-[13px]"></i>
-                        </div>
+                        <div class="flex justify-between items-center cursor-pointer active:opacity-50" @click="openChatSearch"><span class="text-sm">查找聊天记录</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
                         
                         <!-- 顶部排版模式选择 -->
                         <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-2 -mx-2 rounded-lg" @click="headerLayoutModal.show = true">
@@ -3146,24 +3177,24 @@
                         </div>
 
                         <!-- 允许角色后台活动 -->
-                        <div class="flex justify-between items-center"><span class="text-sm">允许角色后台活动</span><input type="checkbox" class="switch-checkbox" :id="'bg-active-'+wechatState.activeSession.id" v-model="wechatState.activeSession.enableBackgroundActivity" @change="saveData"><label :for="'bg-active-'+wechatState.activeSession.id" class="switch-label"><div class="switch-button"></div></label></div>
+                        <div class="flex justify-between items-center"><span class="text-sm">允许角色进行后台活动</span><input type="checkbox" class="switch-checkbox" :id="'bg-active-'+wechatState.activeSession.id" v-model="wechatState.activeSession.enableBackgroundActivity" @change="saveData"><label :for="'bg-active-'+wechatState.activeSession.id" class="switch-label"><div class="switch-button"></div></label></div>
                         <!-- 后台活动的高级参数 (展开) -->
-                        <div v-if="wechatState.activeSession.enableBackgroundActivity" class="bg-white border border-gray-100 rounded-xl mt-2 mb-2 divide-y divide-gray-50 shadow-[0_2px_10px_rgba(0,0,0,0.02)] -mx-1">
-                            <div class="flex items-center justify-between p-3">
-                                <span class="text-[13px] text-gray-700 font-medium">多久没回自动发消息 (小时)</span>
-                                <input type="number" v-model.number="wechatState.activeSession.bgActivityDelay" placeholder="默认: 2" class="w-12 bg-gray-50 border border-gray-200 rounded px-1 py-1 text-xs text-center outline-none" @change="saveData">
+                        <div v-if="wechatState.activeSession.enableBackgroundActivity" class="bg-gray-50 rounded-lg -mx-2 px-3 shadow-inner divide-y divide-gray-200/60 mt-1 border border-gray-100">
+                            <div class="flex items-center justify-between py-3">
+                                <span class="text-[13px] text-gray-700">未读多久后发消息 (小时)</span>
+                                <input type="number" v-model.number="wechatState.activeSession.bgActivityDelay" placeholder="2" class="w-12 bg-white border border-gray-200 rounded px-1 py-1 text-xs text-center outline-none shadow-sm text-gray-600" @change="saveData">
                             </div>
-                            <div class="flex items-center justify-between p-3">
-                                <span class="text-[13px] text-gray-700 font-medium">免打扰时段 (期间不发)</span>
+                            <div class="flex items-center justify-between py-3">
+                                <span class="text-[13px] text-gray-700">免打扰时段</span>
                                 <div class="flex items-center gap-1">
-                                    <input type="time" v-model="wechatState.activeSession.bgActivityDndStart" class="w-14 bg-gray-50 border border-gray-200 rounded px-0.5 py-1 text-[11px] text-center outline-none" @change="saveData">
-                                    <span class="text-xs text-gray-300">-</span>
-                                    <input type="time" v-model="wechatState.activeSession.bgActivityDndEnd" class="w-14 bg-gray-50 border border-gray-200 rounded px-0.5 py-1 text-[11px] text-center outline-none" @change="saveData">
+                                    <input type="time" v-model="wechatState.activeSession.bgActivityDndStart" class="w-20 bg-white border border-gray-200 rounded px-1 py-1 text-xs outline-none shadow-sm text-center text-gray-600" @change="saveData">
+                                    <span class="text-xs text-gray-400">-</span>
+                                    <input type="time" v-model="wechatState.activeSession.bgActivityDndEnd" class="w-20 bg-white border border-gray-200 rounded px-1 py-1 text-xs outline-none shadow-sm text-center text-gray-600" @change="saveData">
                                 </div>
                             </div>
-                            <div class="flex items-center justify-between p-3">
-                                <span class="text-[13px] text-gray-700 font-medium">连续发消息上限 (次)</span>
-                                <input type="number" v-model.number="wechatState.activeSession.bgActivityMaxCount" placeholder="默认: 1" class="w-12 bg-gray-50 border border-gray-200 rounded px-1 py-1 text-xs text-center outline-none" @change="saveData">
+                            <div class="flex items-center justify-between py-3">
+                                <span class="text-[13px] text-gray-700">最多连续发几次</span>
+                                <input type="number" v-model.number="wechatState.activeSession.bgActivityMaxCount" placeholder="1" class="w-12 bg-white border border-gray-200 rounded px-1 py-1 text-xs text-center outline-none shadow-sm text-gray-600" @change="saveData">
                             </div>
                         </div>
 
@@ -3241,32 +3272,6 @@
                     <button @click="resetChatBg" class="w-full bg-white text-red-500 border border-gray-200 py-3 rounded-xl font-bold text-sm">恢复默认</button>
                 </div>
                 <input type="file" ref="chatBgInput" accept="image/*" class="hidden" @change="handleChatBgChange">
-            </div>
-            
-            <!-- 查找聊天记录页面 -->
-            <div v-if="wechatState.activeNav === 'search-history'" class="flex-1 flex flex-col bg-[#f7f7f7] absolute inset-0 z-40">
-                <header class="h-[90px] pt-10 px-4 flex items-center bg-white border-b border-gray-100 shrink-0 shadow-sm">
-                    <button @click="wechatState.activeNav = 'chat-details'" class="w-8 h-8 flex items-center justify-center mr-2"><i class="fas fa-chevron-left text-lg text-black"></i></button>
-                    <div class="flex-1 bg-gray-100 rounded-lg flex items-center px-3 py-2">
-                        <i class="fas fa-search text-gray-400 text-sm mr-2"></i>
-                        <input v-model="searchHistoryQuery" @input="performHistorySearch" type="text" placeholder="搜索关键词..." class="bg-transparent border-none outline-none text-sm w-full font-medium text-gray-800" autofocus>
-                        <i v-if="searchHistoryQuery" @click="searchHistoryQuery=''; searchHistoryResults=[]" class="fas fa-times-circle text-gray-400 text-sm ml-2 cursor-pointer active:scale-90"></i>
-                    </div>
-                </header>
-                <div class="flex-1 overflow-y-auto p-4">
-                    <div v-if="searchHistoryQuery && searchHistoryResults.length === 0" class="text-center text-gray-400 text-sm mt-10">找不到匹配的聊天记录</div>
-                    <div v-if="!searchHistoryQuery" class="flex flex-col items-center text-gray-300 mt-16"><i class="fas fa-search text-3xl mb-3 opacity-50"></i><span class="text-sm">输入关键词查找</span></div>
-                    <div v-for="(res, idx) in searchHistoryResults" :key="idx" class="bg-white p-3 rounded-2xl mb-3 shadow-sm border border-gray-100 flex gap-3 cursor-pointer active:bg-gray-50 transition">
-                        <img :src="res.avatar" class="w-10 h-10 rounded-xl object-cover shrink-0 border border-gray-50">
-                        <div class="flex-1 min-w-0 flex flex-col justify-center">
-                            <div class="flex justify-between items-end mb-1">
-                                <span class="text-sm font-bold text-gray-900">{{ res.name }}</span>
-                                <span class="text-[10px] text-gray-400 font-mono">{{ formatChatTime(res.time) }}</span>
-                            </div>
-                            <div class="text-[13px] text-gray-600 line-clamp-2 leading-snug">{{ res.content }}</div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- 红包详情页 (修复多人拼手气渲染) -->
@@ -4704,10 +4709,7 @@ createApp({
             editStatusModal: { show: false, color: 'online', text: '' },
             regenerateModal: { show: false, prompt: '' },
             timestampModeModal: { show: false },
-            
-            searchHistoryQuery: '',
-            searchHistoryResults:[],
-            
+            chatSearchModal: { show: false, keyword: '', results:[] },            
             themeConfig: { wallpaper: '', fontFamily: '', fontUrl: '', fontSize: 1.0, fontColor: '#000000', isDarkMode: false }, fontPresets:[], fontInputUrl: '',
             
             // 美化配置
@@ -4949,21 +4951,23 @@ createApp({
             if (!this.apiConfig.apiKey) return;
             this.wechatState.sessions.forEach(session => {
                 
-                // 1. 检查自动上线逻辑 (无论是否开启后台活动都要检查)
-                if (session.offlineUntil && Date.now() >= session.offlineUntil) {
-                    session.onlineStatus = 'online';
-                    session.statusText = '手机在线';
-                    session.offlineUntil = null;
-                    session.autoReplyCache = '';
-                    session.messages.push({
-                        type: 'system',
-                        content: `[系统提示] 角色离线时长结束，状态已自动恢复为: 在线`,
-                        time: Date.now()
-                    });
-                    if (this.wechatState.activeSession?.id === session.id) this.scrollToBottom();
-                    this.saveData();
+                // ===== 【新增】检查角色离线时间是否到期，到期自动上线 =====
+                if (session.onlineStatus === 'offline' && session.offlineUntil) {
+                    if (Date.now() >= session.offlineUntil) {
+                        session.onlineStatus = 'online';
+                        session.statusText = '手机在线';
+                        session.offlineUntil = 0;
+                        session.autoReplyCache = '';
+                        session.messages.push({
+                            type: 'system',
+                            content: `[系统提示] 角色处理完了事情，已自动恢复为在线状态`,
+                            time: Date.now()
+                        });
+                        this.saveData();
+                    }
                 }
-
+                // =========================================================
+                
                 if (session.enableBackgroundActivity && !session.isGroup) {
                     const status = session.onlineStatus || 'online';
                     if (status !== 'offline' && !this.voiceCallState.isActive && !this.videoCallState.isActive) {
@@ -5072,34 +5076,6 @@ createApp({
         }
     },
     methods: {
-    openSearchHistory() {
-            this.searchHistoryQuery = '';
-            this.searchHistoryResults =[];
-            this.wechatState.activeNav = 'search-history';
-        },
-        performHistorySearch() {
-            if (!this.searchHistoryQuery.trim()) {
-                this.searchHistoryResults =[];
-                return;
-            }
-            const query = this.searchHistoryQuery.toLowerCase();
-            const session = this.wechatState.activeSession;
-            if (session && session.messages) {
-                // 过滤出包含关键词的文本消息，并倒序排列（最新的在最上面）
-                const matched = session.messages.filter(m => 
-                    m.type !== 'system' && m.content && m.content.toLowerCase().includes(query)
-                );
-                
-                this.searchHistoryResults = matched.map(m => {
-                    return {
-                        name: m.isSelf ? this.homeProfile.name : (m.name || session.name),
-                        avatar: m.isSelf ? this.getMaskById(session.maskId).avatar : m.avatar,
-                        content: m.content,
-                        time: m.time
-                    };
-                }).reverse();
-            }
-        },
         // --- Core Chat Logic ---
         getCurrentChatTitle() {
             if(!this.wechatState.activeSession) return '';
@@ -6784,6 +6760,29 @@ createApp({
                 }
             });
         },
+        openChatSearch() {
+            this.chatSearchModal.keyword = '';
+            this.chatSearchModal.results =[];
+            this.chatSearchModal.show = true;
+        },
+        doChatSearch() {
+            const keyword = this.chatSearchModal.keyword.trim().toLowerCase();
+            const session = this.wechatState.activeSession;
+            if (!keyword || !session || !session.messages) {
+                this.chatSearchModal.results =[];
+                return;
+            }
+            // 过滤文本消息并倒序排列
+            this.chatSearchModal.results = session.messages.filter(m => 
+                m.type === 'text' && m.content && m.content.toLowerCase().includes(keyword)
+            ).reverse();
+        },
+        highlightKeyword(text, keyword) {
+            if (!text || !keyword) return text;
+            const regex = new RegExp(`(${keyword})`, 'gi');
+            // 匹配的关键字标绿（类似微信原版颜色）
+            return text.replace(regex, `<span style="color: #07c160;">$1</span>`);
+        },
         async triggerBackgroundActivity(session) {
             const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
             if (!friend) return;
@@ -6837,29 +6836,16 @@ createApp({
             const statuses =['online', 'busy', 'offline'];
             let targetStatus = statuses[Math.floor(Math.random() * statuses.length)];
             let text = '手机在线';
-            let durationMin = 0;
-            if (targetStatus === 'offline') {
-                text =['睡觉了', '出门没带手机', '离线', '在上课'].sort(()=>0.5-Math.random())[0];
-                durationMin = Math.floor(Math.random() * 120) + 30; // 30~150分钟
-            }
+            if (targetStatus === 'offline') text = ['睡觉了', '出门没带手机', '离线'].sort(()=>0.5-Math.random())[0];
             if (targetStatus === 'busy') text =['在忙勿扰', '打游戏中', '开会中', '上课中'].sort(()=>0.5-Math.random())[0];
             
             if (session.onlineStatus !== targetStatus || session.statusText !== text) {
                 session.onlineStatus = targetStatus;
                 session.statusText = text;
                 session.autoReplyCache = ''; 
-                
-                let sysMsg = `[系统提示] 角色突然将状态更改为了: ${text}`;
-                if (targetStatus === 'offline') {
-                    session.offlineUntil = Date.now() + durationMin * 60 * 1000;
-                    sysMsg += ` (预计离线 ${durationMin} 分钟)`;
-                } else {
-                    session.offlineUntil = null;
-                }
-
                 session.messages.push({
                     type: 'system',
-                    content: sysMsg,
+                    content: `[系统提示] 角色突然将状态更改为了: ${text}`,
                     time: Date.now()
                 });
                 if (this.wechatState.activeSession?.id === session.id) this.scrollToBottom();
@@ -6992,24 +6978,22 @@ createApp({
             const session = this.wechatState.activeSession;
             if (!this.apiConfig.apiKey) { this.showToast('请先配置 API Key'); return; }
             
-            // --- 离线状态点击接收按钮，不再回复自动回复，直接提示并阻断 ---
+            if (session.isBlocked) {
+                if (Math.random() < 0.3) {
+                     this.triggerReAddRequest(session);
+                     return;
+                }
+            }
+
+            // --- 离线状态严格拦截，点击接收不作为 ---
             if (!session.isGroup) {
                 const status = session.onlineStatus || 'online';
                 if (status === 'offline') {
-                    this.showToast('对方处于离线状态，无法收到/回复你的消息');
+                    this.showToast('对方目前处于离线状态，无法收到你的消息');
                     return; 
                 }
             }
 
-            // --- 离线状态严格拦截 ---
-            if (!session.isGroup) {
-                const status = session.onlineStatus || 'online';
-                if (status === 'offline') {
-                    this.showToast('对方目前处于离线状态，无法收到/回复你的消息');
-                    return; // 只要离线，绝对不让AI正常说话
-                }
-            }
-            
             this.isTyping = true; 
             // 兼容点击事件传过来的异常参数
             const prompt = typeof directionPrompt === 'string' ? directionPrompt : '';
@@ -7361,8 +7345,8 @@ Structure:
   "thought": "当前心声(第一人称思考，每轮必须更新)",
   "outfit": "当前穿着(必须更新，贴合此时此地的场景)",
   "note": "随笔日记(OPTIONAL: 看你当前心情决定是否提笔)",
-  "change_online_status": {"color": "online" | "offline" | "busy", "text": "OPTIONAL: 你在干嘛(如:睡觉了,上课中)", "duration_minutes": 60}, // OPTIONAL: 主动修改状态。如果是offline，请一定要填入预计离线多少分钟的数字！
-  "quote": "OPTIONAL: 填入你想引用的玩家刚才说过的原话(必须是一字不差的原话)",
+  "change_online_status": {"color": "online" | "offline" | "busy", "text": "OPTIONAL: 你在干嘛", "offline_duration_minutes": 60}, // OPTIONAL: 主动修改在线状态。如果改为 offline，必须填写离线多少分钟(数字)！
+  "quote_user_message": "OPTIONAL: 填入你想引用的我说过的话的原文内容(针对性回复时使用)",
   "change_remark": "OPTIONAL: 强行修改玩家手机里【对你(AI自身)的备注名】（即玩家的微信里怎么称呼你）。例如你如果是男主，可以把自己在玩家手机里的备注改成'老公'、'哥哥'等。绝对不能改成你对玩家的称呼（如改成'老婆'、'妹妹'等是严重错误）！",
   "call_user": true OR false, // OPTIONAL: 如果你想主动打【语音电话】，请设为 true！
   "call_video_user": true OR false, // OPTIONAL: 如果你想主动打【视频通话】，请设为 true！
@@ -7380,8 +7364,11 @@ Structure:
   "invite_music": true
 }
 `}
-✅ 正确示范：["怎么了？", "你怎么不说话", "别生闷气了行不行", "我真的很担心你。"]
-【增强互动指令】：在聊天时，如果玩家的话让你很有感触或需要针对性反驳，请**非常频繁**地使用 "quote" 字段引用玩家刚才说过的一句话，这样显得更有真实互动感！`;
+【极度严格的作答纪律！！！】
+1. "reply" 必须是一个字符串数组！严禁把一大段长篇大论挤在一个句子里发出来！按句号、叹号或呼吸停顿切分！
+2. 为了表现真实感，请**频繁地使用 "quote_user_message" 字段**！当你要反驳、认同、或者针对性回答我刚刚说过的某句话时，务必把那句话填入引用字段！
+❌ 错误示范：["怎么了？你怎么不说话，别生闷气了行不行，我真的很担心你。"]
+✅ 正确示范：["怎么了？", "你怎么不说话", "别生闷气了行不行", "我真的很担心你。"]`;
 
             // 如果用户在“重回”时提出了具体的走向要求，强行注入最高优先级的提示词
             if (directionPrompt && directionPrompt.trim() !== '') {
@@ -7597,25 +7584,39 @@ Structure:
                             time: Date.now()
                         });
                     }
+                    // === 处理单聊 AI 引用消息 ===
+                    let quoteObj = null;
+                    if (block.quote_user_message) {
+                        quoteObj = { name: '我', content: block.quote_user_message };
+                    }
+
                     // === 处理单聊 AI 自主修改在线状态 ===
                     if (!session.isGroup && block.change_online_status && friend) {
                         const newColor = block.change_online_status.color;
                         const newText = block.change_online_status.text;
-                        const duration = block.change_online_status.duration_minutes;
+                        const duration = parseInt(block.change_online_status.offline_duration_minutes) || 0;
+                        
                         if (newColor && newText && (session.onlineStatus !== newColor || session.statusText !== newText)) {
                             session.onlineStatus = newColor;
                             session.statusText = newText;
                             session.autoReplyCache = ''; 
+                            session.messages.push({
+                                type: 'system',
+                                content: `[系统提示] 角色将状态更改为了: ${newText}`,
+                                time: Date.now()
+                            });
                             
-                            let sysMsg = `[系统提示] 角色将状态更改为了: ${newText}`;
-                            if (newColor === 'offline') {
-                                let mins = parseInt(duration) || 60;
-                                session.offlineUntil = Date.now() + mins * 60 * 1000;
-                                sysMsg += ` (预计离线 ${mins} 分钟)`;
+                            // 如果离线，设置恢复定时
+                            if (newColor === 'offline' && duration > 0) {
+                                session.offlineUntil = Date.now() + duration * 60000;
+                                session.messages.push({
+                                    type: 'system',
+                                    content: `[系统提示] 角色预计约 ${duration} 分钟后恢复在线`,
+                                    time: Date.now()
+                                });
                             } else {
-                                session.offlineUntil = null;
+                                session.offlineUntil = 0;
                             }
-                            session.messages.push({ type: 'system', content: sysMsg, time: Date.now() });
                         }
                     }
 
@@ -7702,15 +7703,9 @@ Structure:
                                  isExpanded: false,
                                  translation: trans,             
                                  showTranslation: !!trans,
-                                 isBlockedSend: session.isBlocked
+                                 isBlockedSend: session.isBlocked,
+                                 quote: quoteObj // 将引用的对象挂载给AI气泡
                              };
-                             
-                             // 如果是第一句话，并且AI想要引用玩家的话，就加上引用气泡
-                             if (index === 0 && block.quote) {
-                                 // 因为是AI引用玩家的话，所以 quote name 肯定是玩家的名字
-                                 aiMsg.quote = { name: this.homeProfile.name, content: block.quote };
-                             }
-                             
                              session.messages.push(aiMsg);
                              this.scrollToBottom();
                              
