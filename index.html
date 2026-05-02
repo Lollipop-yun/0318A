@@ -3551,14 +3551,14 @@
             <main v-if="wechatState.activeNav === 'chat'" class="flex-1 overflow-y-auto px-3 pb-24 z-0 relative">
                 
                 <!-- 固定的搜索栏与Tab (滑动时吸附在顶部) -->
-                <div class="sticky top-0 z-10 bg-[#f3f4f6] pt-4 pb-2 -mx-3 px-3">
-                    <div @click="openGlobalSearch" class="bg-white rounded-lg py-2 flex items-center justify-center text-gray-400 text-sm mb-4 cursor-pointer active:bg-gray-50 transition shadow-sm">
-                        <i class="fas fa-search mr-1.5"></i>
+                <div class="sticky top-0 z-20 bg-[#f2f2f6] pt-2 pb-2">
+                    <div @click="openGlobalSearch" class="bg-white rounded-[10px] py-2 flex items-center justify-center text-gray-400 text-[15px] mb-3 shadow-[0_2px_10px_rgba(0,0,0,0.03)] cursor-pointer active:bg-gray-50 transition">
+                        <i class="fas fa-search mr-1.5 text-sm"></i>
                         <span>i miss...(T u T)o</span>
                     </div>
-                    <!-- 原始唯美版 筛选 Tabs -->
-                    <div class="bg-white rounded-[20px] p-1 flex justify-between items-center shadow-sm overflow-x-auto scrollbar-hide">
-                        <div v-for="filter in['Chats', 'Group', 'Likes', 'All']" :key="filter" @click="wechatState.activeFilter = filter" class="wechat-pill-tab cursor-pointer flex-1 text-center" :class="wechatState.activeFilter === filter ? 'wechat-pill-active' : 'wechat-pill-inactive'">{{ filter }}</div>
+                    <!-- 筛选 Tabs (补上了 in 后面的空格，Vue 终于能正常渲染了) -->
+                    <div class="bg-white rounded-[20px] p-1 flex justify-between items-center shadow-[0_2px_10px_rgba(0,0,0,0.03)] overflow-x-auto scrollbar-hide">
+                        <div v-for="filter in ['Chats', 'Group', 'Likes', 'All']" :key="filter" @click="wechatState.activeFilter = filter" class="wechat-pill-tab cursor-pointer flex-1 text-center" :class="wechatState.activeFilter === filter ? 'wechat-pill-active' : 'wechat-pill-inactive'">{{ filter }}</div>
                     </div>
                 </div>
                 
