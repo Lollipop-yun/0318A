@@ -2007,32 +2007,36 @@
         
         <!-- iOS 灰白极简风：沉浸式外卖小程序 -->
         <transition name="app-slide">
-            <div v-if="takeoutModal.show" class="fixed inset-0 z-[115000] bg-[#f7f8fa] flex flex-col font-sans">
-                <!-- 顶部胶囊返回键 -->
-                <div class="absolute top-12 left-4 z-50">
-                    <div @click="takeoutModal.show = false" class="w-8 h-8 rounded-full bg-white/80 backdrop-blur border border-gray-200 shadow-sm flex items-center justify-center text-gray-800 cursor-pointer active:scale-90 transition">
-                        <i class="fas fa-chevron-left text-sm"></i>
-                    </div>
-                </div>
+            <div v-if="takeoutModal.show" class="fixed inset-0 z-[115000] bg-[#f2f2f6] flex flex-col font-sans pb-safe">
+                <!-- 全新顶部导航栏 -->
+                <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-100 shrink-0 z-50 sticky top-0">
+                    <button @click="takeoutModal.show = false" class="w-8 h-8 flex items-center justify-center text-gray-800 active:opacity-50"><i class="fas fa-chevron-left text-lg"></i></button>
+                    <h1 class="font-bold text-[17px] text-gray-900 absolute left-1/2 -translate-x-1/2">{{ takeoutModal.activeTab === 'home' ? '外卖' : (takeoutModal.activeTab === 'cart' ? '购物车' : (takeoutModal.activeTab === 'msg' ? '消息' : '我的')) }}</h1>
+                    <button v-if="takeoutModal.activeTab === 'home'" @click="refreshTakeoutItems" class="w-8 h-8 flex items-center justify-center text-gray-800 active:opacity-50"><i class="fas fa-sync-alt"></i></button>
+                    <div v-else class="w-8"></div>
+                </header>
 
                 <!-- 内容切换区 -->
                 <div class="flex-1 overflow-y-auto pb-6 relative">
                     
                     <!-- 1. 首页 (推荐) 视图 -->
                     <div v-if="takeoutModal.activeTab === 'home'" class="flex flex-col">
-                        <!-- 搜索栏占位 -->
-                        <div class="pt-14 px-4 pb-4 bg-white rounded-b-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] z-10">
-                            <div class="bg-gray-100 rounded-xl flex items-center px-3 h-10">
+                        <!-- 搜索栏区 -->
+                        <div class="px-4 pt-4 pb-2 bg-white">
+                            <div class="bg-[#f2f2f6] rounded-xl flex items-center px-3 h-10 border border-gray-200/50">
                                 <i class="fas fa-search text-gray-400 mr-2"></i>
-                                <span class="text-[14px] text-gray-400">想吃点什么？</span>
+                                <input placeholder="想吃点什么？" class="bg-transparent flex-1 outline-none text-[14px] text-gray-800">
+                                <button class="bg-black text-white px-3 py-1 rounded-lg text-xs font-bold ml-2 active:scale-95">搜索</button>
                             </div>
                         </div>
 
-                        <!-- 金刚区图标 (灰白极简版) -->
-                        <div class="px-4 py-6 grid grid-cols-5 gap-y-4 gap-x-2">
-                            <div v-for="icon in[{n:'外卖',i:'fa-motorcycle'},{n:'甜点饮品',i:'fa-ice-cream'},{n:'超市便利',i:'fa-shopping-basket'},{n:'买药',i:'fa-capsules'},{n:'跑腿',i:'fa-shoe-prints'},{n:'汉堡披萨',i:'fa-hamburger'},{n:'日韩料理',i:'fa-fish'},{n:'减脂沙拉',i:'fa-leaf'},{n:'夜宵',i:'fa-moon'},{n:'全部',i:'fa-th-large'}]" :key="icon.n" class="flex flex-col items-center gap-1.5 cursor-pointer active:opacity-50">
-                                <div class="w-10 h-10 rounded-2xl bg-white shadow-sm border border-gray-100 flex items-center justify-center text-gray-600"><i class="fas" :class="icon.i"></i></div>
-                                <span class="text-[11px] font-medium text-gray-600">{{ icon.n }}</span>
+                        <!-- 8大分类金刚区 -->
+                        <div class="px-4 py-5 bg-white rounded-b-2xl shadow-sm mb-4">
+                            <div class="grid grid-cols-4 gap-y-5 gap-x-2">
+                                <div v-for="cat in[{n:'美食',i:'fa-hamburger'},{n:'服装',i:'fa-tshirt'},{n:'美妆',i:'fa-magic'},{n:'数码',i:'fa-mobile-alt'},{n:'电器',i:'fa-tv'},{n:'百货',i:'fa-shopping-bag'},{n:'医药',i:'fa-pills'},{n:'其他',i:'fa-ellipsis-h'}]" :key="cat.n" class="flex flex-col items-center gap-1.5 cursor-pointer active:opacity-50">
+                                    <div class="w-11 h-11 rounded-[14px] bg-gray-50 flex items-center justify-center text-gray-600 border border-gray-100 shadow-sm"><i class="fas text-lg" :class="cat.i"></i></div>
+                                    <span class="text-[11px] font-medium text-gray-600">{{ cat.n }}</span>
+                                </div>
                             </div>
                         </div>
 
@@ -2067,16 +2071,13 @@
 
                     <!-- 4. 我的 (Me) 视图 -->
                     <div v-if="takeoutModal.activeTab === 'me'" class="flex flex-col">
-                        <!-- 用户头部 -->
-                        <div class="pt-20 px-6 pb-6 bg-white rounded-b-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex items-center gap-4">
+                        <div class="pt-6 px-6 pb-6 bg-white rounded-b-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex items-center gap-4">
                             <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-100 shadow-sm"><img :src="homeProfile.avatar" class="w-full h-full object-cover"></div>
                             <div class="flex flex-col">
                                 <span class="font-bold text-[20px] text-gray-900">{{ homeProfile.name }}</span>
                                 <span class="text-[12px] text-gray-400 mt-1 bg-gray-100 px-2 py-0.5 rounded-full w-fit">普通会员 <i class="fas fa-chevron-right text-[8px]"></i></span>
                             </div>
                         </div>
-                        
-                        <!-- 资产区 -->
                         <div class="px-4 mt-4">
                             <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex justify-around">
                                 <div class="flex flex-col items-center gap-1"><i class="far fa-star text-gray-500 text-lg"></i><span class="text-[11px] text-gray-600">收藏</span></div>
@@ -2084,8 +2085,6 @@
                                 <div class="flex flex-col items-center gap-1"><i class="fas fa-ticket-alt text-gray-500 text-lg"></i><span class="text-[11px] text-gray-600">红包卡券</span></div>
                             </div>
                         </div>
-
-                        <!-- 订单区 -->
                         <div class="px-4 mt-4">
                             <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
                                 <div class="font-bold text-[14px] text-gray-900 mb-4">我的订单</div>
@@ -2102,7 +2101,7 @@
 
                 <!-- 底部弹出：选择商品后的代付确认框 -->
                 <transition name="app-slide">
-                    <div v-if="takeoutModal.selectedItem" class="absolute bottom-[60px] left-0 w-full bg-white border-t border-gray-200 rounded-t-2xl p-5 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-40">
+                    <div v-if="takeoutModal.selectedItem" class="absolute bottom-[75px] left-0 w-full bg-white border-t border-gray-200 rounded-t-3xl p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-40">
                         <div class="flex justify-between items-start mb-4">
                             <div>
                                 <div class="text-[11px] text-gray-400 mb-1">正在向当前好友发送代付请求</div>
@@ -2110,27 +2109,29 @@
                             </div>
                             <span class="text-2xl font-bold font-mono text-gray-900">¥{{ takeoutModal.selectedItem.price }}</span>
                         </div>
-                        <input v-model="takeoutModal.note" placeholder="给TA留言 (例如：想喝这个！)" class="w-full bg-[#f2f2f6] p-3 rounded-xl text-[14px] border border-gray-200 outline-none mb-3 text-gray-700">
+                        <input v-model="takeoutModal.note" placeholder="给TA留言 (例如：想喝这个！)" class="w-full bg-[#f2f2f6] p-3 rounded-xl text-[14px] border border-gray-200 outline-none mb-4 text-gray-700">
                         <div class="flex gap-3">
                             <button @click="takeoutModal.selectedItem = null" class="w-1/3 py-3 rounded-xl bg-gray-100 text-gray-600 font-bold text-[14px] active:scale-95 transition">取消</button>
-                            <button @click="confirmTakeoutRequest" class="flex-1 py-3 rounded-xl bg-gray-900 text-white font-bold text-[14px] active:scale-95 transition shadow-md">发送给TA</button>
+                            <button @click="confirmTakeoutRequest" class="flex-1 py-3 rounded-xl bg-black text-white font-bold text-[14px] active:scale-95 transition shadow-md flex items-center justify-center gap-2">
+                                <i class="fas fa-paper-plane"></i> 发送请求
+                            </button>
                         </div>
                     </div>
                 </transition>
 
-                <!-- 底部 4 大导航栏 -->
-                <div class="h-[60px] bg-white border-t border-gray-200 flex items-center justify-around shrink-0 pb-safe z-50">
+                <!-- 加高版：底部 4 大导航栏 -->
+                <div class="h-[75px] pt-1.5 bg-white border-t border-gray-200 flex items-center justify-around shrink-0 pb-safe z-50">
                     <div @click="takeoutModal.activeTab = 'home'" class="flex flex-col items-center gap-1 cursor-pointer transition" :class="takeoutModal.activeTab === 'home' ? 'text-black' : 'text-gray-400'">
-                        <i class="fas fa-home text-lg"></i><span class="text-[10px] font-bold">推荐</span>
+                        <i class="fas fa-home text-[22px]"></i><span class="text-[10px] font-bold">推荐</span>
                     </div>
                     <div @click="takeoutModal.activeTab = 'cart'" class="flex flex-col items-center gap-1 cursor-pointer transition" :class="takeoutModal.activeTab === 'cart' ? 'text-black' : 'text-gray-400'">
-                        <i class="fas fa-shopping-cart text-lg"></i><span class="text-[10px] font-bold">购物车</span>
+                        <i class="fas fa-shopping-cart text-[22px]"></i><span class="text-[10px] font-bold">购物车</span>
                     </div>
                     <div @click="takeoutModal.activeTab = 'msg'" class="flex flex-col items-center gap-1 cursor-pointer transition" :class="takeoutModal.activeTab === 'msg' ? 'text-black' : 'text-gray-400'">
-                        <i class="fas fa-comment-dots text-lg"></i><span class="text-[10px] font-bold">消息</span>
+                        <i class="fas fa-comment-dots text-[22px]"></i><span class="text-[10px] font-bold">消息</span>
                     </div>
                     <div @click="takeoutModal.activeTab = 'me'" class="flex flex-col items-center gap-1 cursor-pointer transition" :class="takeoutModal.activeTab === 'me' ? 'text-black' : 'text-gray-400'">
-                        <i class="fas fa-user text-lg"></i><span class="text-[10px] font-bold">我的</span>
+                        <i class="fas fa-user text-[22px]"></i><span class="text-[10px] font-bold">我的</span>
                     </div>
                 </div>
             </div>
@@ -2724,12 +2725,12 @@
                                 <span v-if="wechatState.activeSession?.isGroup && !msg.isSelf" class="text-[10px] text-gray-500 ml-1.5 mb-1">{{ msg.name }}</span>
                                 
                                 <!-- 气泡核心 -->
-                                <div class="chat-bubble" :class="[msg.isSelf ? 'chat-bubble-user' : 'chat-bubble-ai', msg.type === 'voice' ? 'chat-bubble-voice' : '', msg.type === 'image' || msg.type === 'fake_image' || msg.type === 'sticker' ? 'chat-bubble-image' : '', msg.type === 'red_packet' || msg.type === 'transfer' ? 'chat-bubble-finance' : '', msg.type === 'transfer' ? 'chat-bubble-transfer' : '', msg.type === 'red_packet' ? 'chat-bubble-redpacket' : '', msg.type === 'qinmi_invite' ? 'chat-bubble-qinmi' : '', msg.type === 'moment' ? 'chat-bubble-moment' : '', msg.type === 'location' ? 'chat-bubble-location' : '', msg.isReceived ? 'received' : '']" 
+                                <div class="chat-bubble" :class="[msg.isSelf ? 'chat-bubble-user' : 'chat-bubble-ai', msg.type === 'voice' ? 'chat-bubble-voice' : '', msg.type === 'image' || msg.type === 'fake_image' || msg.type === 'sticker' ? 'chat-bubble-image' : '', msg.type === 'red_packet' || msg.type === 'transfer' ? 'chat-bubble-finance' : '', msg.type === 'transfer' ? 'chat-bubble-transfer' : '', msg.type === 'red_packet' ? 'chat-bubble-redpacket' : '', msg.type === 'qinmi_invite' ? 'chat-bubble-qinmi' : '', msg.type === 'moment' ? 'chat-bubble-moment' : '', msg.type === 'location' ? 'chat-bubble-location' : '', msg.isReceived ? 'received' : '', (msg.quote && msg.type === 'voice') ? '!flex-col !items-stretch !gap-1.5' : '']" 
                                      :style="msg.type === 'voice' ? { width: (60 + Math.min(msg.duration, 60) * 4) + 'px' } : {}"
                                      @click="handleChatBubbleClick(msg)"
                                      @contextmenu.prevent="showChatContextMenu($event, msg, i)">
                                      
-                                    <div v-if="msg.quote" class="quote-block"><span class="font-bold mr-1">{{ msg.quote.name }}:</span>{{ msg.quote.content }}</div>
+                                    <div v-if="msg.quote" class="quote-block w-full"><span class="font-bold mr-1">{{ msg.quote.name }}:</span>{{ msg.quote.content }}</div>
                                     
                                     <!-- 语音消息 -->
                                     <div v-if="msg.type === 'voice'" class="flex items-center justify-between w-full">
@@ -3564,40 +3565,38 @@
                 
                 <div class="bg-white rounded-[18px] h-fit overflow-hidden mb-8 mt-2 shadow-sm">
                     <div class="bg-white rounded-[18px] h-fit overflow-hidden mb-8 shadow-sm">
-                    <!-- 分组视图模式 (极简头像与名字版) -->
-                    <div v-if="wechatState.activeFilter === 'Group'">
-                        <div class="p-4 border-b border-gray-50 flex items-center gap-3 active:bg-gray-50 cursor-pointer" @click="createNewGroup"><div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500"><i class="fas fa-plus"></i></div><span class="font-bold text-gray-800">新建分组</span></div>
+                    <!-- 分组视图模式 (完美去白边版) -->
+                    <div v-if="wechatState.activeFilter === 'Group'" class="divide-y divide-gray-50">
+                        <div class="p-4 flex items-center gap-3 active:bg-gray-50 cursor-pointer" @click="createNewGroup"><div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500"><i class="fas fa-plus"></i></div><span class="font-bold text-gray-800">新建分组</span></div>
                         
-                        <div class="border-b border-gray-50"><div class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer" @click="toggleGroup('all')"><span class="font-bold text-gray-800">全部 ({{ wechatState.sessions.filter(s => !s.isGroup).length }})</span><i class="fas fa-chevron-right text-gray-300 transition-transform" :class="{'rotate-90': expandedGroups.includes('all')}"></i></div><div v-show="expandedGroups.includes('all')" class="bg-gray-50/30">
+                        <div><div class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer" @click="toggleGroup('all')"><span class="font-bold text-gray-800">全部 ({{ wechatState.sessions.filter(s => !s.isGroup).length }})</span><i class="fas fa-chevron-right text-gray-300 transition-transform" :class="{'rotate-90': expandedGroups.includes('all')}"></i></div><div v-show="expandedGroups.includes('all')" class="bg-gray-50/30 divide-y divide-gray-50">
                             <!-- 极简UI -->
-                            <div v-for="session in filteredWechatContacts.filter(s => !s.isGroup)" :key="session.id" @click="enterChatRoom(session)" class="flex items-center p-3.5 active:bg-gray-50 transition border-b border-gray-50 last:border-0 relative">
+                            <div v-for="session in filteredWechatContacts.filter(s => !s.isGroup)" :key="session.id" @click="enterChatRoom(session)" class="flex items-center p-3.5 active:bg-gray-50 transition relative">
                                 <div class="w-[46px] h-[46px] rounded-full overflow-hidden mr-3 bg-gray-100"><img :src="session.customAvatarTarget || session.avatar" class="w-full h-full object-cover"></div>
                                 <h3 class="text-[16px] font-semibold text-gray-900">{{ session.remark || session.name }}</h3>
                             </div>
                         </div></div>
                         
                         <!-- 纯群聊合集 -->
-                        <div class="border-b border-gray-50">
+                        <div>
                             <div class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer" @click="toggleGroup('group_chats')">
                                 <span class="font-bold text-gray-800">群聊 ({{ wechatState.sessions.filter(s => s.isGroup).length }})</span>
                                 <i class="fas fa-chevron-right text-gray-300 transition-transform" :class="{'rotate-90': expandedGroups.includes('group_chats')}"></i>
                             </div>
-                            <div v-show="expandedGroups.includes('group_chats')" class="bg-gray-50/30">
+                            <div v-show="expandedGroups.includes('group_chats')" class="bg-gray-50/30 divide-y divide-gray-50">
                                 <div v-if="wechatState.sessions.filter(s => s.isGroup).length === 0" class="p-4 text-center text-xs text-gray-400">暂无群聊</div>
-                                <!-- 极简UI -->
-                                <div v-for="session in filteredWechatContacts.filter(s => s.isGroup)" :key="session.id" @click="enterChatRoom(session)" class="flex items-center p-3.5 active:bg-gray-50 transition border-b border-gray-50 last:border-0 relative">
+                                <div v-for="session in filteredWechatContacts.filter(s => s.isGroup)" :key="session.id" @click="enterChatRoom(session)" class="flex items-center p-3.5 active:bg-gray-50 transition relative">
                                     <div class="w-[46px] h-[46px] rounded-full overflow-hidden mr-3 bg-gray-100"><img :src="session.avatar" class="w-full h-full object-cover"></div>
                                     <h3 class="text-[16px] font-semibold text-gray-900">{{ session.remark || session.name }}</h3>
                                 </div>
                             </div>
                         </div>
 
-                        <div v-for="group in wechatState.groups" :key="group.id" class="border-b border-gray-50">
+                        <div v-for="group in wechatState.groups" :key="group.id">
                             <div class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer" @click="toggleGroup(group.id)"><span class="font-bold text-gray-800">{{ group.name }} ({{ getGroupSessions(group.id).length }})</span><div class="flex items-center gap-3"><button @click.stop="deleteGroup(group.id)" class="text-gray-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button><i class="fas fa-chevron-right text-gray-300 transition-transform" :class="{'rotate-90': expandedGroups.includes(group.id)}"></i></div></div>
-                            <div v-show="expandedGroups.includes(group.id)" class="bg-gray-50/30">
+                            <div v-show="expandedGroups.includes(group.id)" class="bg-gray-50/30 divide-y divide-gray-50">
                                 <div v-if="getGroupSessions(group.id).length === 0" class="p-4 text-center text-xs text-gray-400">该分组暂无好友</div>
-                                <!-- 极简UI -->
-                                <div v-for="session in getGroupSessions(group.id)" :key="session.id" @click="enterChatRoom(session)" class="flex items-center p-3.5 active:bg-gray-50 transition border-b border-gray-50 last:border-0 relative">
+                                <div v-for="session in getGroupSessions(group.id)" :key="session.id" @click="enterChatRoom(session)" class="flex items-center p-3.5 active:bg-gray-50 transition relative">
                                     <div class="w-[46px] h-[46px] rounded-full overflow-hidden mr-3 bg-gray-100"><img :src="session.customAvatarTarget || session.avatar" class="w-full h-full object-cover"></div>
                                     <h3 class="text-[16px] font-semibold text-gray-900">{{ session.remark || session.name }}</h3>
                                 </div>
@@ -7171,6 +7170,32 @@ createApp({
             this.takeoutModal.show = true;
             this.wechatState.showAttachMenu = false;
         },
+        openTakeoutModal() {
+            this.takeoutModal.activeTab = 'home'; // 每次打开默认进入推荐页
+            this.takeoutModal.selectedItem = null;
+            this.takeoutModal.note = '';
+            this.takeoutModal.show = true;
+            this.wechatState.showAttachMenu = false;
+        },
+
+        // ==== 这是新增的刷新商品方法 ====
+        refreshTakeoutItems() {
+            this.showToast('正在为您刷新商品...');
+            // 延迟一点点营造网络请求的刷新感，然后打乱数组内的商品顺序
+            setTimeout(() => {
+                if (this.takeoutModal.storeList) {
+                    this.takeoutModal.storeList.forEach(store => {
+                        if (store.items) {
+                            // 随机打乱商品排序，模拟刷新效果
+                            store.items.sort(() => Math.random() - 0.5);
+                        }
+                    });
+                    this.saveData();
+                }
+                this.showToast('刷新成功');
+            }, 600);
+        },
+        // ==================================        
         confirmTakeoutRequest() {
             if (!this.takeoutModal.selectedItem) return this.showToast('请先选择商品');
             const session = this.wechatState.activeSession;
