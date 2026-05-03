@@ -1465,9 +1465,10 @@
                     <label for="wb-global-toggle" class="switch-label shrink-0"><div class="switch-button"></div></label>
                 </div>
 
-                <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 flex flex-col min-h-[250px]">
+                <!-- 拉高拉长版文本框 -->
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 flex flex-col flex-1 min-h-[350px]">
                     <div class="px-4 py-2.5 border-b border-gray-100 bg-gray-50 text-[13px] font-medium text-gray-500">条目内容 (AI 将读取的具体设定)</div>
-                    <textarea v-model="worldModal.content" placeholder="输入设定内容..." class="flex-1 p-4 bg-transparent outline-none text-[15px] text-gray-800 leading-relaxed resize-none h-48"></textarea>
+                    <textarea v-model="worldModal.content" placeholder="输入设定内容..." class="flex-1 w-full h-full min-h-[300px] p-4 bg-transparent outline-none text-[15px] text-gray-800 leading-relaxed resize-none"></textarea>
                 </div>
             </div>
         </div>
@@ -2655,7 +2656,8 @@
                                     <span v-if="isTyping" class="text-sm font-normal text-gray-500">正在输入<span class="typing-dot">.</span><span class="typing-dot">.</span><span class="typing-dot">.</span></span>
                                     <span v-else>{{ getCurrentChatTitle() }}</span>
                                 </h1>
-                                <div class="flex items-center gap-1.5 mt-[3px] cursor-pointer" @dblclick="openEditStatusModal()">
+                                <!-- 群聊不显示在线状态 -->
+                                <div v-if="!wechatState.activeSession.isGroup" class="flex items-center gap-1.5 mt-[3px] cursor-pointer" @dblclick="openEditStatusModal()">
                                     <div class="w-2 h-2 rounded-full shadow-sm" :class="getStatusColorClass(wechatState.activeSession?.onlineStatus)"></div>
                                     <span class="text-[10px] text-gray-500 font-medium select-none">{{ wechatState.activeSession?.statusText || '手机在线' }}</span>
                                 </div>
@@ -2669,8 +2671,8 @@
                             <span v-if="isTyping">对方正在输入中<span class="typing-dot">.</span><span class="typing-dot">.</span><span class="typing-dot">.</span></span>
                             <span v-else>{{ getCurrentChatTitle() }}</span>
                         </h1>
-                        <!-- 状态显示替代了原本的 Only You -->
-                        <div class="flex items-center gap-1.5 mt-[2px]" @dblclick.stop="openEditStatusModal()">
+                        <!-- 群聊不显示在线状态 -->
+                        <div v-if="!wechatState.activeSession.isGroup" class="flex items-center gap-1.5 mt-[2px]" @dblclick.stop="openEditStatusModal()">
                             <div class="w-1.5 h-1.5 rounded-full shadow-sm" :class="getStatusColorClass(wechatState.activeSession?.onlineStatus)"></div>
                             <span class="text-[10px] text-gray-400 font-medium tracking-wider">{{ wechatState.activeSession?.statusText || '手机在线' }}</span>
                         </div>
@@ -2726,7 +2728,7 @@
                                 
                                 <!-- 气泡核心 -->
                                 <div class="chat-bubble" :class="[msg.isSelf ? 'chat-bubble-user' : 'chat-bubble-ai', msg.type === 'voice' ? 'chat-bubble-voice' : '', msg.type === 'image' || msg.type === 'fake_image' || msg.type === 'sticker' ? 'chat-bubble-image' : '', msg.type === 'red_packet' || msg.type === 'transfer' ? 'chat-bubble-finance' : '', msg.type === 'transfer' ? 'chat-bubble-transfer' : '', msg.type === 'red_packet' ? 'chat-bubble-redpacket' : '', msg.type === 'qinmi_invite' ? 'chat-bubble-qinmi' : '', msg.type === 'moment' ? 'chat-bubble-moment' : '', msg.type === 'location' ? 'chat-bubble-location' : '', msg.isReceived ? 'received' : '', (msg.quote && msg.type === 'voice') ? '!flex-col !items-stretch !gap-1.5' : '']" 
-                                     :style="msg.type === 'voice' ? { width: (60 + Math.min(msg.duration, 60) * 4) + 'px' } : {}"
+                                     :style="msg.type === 'voice' ? (msg.quote ? { minWidth: (60 + Math.min(msg.duration, 60) * 4) + 'px', width: 'fit-content' } : { width: (60 + Math.min(msg.duration, 60) * 4) + 'px' }) : {}"
                                      @click="handleChatBubbleClick(msg)"
                                      @contextmenu.prevent="showChatContextMenu($event, msg, i)">
                                      
@@ -3565,11 +3567,45 @@
                 
                 <div class="bg-white rounded-[18px] h-fit overflow-hidden mb-8 mt-2 shadow-sm">
                     <div class="bg-white rounded-[18px] h-fit overflow-hidden mb-8 shadow-sm">
-                    <!-- 分组视图模式 (完美去白边版) -->
-                    <div v-if="wechatState.activeFilter === 'Group'" class="divide-y divide-gray-50">
-                        <div class="p-4 flex items-center gap-3 active:bg-gray-50 cursor-pointer" @click="createNewGroup"><div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500"><i class="fas fa-plus"></i></div><span class="font-bold text-gray-800">新建分组</span></div>
+                    <!-- 分组视图模式 (极致紧凑版去白边) -->
+                    <div v-if="wechatState.activeFilter === 'Group'">
+                        <!-- 新建分组 -->
+                        <div class="p-4 flex items-center gap-3 active:bg-gray-50 cursor-pointer border-b border-gray-50" @click="createNewGroup"><div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500"><i class="fas fa-plus"></i></div><span class="font-bold text-gray-800">新建分组</span></div>
                         
-                        <div><div class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer" @click="toggleGroup('all')"><span class="font-bold text-gray-800">全部 ({{ wechatState.sessions.filter(s => !s.isGroup).length }})</span><i class="fas fa-chevron-right text-gray-300 transition-transform" :class="{'rotate-90': expandedGroups.includes('all')}"></i></div><div v-show="expandedGroups.includes('all')" class="bg-gray-50/30 divide-y divide-gray-50">
+                        <!-- 全部 -->
+                        <div class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer border-b border-gray-50" @click="toggleGroup('all')"><span class="font-bold text-gray-800">全部 ({{ wechatState.sessions.filter(s => !s.isGroup).length }})</span><i class="fas fa-chevron-right text-gray-300 transition-transform" :class="{'rotate-90': expandedGroups.includes('all')}"></i></div>
+                        <div v-show="expandedGroups.includes('all')" class="bg-gray-50/30">
+                            <div v-for="session in filteredWechatContacts.filter(s => !s.isGroup)" :key="session.id" @click="enterChatRoom(session)" class="flex items-center p-3.5 active:bg-gray-50 transition relative border-b border-gray-50">
+                                <div class="w-[46px] h-[46px] rounded-full overflow-hidden mr-3 bg-gray-100"><img :src="session.customAvatarTarget || session.avatar" class="w-full h-full object-cover"></div>
+                                <h3 class="text-[16px] font-semibold text-gray-900">{{ session.remark || session.name }}</h3>
+                            </div>
+                        </div>
+                        
+                        <!-- 群聊 -->
+                        <div class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer border-b border-gray-50" @click="toggleGroup('group_chats')"><span class="font-bold text-gray-800">群聊 ({{ wechatState.sessions.filter(s => s.isGroup).length }})</span><i class="fas fa-chevron-right text-gray-300 transition-transform" :class="{'rotate-90': expandedGroups.includes('group_chats')}"></i></div>
+                        <div v-show="expandedGroups.includes('group_chats')" class="bg-gray-50/30">
+                            <div v-if="wechatState.sessions.filter(s => s.isGroup).length === 0" class="p-4 text-center text-xs text-gray-400 border-b border-gray-50">暂无群聊</div>
+                            <div v-for="session in filteredWechatContacts.filter(s => s.isGroup)" :key="session.id" @click="enterChatRoom(session)" class="flex items-center p-3.5 active:bg-gray-50 transition relative border-b border-gray-50">
+                                <div class="w-[46px] h-[46px] rounded-full overflow-hidden mr-3 bg-gray-100"><img :src="session.avatar" class="w-full h-full object-cover"></div>
+                                <h3 class="text-[16px] font-semibold text-gray-900">{{ session.remark || session.name }}</h3>
+                            </div>
+                        </div>
+
+                        <!-- 自定义分组 -->
+                        <div v-for="group in wechatState.groups" :key="group.id">
+                            <div class="p-4 flex items-center justify-between active:bg-gray-50 cursor-pointer border-b border-gray-50" @click="toggleGroup(group.id)">
+                                <span class="font-bold text-gray-800">{{ group.name }} ({{ getGroupSessions(group.id).length }})</span>
+                                <div class="flex items-center gap-3"><button @click.stop="deleteGroup(group.id)" class="text-gray-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button><i class="fas fa-chevron-right text-gray-300 transition-transform" :class="{'rotate-90': expandedGroups.includes(group.id)}"></i></div>
+                            </div>
+                            <div v-show="expandedGroups.includes(group.id)" class="bg-gray-50/30">
+                                <div v-if="getGroupSessions(group.id).length === 0" class="p-4 text-center text-xs text-gray-400 border-b border-gray-50">该分组暂无好友</div>
+                                <div v-for="session in getGroupSessions(group.id)" :key="session.id" @click="enterChatRoom(session)" class="flex items-center p-3.5 active:bg-gray-50 transition relative border-b border-gray-50">
+                                    <div class="w-[46px] h-[46px] rounded-full overflow-hidden mr-3 bg-gray-100"><img :src="session.customAvatarTarget || session.avatar" class="w-full h-full object-cover"></div>
+                                    <h3 class="text-[16px] font-semibold text-gray-900">{{ session.remark || session.name }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                             <!-- 极简UI -->
                             <div v-for="session in filteredWechatContacts.filter(s => !s.isGroup)" :key="session.id" @click="enterChatRoom(session)" class="flex items-center p-3.5 active:bg-gray-50 transition relative">
                                 <div class="w-[46px] h-[46px] rounded-full overflow-hidden mr-3 bg-gray-100"><img :src="session.customAvatarTarget || session.avatar" class="w-full h-full object-cover"></div>
@@ -4490,7 +4526,26 @@
     <span class="mx-1 text-gray-300">|</span>
     <span @click="showSettingsDisclaimer = true" class="text-blue-500 cursor-pointer active:opacity-70">用户条约与免责声明</span>
 </div>
-</div></div></transition><transition name="page-slide"><div v-if="settingsPage === 'api-config'" class="absolute inset-0 p-4"><div class="space-y-5 pb-10"><div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4"><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">反代地址</label><input v-model="apiConfig.baseUrl" placeholder="https://..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">API 密钥</label><input v-model="apiConfig.apiKey" type="password" placeholder="sk-..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div><div class="flex items-center gap-2"><button @click="fetchModels" :disabled="isLoading" class="flex-1 bg-gray-900 text-white py-2.5 rounded-xl text-sm font-bold active:scale-95 transition flex items-center justify-center gap-2"><i v-if="isLoading" class="fas fa-spinner fa-spin"></i><span v-else>拉取模型</span></button></div><div v-if="availableModels.length > 0" class="animate-fade-in"><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">选择模型</label><div @click="modelSelectModal.show = true" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-medium border border-gray-200 flex justify-between items-center cursor-pointer"><span>{{ apiConfig.selectedModel || '点击选择' }}</span><i class="fas fa-chevron-down text-gray-400 text-xs"></i></div></div><div><div class="flex justify-between mb-1"><label class="text-xs font-bold text-gray-500 ml-1">温度 (创造性): {{ apiConfig.temperature }}</label></div><input type="range" min="0" max="2" step="0.1" v-model.number="apiConfig.temperature" class="w-full h-2 bg-gray-200 rounded-lg cursor-pointer"></div></div>
+</div></div></transition><transition name="page-slide">
+    <div v-if="settingsPage === 'api-config'" class="absolute inset-0 p-4">
+        <div class="space-y-5 pb-10">
+            <!-- 主 API 配置 -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
+                <div class="font-bold text-gray-800 text-[15px] border-b border-gray-50 pb-2 mb-2">主 API (用于聊天)</div>
+                <div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">反代地址</label><input v-model="apiConfig.baseUrl" placeholder="https://..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div>
+                <div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">API 密钥</label><input v-model="apiConfig.apiKey" type="password" placeholder="sk-..." class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div>
+                <div class="flex items-center gap-2"><button @click="fetchModels" :disabled="isLoading" class="flex-1 bg-gray-900 text-white py-2.5 rounded-xl text-sm font-bold active:scale-95 transition flex items-center justify-center gap-2"><i v-if="isLoading" class="fas fa-spinner fa-spin"></i><span v-else>拉取主模型</span></button></div>
+                <div v-if="availableModels.length > 0" class="animate-fade-in"><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">选择主模型</label><div @click="modelSelectModal.show = true" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-medium border border-gray-200 flex justify-between items-center cursor-pointer"><span>{{ apiConfig.selectedModel || '点击选择' }}</span><i class="fas fa-chevron-down text-gray-400 text-xs"></i></div></div>
+                <div><div class="flex justify-between mb-1"><label class="text-xs font-bold text-gray-500 ml-1">温度 (创造性): {{ apiConfig.temperature }}</label></div><input type="range" min="0" max="2" step="0.1" v-model.number="apiConfig.temperature" class="w-full h-2 bg-gray-200 rounded-lg cursor-pointer"></div>
+            </div>
+            
+            <!-- 副 API 配置 -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
+                <div class="font-bold text-gray-800 text-[15px] border-b border-gray-50 pb-2 mb-2">副 API (不填则默认使用主API)</div>
+                <div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">副反代地址</label><input v-model="apiConfig.secondaryBaseUrl" placeholder="选填" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div>
+                <div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">副 API 密钥</label><input v-model="apiConfig.secondaryApiKey" type="password" placeholder="选填" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div>
+                <div><label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">副模型名称</label><input v-model="apiConfig.secondaryModel" placeholder="例如: gpt-4 (手动填写)" class="w-full bg-gray-50 p-3 rounded-xl text-sm font-mono border border-gray-200 outline-none"></div>
+            </div>
 
 <!-- === 新增：MiniMax 语音合成面板 === -->
 <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
@@ -4938,7 +4993,7 @@ createApp({
         return {
             isActivated: false,
             isAppOpen: false, currentApp: null, settingsPage: 'main', themesPage: 'main', isLoading: false, isFullScreen: false, hideStatusBar: false,
-            apiConfig: { baseUrl: '', apiKey: '', selectedModel: 'gpt-3.5-turbo', temperature: 0.7 }, availableModels: [], apiPresets:[], 
+            apiConfig: { baseUrl: '', apiKey: '', selectedModel: 'gpt-3.5-turbo', temperature: 0.7, secondaryBaseUrl: '', secondaryApiKey: '', secondaryModel: '' }, availableModels: [], apiPresets:[], 
             minimaxConfig: { enabled: false, region: 'cn', groupId: '', apiKey: '', selectedModel: '', voiceId: 'male-qn-qingse' }, minimaxModels:[],
             notificationConfig: { currentSound: null, currentName: '默认提示音' }, soundPresets:[],
             pushConfig: { enabled: false }, // 新增推送设置
@@ -7165,6 +7220,11 @@ createApp({
         
         // --- 逼真外卖代付平台逻辑 ---
         openTakeoutModal() {
+            if (!this.takeoutModal) {
+                this.showToast('外卖系统尚未初始化');
+                return;
+            }
+            this.takeoutModal.activeTab = 'home'; 
             this.takeoutModal.selectedItem = null;
             this.takeoutModal.note = '';
             this.takeoutModal.show = true;
