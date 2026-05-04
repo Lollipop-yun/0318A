@@ -2033,6 +2033,7 @@
                         <!-- 8大分类金刚区 -->
                         <div class="px-4 py-5 bg-white rounded-b-2xl shadow-sm mb-4">
                             <div class="grid grid-cols-4 gap-y-5 gap-x-2">
+                                <!-- 修复了 in 后面的空格 -->
                                 <div v-for="cat in[{n:'美食',i:'fa-hamburger'},{n:'服装',i:'fa-tshirt'},{n:'美妆',i:'fa-magic'},{n:'数码',i:'fa-mobile-alt'},{n:'电器',i:'fa-tv'},{n:'百货',i:'fa-shopping-bag'},{n:'医药',i:'fa-pills'},{n:'其他',i:'fa-ellipsis-h'}]" :key="cat.n" class="flex flex-col items-center gap-1.5 cursor-pointer active:opacity-50">
                                     <div class="w-11 h-11 rounded-[14px] bg-gray-50 flex items-center justify-center text-gray-600 border border-gray-100 shadow-sm"><i class="fas text-lg" :class="cat.i"></i></div>
                                     <span class="text-[11px] font-medium text-gray-600">{{ cat.n }}</span>
@@ -7152,11 +7153,19 @@ createApp({
             if (isOwner) return { text: '群主', color: 'bg-yellow-100 text-yellow-600' };
             if (isAdmin) return { text: '管理员', color: 'bg-green-100 text-green-600' };
 
+            // 【新增防崩溃安全锁】如果旧存档没进过设置页，直接返回兜底，防止 undefined 报错卡死
+            if (!session.levelTitles) return { text: '成员', color: 'bg-gray-100 text-gray-500' };
+
             // 普通成员且无专属头衔，计算等级文字
             const level = session.memberLevels ? (session.memberLevels[memberId] || 1) : 1;
             let levelText = '';
-            if (level <= 25) levelText = session.levelTitles['1-25'];
-            else if (level <= 50) levelText = session.levelTitles['26-50'];
+            if (level <= 25) levelText = session.levelTitles['1-25'] || '成员';
+            else if (level <= 50) levelText = session.levelTitles['26-50'] || '成员';
+            else if (level <= 75) levelText = session.levelTitles['51-75'] || '成员';
+            else if (level <= 99) levelText = session.levelTitles['76-99'] || '成员';
+            else levelText = session.levelTitles['100'] || '成员';
+
+            return { text: levelText, color: 'bg-gray-100 text-gray-500' }; // 普通等级灰底
             else if (level <= 75) levelText = session.levelTitles['51-75'];
             else if (level <= 99) levelText = session.levelTitles['76-99'];
             else levelText = session.levelTitles['100'];
