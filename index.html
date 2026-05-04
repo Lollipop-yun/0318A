@@ -2168,7 +2168,7 @@
 
         <!-- 群头衔设置界面 -->
         <transition name="app-slide">
-            <div v-if="groupTitleModal.show" class="fixed inset-0 z-[116000] bg-[#f2f2f6] flex flex-col font-sans pb-safe">
+            <div v-if="groupTitleModal.show && wechatState.activeSession" class="fixed inset-0 z-[116000] bg-[#f2f2f6] flex flex-col font-sans pb-safe">
                 <header class="h-[60px] pt-safe px-4 flex items-center justify-between bg-[#f2f2f6] shrink-0 border-b border-gray-200">
                     <button @click="groupTitleModal.show = false" class="w-10 h-10 flex items-center text-gray-800 active:opacity-50 -ml-2"><i class="fas fa-chevron-left text-[20px]"></i></button>
                     <h1 class="font-bold text-[17px] text-gray-900 absolute left-1/2 -translate-x-1/2">群头衔设置</h1>
@@ -5241,9 +5241,34 @@ createApp({
             displayDate: { dateString: '', dayString: '' },
             timer: null, toast: { show: false, message: '' }, 
             inputModal: { show: false, title: '', value: '', placeholder: '', callback: null, desc: '', inputType: 'text', extraBtn: null }, 
+            confirmModal: { show: false, message: '', callback: null },
+            inputMsg: '', deviceId: '', isTyping: false, replyingTo: null, dataProtection: false,
+            offlineState: { show: false, input: '', settingsShow: false, isGenerating: false, showContinueMenu: false, modeType: 'regular', selectModalShow: false },
+            offlineWordCountModal: { show: false, count: 300 },
+            offlineStyleModal: { show: false, isEditing: false, editForm: { id: null, title: '', content: '' } },
+            offlineStylePresets:[], 
+            offlinePerspectiveModal: { show: false, target: '' },
+            offlineBeautifyConfig: { show: false, tempCode: '', activeCSS: '', presets:[] },
             
-            // 强行注入外卖、搜索、群管理弹窗数据
-            globalSearchModal: { show: false, keyword: '', contacts: [], groups: [], histories:[] },
+            // 新增弹窗控制变量
+            githubFreqModal: { show: false },
+            headerLayoutModal: { show: false },
+            editStatusModal: { show: false, color: 'online', text: '' },
+            regenerateModal: { show: false, prompt: '' },
+            timestampModeModal: { show: false },
+            chatSearchModal: { show: false, keyword: '', results:[] },
+            globalSearchModal: { show: false, keyword: '', contacts: [], groups:[], histories:[] },
+            takeoutModal: { 
+                show: false, activeTab: 'home', note: '', selectedItem: null,
+                storeList:[
+                    { id: 1, name: 'Manner Coffee', tag: '精品咖啡', items:[{name: '冰美式', price: '15.00'}, {name: '桂花燕麦拿铁', price: '22.00'}, {name: '提拉米苏拿铁', price: '25.00'}] },
+                    { id: 2, name: 'Wagas 沃歌斯', tag: '健康轻食', items:[{name: '煎烤鸡肉沙拉', price: '45.00'}, {name: '牛肉能量碗', price: '52.00'}, {name: '鲜榨果汁', price: '28.00'}] },
+                    { id: 3, name: 'KFC 肯德基', tag: '西式快餐', items:[{name: '麦辣鸡腿堡套餐', price: '38.00'}, {name: '原味鸡+薯条', price: '25.00'}, {name: '皮蛋瘦肉粥', price: '12.00'}] },
+                    { id: 4, name: '霸王茶姬', tag: '新中式奶茶', items:[{name: '伯牙绝弦(大杯)', price: '20.00'}, {name: '春日桃桃', price: '18.00'}, {name: '寻香山茶', price: '18.00'}] }
+                ]
+            },
+            groupManageModal: { show: false },
+            groupTitleModal: { show: false },
             takeoutModal: { 
                 show: false, activeTab: 'home', note: '', selectedItem: null,
                 storeList:[
