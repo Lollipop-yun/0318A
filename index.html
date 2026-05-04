@@ -2729,8 +2729,7 @@
                                      @click="handleChatBubbleClick(msg)"
                                      @contextmenu.prevent="showChatContextMenu($event, msg, i)">
                                      
-                                    <!-- 语音气泡禁止显示引用 -->
-                                    <div v-if="msg.quote && msg.type !== 'voice'" class="quote-block w-full"><span class="font-bold mr-1">{{ msg.quote.name }}:</span>{{ msg.quote.content }}</div>
+                                    <div v-if="msg.quote" class="quote-block w-full"><span class="font-bold mr-1">{{ msg.quote.name }}:</span>{{ msg.quote.content }}</div>
                                     
                                     <!-- 语音消息 -->
                                     <div v-if="msg.type === 'voice'" class="flex items-center justify-between w-full">
@@ -2950,19 +2949,24 @@
                     <!-- 附件菜单 (全新网格布局) -->
                     <transition name="app-slide">
                         <div v-if="wechatState.showAttachMenu" class="chat-attach-menu">
+                            <!-- 功能图标项 (全部灰色) -->
+                            <!-- 相册 (支持 Vision) -->
                             <div class="attach-item" @click="triggerImageUpload"><div class="attach-icon-box"><i class="fas fa-images text-gray-600"></i></div><span class="attach-label">相册</span></div>
+                            <!-- 拍摄 (文字转灰色图) -->
                             <div class="attach-item" @click="openFakeImageInput"><div class="attach-icon-box"><i class="fas fa-camera text-gray-600"></i></div><span class="attach-label">拍摄</span></div>
                             <div class="attach-item" @click="startVideoCall"><div class="attach-icon-box"><i class="fas fa-video text-gray-600"></i></div><span class="attach-label">视频通话</span></div>
                             <div class="attach-item" @click="openLocationModal"><div class="attach-icon-box"><i class="fas fa-map-marker-alt text-gray-600"></i></div><span class="attach-label">位置</span></div>
                             <div class="attach-item" @click="startVoiceCall"><div class="attach-icon-box"><i class="fas fa-phone text-gray-600"></i></div><span class="attach-label">语音通话</span></div>
-                            <div class="attach-item" @click="openRedPacketModal"><div class="attach-icon-box !bg-white border border-gray-200 text-gray-600 !rounded-2xl"><i class="fas fa-wallet text-lg"></i></div><span class="attach-label">红包</span></div>
-                            <!-- 准确绑定的外卖与记忆按钮 -->
+                            <!-- 自定义灰色红包图标 (Cute Rounded - Swapped Colors) -->
+                            <div class="attach-item" @click="openRedPacketModal"><div class="attach-icon-box !bg-white border border-gray-200 text-gray-600 !rounded-2xl">
+                                <i class="fas fa-wallet text-lg"></i>
+                            </div><span class="attach-label">红包</span></div>
                             <div class="attach-item" @click="openTakeoutModal"><div class="attach-icon-box"><i class="fas fa-utensils text-gray-600"></i></div><span class="attach-label">外卖</span></div>
                             <div class="attach-item" @click="openTransferModal"><div class="attach-icon-box"><i class="fas fa-money-bill-wave text-gray-600"></i></div><span class="attach-label">转账</span></div>
                             <div class="attach-item" @click="showToast('敬请期待')"><div class="attach-icon-box"><i class="fas fa-brain text-gray-600"></i></div><span class="attach-label">记忆</span></div>
-                            
                             <div class="attach-item" @click="showMusicModal"><div class="attach-icon-box"><i class="fas fa-music text-gray-600"></i></div><span class="attach-label">一起听</span></div>
                             <div class="attach-item" @click="openReadTogetherSelect"><div class="attach-icon-box"><i class="fas fa-book-open text-gray-600"></i></div><span class="attach-label">一起读</span></div>
+                            <!-- 线下模式 (灰色咖啡杯) -->
                             <div class="attach-item" @click="offlineState.selectModalShow = true; wechatState.showAttachMenu = false;"><div class="attach-icon-box"><i class="fas fa-coffee text-gray-600"></i></div><span class="attach-label">线下模式</span></div>
                         </div>
                     </transition>
@@ -3357,149 +3361,163 @@
                 </div>
             </transition>
             
-            <!-- 聊天详情页 (精美卡片分类版) -->
-            <div v-if="wechatState.activeNav === 'chat-details'" class="flex-1 flex flex-col bg-[#f2f2f6] absolute inset-0 z-30">
-                <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-[#f2f2f6] border-b border-gray-200 shrink-0 z-10 sticky top-0">
-                    <button @click="wechatState.activeNav = 'room'" class="w-8 h-8 flex items-center justify-center text-gray-800"><i class="fas fa-chevron-left text-lg"></i></button>
-                    <h1 class="font-bold text-[17px] text-gray-900">聊天详情</h1>
-                    <div class="w-8"></div>
+            <!-- 聊天详情页 -->
+            <!-- 聊天详情页 (全新 iOS 卡片分块 UI) -->
+            <div v-if="wechatState.activeNav === 'chat-details'" class="flex-1 flex flex-col bg-[#f2f2f6] absolute inset-0 z-30 font-sans pb-safe">
+                <header class="h-[90px] pt-10 px-4 flex items-center bg-[#f2f2f6] z-10 shrink-0">
+                    <button @click="wechatState.activeNav = 'room'" class="w-8 h-8 flex items-center justify-center active:opacity-50"><i class="fas fa-chevron-left text-[18px] text-gray-800"></i></button>
+                    <h1 class="font-bold text-[17px] text-gray-900 absolute left-1/2 -translate-x-1/2">聊天设置</h1>
                 </header>
-                <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                
+                <div class="flex-1 overflow-y-auto px-4 pb-10 space-y-4">
                     
-                    <!-- 顶部资料卡片 (区分群聊与单聊) -->
-                    <div class="bg-white rounded-2xl p-4 flex items-center gap-4 shadow-sm border border-gray-100 cursor-pointer active:bg-gray-50 transition" @click="wechatState.activeSession.isGroup ? openGroupProfileModal() : editCurrentSessionFriend()">
-                        <div class="w-16 h-16 rounded-full bg-gray-100 overflow-hidden shrink-0 border border-gray-100">
+                    <!-- 卡片 1：顶部资料卡片 -->
+                    <div class="bg-white rounded-[16px] p-4 flex items-center gap-4 cursor-pointer active:bg-gray-50 transition shadow-sm" @click="wechatState.activeSession.isGroup ? openGroupProfileModal() : editCurrentSessionFriend()">
+                        <div class="w-[52px] h-[52px] rounded-full bg-gray-100 overflow-hidden shrink-0 border border-gray-100">
                             <img :src="wechatState.activeSession.isGroup ? wechatState.activeSession.avatar : getCurrentSessionAvatar()" class="w-full h-full object-cover">
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-lg text-gray-900 truncate">{{ wechatState.activeSession.isGroup ? (wechatState.activeSession.remark || wechatState.activeSession.name) : wechatState.activeSession.name }}</h3>
-                            <p class="text-xs text-gray-500 mt-1 truncate">{{ wechatState.activeSession.isGroup ? '群号: ' + wechatState.activeSession.groupIdNum : 'ID: ' + getCurrentSessionId() }}</p>
-                            <p class="text-[11px] text-gray-400 mt-1 truncate">{{ wechatState.activeSession.isGroup ? wechatState.activeSession.bio : getCurrentSessionBio() }}</p>
+                            <h3 class="font-bold text-[16px] text-gray-900 truncate">{{ wechatState.activeSession.isGroup ? (wechatState.activeSession.remark || wechatState.activeSession.name) : wechatState.activeSession.name }}</h3>
+                            <p class="text-[12px] text-gray-500 mt-0.5 truncate">{{ wechatState.activeSession.isGroup ? '群号: ' + wechatState.activeSession.groupIdNum : 'ID: ' + getCurrentSessionId() }}</p>
                         </div>
-                        <i class="fas fa-chevron-right text-gray-300"></i>
+                        <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
                     </div>
-                
-                    <!-- 第一组：排版与外观 -->
-                    <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 divide-y divide-gray-50">
-                        <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-4" @click="headerLayoutModal.show = true">
-                            <span class="text-[15px] text-gray-800">顶部备注显示位置</span>
-                            <div class="flex items-center gap-2"><span class="text-[13px] text-gray-400">{{ (wechatState.activeSession?.headerLayout || 'center') === 'center' ? '顶部中间' : '顶部左侧' }}</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
+
+                    <!-- 卡片 2：搜索与显示排版 -->
+                    <div class="bg-white rounded-[16px] overflow-hidden shadow-sm divide-y divide-gray-100">
+                        <div class="flex justify-between items-center p-4 cursor-pointer active:bg-gray-50 transition" @click="openChatSearch">
+                            <span class="text-[15px] text-gray-900">查找聊天记录</span>
+                            <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
                         </div>
-                        <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-4" @click="timestampModeModal.show = true">
-                            <span class="text-[15px] text-gray-800">时间戳显示位置</span>
-                            <div class="flex items-center gap-2"><span class="text-[13px] text-gray-400">{{ getTimestampModeName(wechatState.activeSession?.timestampMode) }}</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
+                        <div class="flex justify-between items-center p-4 cursor-pointer active:bg-gray-50 transition" @click="headerLayoutModal.show = true">
+                            <span class="text-[15px] text-gray-900">顶部备注显示位置</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[14px] text-gray-500">{{ (wechatState.activeSession?.headerLayout || 'center') === 'center' ? '顶部中间' : '顶部左侧' }}</span>
+                                <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-4" @click="editReadText">
-                            <span class="text-[15px] text-gray-800">文字戳 (Read) 设置</span>
-                            <div class="flex items-center gap-2"><span class="text-[13px] text-gray-400">{{ wechatState.activeSession?.readText || 'Read' }}</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
+                        <div class="flex justify-between items-center p-4 cursor-pointer active:bg-gray-50 transition" @click="timestampModeModal.show = true">
+                            <span class="text-[15px] text-gray-900">时间戳显示位置</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[14px] text-gray-500">{{ getTimestampModeName(wechatState.activeSession?.timestampMode) }}</span>
+                                <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-4" @click="avatarModeModal.show = true">
-                            <span class="text-[15px] text-gray-800">头像显示设置</span>
-                            <div class="flex items-center gap-2"><span class="text-[13px] text-gray-400">{{ getAvatarModeName() }}</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
+                        <div class="flex justify-between items-center p-4 cursor-pointer active:bg-gray-50 transition" @click="editReadText">
+                            <span class="text-[15px] text-gray-900">文字戳 (Read) 设置</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[14px] text-gray-500">{{ wechatState.activeSession?.readText || 'Read' }}</span>
+                                <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-4" @click="navigateToChatBgSettings">
-                            <span class="text-[15px] text-gray-800">设置当前聊天背景</span>
-                            <div class="flex items-center gap-2"><span class="text-[13px] text-gray-400">{{ wechatState.activeSession.wallpaper ? '已设置' : '默认' }}</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
+                        <div class="flex justify-between items-center p-4 cursor-pointer active:bg-gray-50 transition" @click="avatarModeModal.show = true">
+                            <span class="text-[15px] text-gray-900">头像显示设置</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[14px] text-gray-500">{{ getAvatarModeName() }}</span>
+                                <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- 第二组：功能与关联 -->
-                    <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 divide-y divide-gray-50">
-                        <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-4" @click="openChatSearch">
-                            <span class="text-[15px] text-gray-800">查找聊天记录</span>
-                            <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                    <!-- 卡片 3：专属面具与背景 (含记忆互通) -->
+                    <div class="bg-white rounded-[16px] overflow-hidden shadow-sm divide-y divide-gray-100">
+                        <div class="flex justify-between items-center p-4 cursor-pointer active:bg-gray-50 transition" @click="openSessionMaskModal">
+                            <span class="text-[15px] text-gray-900">当前身份面具</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[14px] text-gray-500">{{ getMaskById(wechatState.activeSession.maskId).name }}</span>
+                                <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-4" @click="openSessionMaskModal">
-                            <span class="text-[15px] text-gray-800">当前身份面具</span>
-                            <div class="flex items-center gap-2"><span class="text-[13px] text-gray-400">{{ getMaskById(wechatState.activeSession.maskId).name }}</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
+                        <div v-if="!wechatState.activeSession.isGroup" class="flex justify-between items-center p-4 cursor-pointer active:bg-gray-50 transition" @click="openAvatarSetting">
+                            <span class="text-[15px] text-gray-900">设置本聊专属头像</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[14px] text-gray-500" v-if="wechatState.activeSession.customAvatarSelf || wechatState.activeSession.customAvatarTarget">已设置</span>
+                                <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-4" @click="worldBinderModal.show = true">
-                            <span class="text-[15px] text-gray-800">绑定世界书</span>
-                            <div class="flex items-center gap-2"><span class="text-[13px] text-gray-400">{{ getWorldbookStatus() }}</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
+                        <div class="flex justify-between items-center p-4 cursor-pointer active:bg-gray-50 transition" @click="navigateToChatBgSettings">
+                            <span class="text-[15px] text-gray-900">设置当前聊天背景</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[14px] text-gray-500">{{ wechatState.activeSession.wallpaper ? '已设置' : '默认' }}</span>
+                                <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
+                            </div>
                         </div>
-                        <div v-if="!wechatState.activeSession.isGroup" class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-4" @click="openMemorySyncModal">
-                            <span class="text-[15px] text-gray-800">群聊记忆互通</span>
-                            <div class="flex items-center gap-2"><span class="text-[13px] text-gray-400">{{ wechatState.activeSession.syncGroupIds?.length ? '已开启' : '未开启' }}</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
+                        <div v-if="!wechatState.activeSession.isGroup" class="flex justify-between items-center p-4 cursor-pointer active:bg-gray-50 transition" @click="openMemorySyncModal">
+                            <span class="text-[15px] text-gray-900">群聊记忆互通</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[14px] text-gray-500">{{ wechatState.activeSession.syncGroupIds?.length ? '已开启' : '未开启' }}</span>
+                                <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
+                            </div>
                         </div>
-                        <div v-if="!wechatState.activeSession.isGroup" class="flex justify-between items-center cursor-pointer active:bg-gray-50 p-4" @click="openAvatarSetting">
-                            <span class="text-[15px] text-gray-800">设置本聊专属头像</span>
-                            <div class="flex items-center gap-2"><span class="text-[13px] text-gray-400" v-if="wechatState.activeSession.customAvatarSelf || wechatState.activeSession.customAvatarTarget">已设置</span><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>
+                        <div class="flex justify-between items-center p-4 cursor-pointer active:bg-gray-50 transition" @click="worldBinderModal.show = true">
+                            <div class="flex flex-col">
+                                <span class="text-[15px] text-gray-900">绑定世界书 (可多选)</span>
+                                <span class="text-[11px] text-gray-400 mt-0.5">{{ getWorldbookStatus() }}</span>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
                         </div>
                     </div>
 
-                    <!-- 第三组：开关控制与后台活动 -->
-                    <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 divide-y divide-gray-50">
-                        <div class="flex justify-between items-center p-4">
-                            <span class="text-[15px] text-gray-800">时间感应</span>
-                            <input type="checkbox" class="switch-checkbox" id="time-sense-toggle" v-model="wechatState.activeSession.enableTimeSense" @change="saveData">
-                            <label for="time-sense-toggle" class="switch-label"><div class="switch-button"></div></label>
-                        </div>
-                        <div class="flex justify-between items-center p-4">
-                            <span class="text-[15px] text-gray-800">点击气泡翻译</span>
-                            <input type="checkbox" class="switch-checkbox" id="translate-toggle" v-model="wechatState.activeSession.enableClickTranslate" @change="saveData">
-                            <label for="translate-toggle" class="switch-label"><div class="switch-button"></div></label>
-                        </div>
-                        <div class="flex justify-between items-center p-4">
-                            <span class="text-[15px] text-gray-800">置顶聊天</span>
-                            <input type="checkbox" class="switch-checkbox" id="pin-chat-toggle" :checked="wechatState.activeSession?.isPinned" @change="togglePin">
-                            <label for="pin-chat-toggle" class="switch-label"><div class="switch-button"></div></label>
-                        </div>
-                        <div v-if="!wechatState.activeSession.isGroup" class="flex justify-between items-center p-4">
-                            <span class="text-[15px] text-gray-800">加入黑名单</span>
-                            <input type="checkbox" class="switch-checkbox" id="block-toggle" v-model="wechatState.activeSession.isBlocked" @change="saveData">
-                            <label for="block-toggle" class="switch-label"><div class="switch-button"></div></label>
-                        </div>
-                        
-                        <!-- 后台活动模块 -->
-                        <div class="p-4 flex flex-col bg-gray-50/30">
-                            <div class="flex justify-between items-center">
-                                <span class="text-[15px] text-gray-800 font-bold">允许角色进行后台活动</span>
+                    <!-- 卡片 4：AI 自动化功能与开关 -->
+                    <div class="bg-white rounded-[16px] overflow-hidden shadow-sm divide-y divide-gray-100">
+                        <div class="flex flex-col p-4 active:bg-gray-50 transition">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[15px] text-gray-900">允许角色进行后台活动</span>
                                 <input type="checkbox" class="switch-checkbox" :id="'bg-active-'+wechatState.activeSession.id" v-model="wechatState.activeSession.enableBackgroundActivity" @change="saveData">
                                 <label :for="'bg-active-'+wechatState.activeSession.id" class="switch-label"><div class="switch-button"></div></label>
                             </div>
-                            <div v-if="wechatState.activeSession.enableBackgroundActivity" class="bg-white rounded-lg p-3 shadow-sm divide-y divide-gray-100 mt-3 border border-gray-200/60">
-                                <div class="flex items-center justify-between py-2.5">
+                            <!-- 后台活动的高级参数 (展开) -->
+                            <div v-if="wechatState.activeSession.enableBackgroundActivity" class="bg-gray-50 rounded-lg px-3 shadow-inner divide-y divide-gray-200/60 mt-3 border border-gray-100">
+                                <div class="flex items-center justify-between py-3">
                                     <span class="text-[13px] text-gray-700">未读多久后发消息 (小时)</span>
-                                    <input type="number" v-model.number="wechatState.activeSession.bgActivityDelay" placeholder="2" class="w-12 bg-gray-50 border border-gray-200 rounded px-1 py-1 text-xs text-center outline-none text-gray-600" @change="saveData">
+                                    <input type="number" v-model.number="wechatState.activeSession.bgActivityDelay" placeholder="2" class="w-12 bg-white border border-gray-200 rounded px-1 py-1 text-xs text-center outline-none shadow-sm text-gray-600" @change="saveData">
                                 </div>
-                                <div class="flex items-center justify-between py-2.5">
+                                <div class="flex items-center justify-between py-3">
                                     <span class="text-[13px] text-gray-700">免打扰时段</span>
                                     <div class="flex items-center gap-1">
-                                        <input type="time" v-model="wechatState.activeSession.bgActivityDndStart" class="w-20 bg-gray-50 border border-gray-200 rounded px-1 py-1 text-xs outline-none text-center text-gray-600" @change="saveData">
-                                        <span class="text-xs text-gray-400">-</span>
-                                        <input type="time" v-model="wechatState.activeSession.bgActivityDndEnd" class="w-20 bg-gray-50 border border-gray-200 rounded px-1 py-1 text-xs outline-none text-center text-gray-600" @change="saveData">
+                                        <input type="time" v-model="wechatState.activeSession.bgActivityDndStart" class="w-20 bg-white border border-gray-200 rounded px-1 py-1 text-xs outline-none shadow-sm text-center text-gray-600" @change="saveData">
+                                        <span class="text-[11px] text-gray-400">-</span>
+                                        <input type="time" v-model="wechatState.activeSession.bgActivityDndEnd" class="w-20 bg-white border border-gray-200 rounded px-1 py-1 text-xs outline-none shadow-sm text-center text-gray-600" @change="saveData">
                                     </div>
                                 </div>
-                                <div class="flex items-center justify-between py-2.5">
-                                    <span class="text-[13px] text-gray-700">最多连续发几条</span>
-                                    <input type="number" v-model.number="wechatState.activeSession.bgActivityMaxCount" placeholder="1" class="w-12 bg-gray-50 border border-gray-200 rounded px-1 py-1 text-xs text-center outline-none text-gray-600" @change="saveData">
+                                <div class="flex items-center justify-between py-3">
+                                    <span class="text-[13px] text-gray-700">最多连续发几条 (0为不限)</span>
+                                    <input type="number" v-model.number="wechatState.activeSession.bgActivityMaxCount" placeholder="0" class="w-12 bg-white border border-gray-200 rounded px-1 py-1 text-xs text-center outline-none shadow-sm text-gray-600" @change="saveData">
                                 </div>
                             </div>
                         </div>
+
+                        <div class="flex justify-between items-center p-4 active:bg-gray-50 transition">
+                            <span class="text-[15px] text-gray-900">时间感应</span>
+                            <input type="checkbox" class="switch-checkbox" id="time-sense-toggle" v-model="wechatState.activeSession.enableTimeSense" @change="saveData">
+                            <label for="time-sense-toggle" class="switch-label"><div class="switch-button"></div></label>
+                        </div>
+                        <div class="flex justify-between items-center p-4 active:bg-gray-50 transition">
+                            <span class="text-[15px] text-gray-900">点击气泡翻译(外语/方言)</span>
+                            <input type="checkbox" class="switch-checkbox" id="translate-toggle" v-model="wechatState.activeSession.enableClickTranslate" @change="saveData">
+                            <label for="translate-toggle" class="switch-label"><div class="switch-button"></div></label>
+                        </div>
+                        <div class="flex justify-between items-center p-4 active:bg-gray-50 transition">
+                            <span class="text-[15px] text-gray-900">置顶聊天</span>
+                            <input type="checkbox" class="switch-checkbox" id="pin-chat-toggle" :checked="wechatState.activeSession?.isPinned" @change="togglePin">
+                            <label for="pin-chat-toggle" class="switch-label"><div class="switch-button"></div></label>
+                        </div>
+                        <div v-if="!wechatState.activeSession.isGroup" class="flex justify-between items-center p-4 active:bg-gray-50 transition">
+                            <span class="text-[15px] text-gray-900">加入黑名单</span>
+                            <input type="checkbox" class="switch-checkbox" id="block-toggle" v-model="wechatState.activeSession.isBlocked" @change="saveData">
+                            <label for="block-toggle" class="switch-label"><div class="switch-button"></div></label>
+                        </div>
                     </div>
 
-                    <!-- 第四组：危险操作区 -->
-                    <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 divide-y divide-gray-50 mt-4">
+                    <!-- 卡片 5：危险操作区 -->
+                    <div class="bg-white rounded-[16px] overflow-hidden shadow-sm divide-y divide-gray-100">
                         <button @click="confirmClearChatHistory" class="w-full text-red-500 font-bold text-[15px] py-4 text-center active:bg-gray-50 transition">清空聊天记录</button>
                         <button @click="wechatState.activeSession.isGroup ? confirmDismissGroup() : confirmDeleteFriend()" class="w-full text-red-500 font-bold text-[15px] py-4 text-center active:bg-gray-50 transition">
                             {{ wechatState.activeSession.isGroup ? '解散并退出群聊' : '删除好友' }}
                         </button>
                     </div>
-                </div>
-            </div>
 
-            <!-- 聊天背景设置页 -->
-            <div v-if="wechatState.activeNav === 'chat-bg-settings'" class="flex-1 flex flex-col bg-gray-50 absolute inset-0 z-40">
-                <header class="h-[90px] pt-10 px-4 flex items-center bg-white border-b border-gray-100"><button @click="wechatState.activeNav = 'chat-details'" class="w-8 h-8 flex items-center justify-center"><i class="fas fa-chevron-left text-lg text-black"></i></button><h1 class="font-bold text-[17px] ml-2">聊天背景</h1></header>
-                <div class="flex-1 p-6 flex flex-col items-center">
-                    <div class="w-48 h-80 bg-gray-200 rounded-lg overflow-hidden shadow-md mb-8 border-4 border-white relative">
-                        <img v-if="wechatState.activeSession.wallpaper" :src="wechatState.activeSession.wallpaper" class="w-full h-full object-cover">
-                        <div v-else class="w-full h-full flex items-center justify-center text-gray-400 flex-col"><i class="fas fa-image text-3xl mb-2"></i><span class="text-xs">默认</span></div>
-                    </div>
-                    <button @click="triggerChatBgUpload" class="w-full bg-black text-white py-3 rounded-xl font-bold text-sm mb-3">从相册选择</button>
-                    <button @click="resetChatBg" class="w-full bg-white text-red-500 border border-gray-200 py-3 rounded-xl font-bold text-sm">恢复默认</button>
                 </div>
-                <input type="file" ref="chatBgInput" accept="image/*" class="hidden" @change="handleChatBgChange">
             </div>
 
             <!-- 红包详情页 (修复多人拼手气渲染) -->
@@ -7145,9 +7163,9 @@ createApp({
                 aiConsecutiveCount++;
             }
 
-            // 判定是否超过设定的最高连发次数
-            const maxCount = parseInt(session.bgActivityMaxCount) || 1;
-            if (aiConsecutiveCount >= maxCount) return; 
+            // 判定是否超过设定的最高连发次数 (0 代表不限制条数)
+            const maxCount = parseInt(session.bgActivityMaxCount) || 0;
+            if (maxCount > 0 && aiConsecutiveCount >= maxCount) return; 
 
             // 计算时间间隔 (修复：引入独立的 lastBgActivityTime，不再污染原始时间戳)
             const delayHours = parseFloat(session.bgActivityDelay) || 2; 
@@ -7242,15 +7260,10 @@ createApp({
                 
                 const recentContext = session.messages.slice(-5).map(m => `[${m.isSelf ? '我' : friend.name}]: ${m.content}`).join('\n');
                 
-                const systemPrompt = `你是 ${friend.name}。人设: ${friend.bio || '无'}。你在忙自己的事情时，突然想到我，决定主动给我发微信。
-请根据你的人设以及我们的关系（${friend.relationship || '未知'}），像真人一样主动找话题、分享日常、抛梗、调侃或是表达关心。
+                const systemPrompt = `你是 ${friend.name}。人设: ${friend.bio || '无'}。你在忙自己的事情时，突然想到我，决定主动给我发一条微信。
+请根据你的人设以及我们的关系（${friend.relationship || '未知'}），像真人一样简短随意地发一条消息。可以是分享日常、抛梗、调侃或是表达关心。
 参考最近聊天：\n${recentContext}
-【重要格式要求】：
-请输出 JSON 格式。你可以连发多条消息（数组形式），模拟真人连续发几条短促微信的习惯！
-格式如下：
-{
-  "reply": ["你要发的第一句话", "第二句话..."]
-}`;
+要求：绝对不带引号，直接输出要发的一句话，10字到30字以内。`;
 
                 const res = await fetch(`${url}/chat/completions`, {
                     method: 'POST',
@@ -7261,44 +7274,6 @@ createApp({
                         temperature: 0.8
                     })
                 });
-                
-                if (res.ok) {
-                    const data = await res.json();
-                    let rawContent = data.choices[0].message.content.trim().replace(/```json/g, '').replace(/```/g, '').trim();
-                    let parsed = JSON.parse(rawContent);
-                    let replies = parsed.reply || [];
-                    if (!Array.isArray(replies)) replies = [replies];
-
-                    let delay = 0;
-                    replies.forEach(sentence => {
-                        setTimeout(() => {
-                            session.messages.push({
-                                content: sentence,
-                                isSelf: false,
-                                time: Date.now(),
-                                avatar: this.getCurrentSessionAvatar(),
-                                type: 'text'
-                            });
-                            
-                            if (this.currentApp !== 'wechat' || this.wechatState.activeNav !== 'room' || this.wechatState.activeSession?.id !== session.id || document.hidden) {
-                                session.unreadCount = (session.unreadCount || 0) + 1;
-                                if (!document.hidden) {
-                                    this.showGlobalNotification(session, sentence);
-                                }
-                                this.sendPushNotification('微信新消息', session.name, sentence, session.avatar);
-                            } else {
-                                this.scrollToBottom();
-                            }
-                            if(this.notificationConfig.currentSound) new Audio(this.notificationConfig.currentSound).play();
-                            this.saveData();
-                        }, delay);
-                        delay += 2000 + Math.random() * 1500; // 每条间隔 2~3.5 秒
-                    });
-                }
-            } catch(e) {
-                console.warn("后台活动请求失败", e);
-            }
-        },
                 
                 if (res.ok) {
                     const data = await res.json();
@@ -8205,7 +8180,8 @@ Structure:
                                  translation: trans,             
                                  showTranslation: !!trans,
                                  isBlockedSend: session.isBlocked,
-                                 quote: quoteObj // 将引用的对象挂载给AI气泡
+                                 // 【修改】如果是语音消息，强制清空引用，防止排版变异
+                                 quote: msgType === 'voice' ? null : quoteObj 
                              };
                              session.messages.push(aiMsg);
                              this.scrollToBottom();
@@ -10069,10 +10045,6 @@ ${settings.bannedWords && settings.bannedWords.trim() ? `5. 【绝对禁忌词�
             };
             this.wechatState.activeSession.messages.push(msg);
             this.wechatState.activeSession.lastMessage = '[语音]';
-            
-            // 【新增】发语音时自动清空引用状态，避免引用冲突
-            this.replyingTo = null; 
-
             this.voiceInputModal.show = false;
             this.scrollToBottom();
             this.saveData();
