@@ -699,10 +699,10 @@
                     <span class="text-base font-bold">{{ musicModal.songTitle || '---' }}</span>
                     <span class="text-xs text-gray-400">{{ musicModal.artist || '---' }}</span>
                 </div>
-                <div class="flex items-center gap-4">
-     <button @click="stopListenTogether" class="text-gray-400 hover:text-white"><i class="fas fa-power-off text-lg"></i></button>
-     <button @click="openMusicManager" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white"><i class="fas fa-ellipsis-h text-xl"></i></button>
-</div>
+                <div class="flex items-center gap-5">
+                     <button @click="stopListenTogether" class="text-gray-300 hover:text-white"><i class="fas fa-power-off text-xl"></i></button>
+                     <button @click="openMusicManager" class="text-gray-300 hover:text-white"><i class="fas fa-ellipsis-h text-xl"></i></button>
+                </div>
             </div>
             
             <div class="music-disc-container">
@@ -1815,93 +1815,80 @@
 
     </div> <!-- 【修复致命Bug！！！】：彻底闭合主界面 -->
     
-    <!-- 群聊资料设置弹窗 (还原图1设计) -->
+    <!-- 群聊资料设置弹窗 (完美还原图一 UI) -->
         <transition name="page-slide">
-            <div v-if="groupProfileModal.show" class="fixed inset-0 z-[105000] flex flex-col bg-[#f2f2f6] pb-safe font-sans">
-                <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-[#f2f2f6] sticky top-0 z-10">
-                    <button @click="groupProfileModal.show = false; saveData()" class="w-8 h-8 flex items-center justify-center text-gray-800"><i class="fas fa-chevron-left text-[18px]"></i></button>
-                    <h3 class="font-bold text-[17px] text-gray-900 absolute left-1/2 -translate-x-1/2">群资料管理</h3>
-                    <div class="w-8"></div>
+            <div v-if="groupProfileModal.show" class="fixed inset-0 z-[105000] bg-[#f5f6fa] flex flex-col font-sans pb-safe">
+                <!-- 顶部导航栏 -->
+                <header class="h-[90px] pt-10 px-4 flex items-center bg-[#f5f6fa] shrink-0 z-50 sticky top-0">
+                    <button @click="groupProfileModal.show = false" class="w-8 h-8 flex items-center justify-center text-gray-800 active:opacity-50"><i class="fas fa-chevron-left text-[20px]"></i></button>
+                    <h1 class="font-medium text-[17px] text-gray-900 absolute left-1/2 -translate-x-1/2">群资料管理</h1>
                 </header>
-                
-                <div class="flex-1 overflow-y-auto pb-6">
-                    <!-- 顶部上传封面卡片 -->
-                    <div class="mx-4 mt-4 bg-[#e9e9eb] rounded-[16px] py-10 flex flex-col items-center justify-center gap-2 cursor-pointer active:opacity-70 transition">
-                        <div class="relative mb-2">
-                            <i class="far fa-image text-[42px] text-gray-500 font-light"></i>
-                            <i class="fas fa-plus-circle text-blue-500 text-xl absolute -bottom-1 -right-2 bg-[#e9e9eb] rounded-full border-2 border-[#e9e9eb]"></i>
+
+                <div class="flex-1 overflow-y-auto px-4 pb-12 space-y-6 pt-2">
+                    
+                    <!-- 顶部添加封面区域 -->
+                    <div class="w-full bg-[#eeeef3] rounded-[16px] h-40 flex flex-col items-center justify-center cursor-pointer active:bg-gray-200 transition" @click="showToast('添加封面功能开发中')">
+                        <div class="relative">
+                            <i class="far fa-image text-4xl text-gray-600 font-light"></i>
+                            <i class="fas fa-plus-circle absolute -bottom-1 -right-2 text-xl text-gray-600 bg-[#eeeef3] rounded-full border-2 border-[#eeeef3]"></i>
                         </div>
-                        <span class="text-[13px] text-gray-500 tracking-wide">丰富群聊资料，吸引更多成员加入</span>
-                        <span class="text-[15px] text-[#576b95] font-medium mt-1">添加群封面</span>
+                        <span class="text-[13px] text-gray-600 mt-4 tracking-wide">丰富群聊资料，吸引更多成员加入</span>
+                        <span class="text-[14px] text-[#4f6b9e] mt-2">添加群封面</span>
                     </div>
 
-                    <!-- 居中群头像编辑 -->
-                    <div class="flex flex-col items-center mt-8 mb-8">
-                        <div class="w-[84px] h-[84px] rounded-full bg-gray-200 overflow-hidden cursor-pointer border border-gray-100 shadow-sm" @click="$refs.groupAvatarInput2.click()">
+                    <!-- 居中群头像区域 -->
+                    <div class="flex flex-col items-center justify-center -mt-2">
+                        <div class="w-20 h-20 rounded-full bg-gray-100 overflow-hidden border border-gray-200 shadow-sm cursor-pointer" @click="$refs.groupAvatarInput2.click()">
                             <img :src="groupProfileModal.avatar" class="w-full h-full object-cover">
                         </div>
-                        <span class="text-[15px] text-[#576b95] font-medium mt-4 cursor-pointer" @click="$refs.groupAvatarInput2.click()">编辑群头像</span>
+                        <span class="text-[14px] text-[#4f6b9e] mt-3 cursor-pointer" @click="$refs.groupAvatarInput2.click()">编辑群头像</span>
                     </div>
 
-                    <!-- 群名称区块 -->
-                    <div class="mx-4 bg-white rounded-[16px] overflow-hidden mb-4 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-                        <div class="flex justify-between items-center p-4 border-b border-gray-100/60">
+                    <!-- 群名与权限卡片 -->
+                    <div class="bg-white rounded-[16px] overflow-hidden shadow-sm divide-y divide-gray-50 px-4">
+                        <div class="flex justify-between items-center py-4 cursor-pointer">
                             <span class="text-[16px] text-gray-900">群聊名称</span>
                             <div class="flex items-center gap-1">
-                                <input v-model="groupProfileModal.name" class="text-[15px] text-gray-500 text-right outline-none bg-transparent w-36" placeholder="填写群名">
+                                <input v-model="groupProfileModal.name" class="bg-transparent text-right text-[14px] text-gray-500 outline-none w-32" @blur="saveGroupProfile">
                                 <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
                             </div>
                         </div>
-                        <div class="flex justify-between items-center p-4">
+                        <div class="flex justify-between items-center py-4">
                             <span class="text-[16px] text-gray-900">允许群成员修改群聊名称</span>
-                            <input type="checkbox" class="switch-checkbox" id="allow-edit-name">
-                            <label for="allow-edit-name" class="switch-label"><div class="switch-button"></div></label>
+                            <input type="checkbox" class="switch-checkbox" id="allow-rename-toggle">
+                            <label for="allow-rename-toggle" class="switch-label"><div class="switch-button"></div></label>
                         </div>
                     </div>
 
-                    <!-- 群信息区块 -->
-                    <div class="mx-4 bg-white rounded-[16px] overflow-hidden mb-8 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-                        <div class="flex justify-between items-center p-4 border-b border-gray-100/60">
-                            <div class="flex flex-col w-full gap-1">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-[16px] text-gray-900">群介绍</span>
-                                    <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
-                                </div>
-                                <input v-model="groupProfileModal.bio" class="text-[14px] text-gray-400 outline-none w-full bg-transparent" placeholder="在这里，发现更多~">
+                    <!-- 详细资料卡片 -->
+                    <div class="bg-white rounded-[16px] overflow-hidden shadow-sm divide-y divide-gray-50 px-4">
+                        <div class="flex flex-col py-4 cursor-pointer relative" @click="showInput('修改群介绍', groupProfileModal.bio, '在这里，发现更多~', (v) => { if(v){ groupProfileModal.bio=v; saveGroupProfile(); } })">
+                            <span class="text-[16px] text-gray-900 mb-1">群介绍</span>
+                            <span class="text-[14px] text-gray-400 truncate w-[90%]">{{ groupProfileModal.bio || '在这里，发现更多~' }}</span>
+                            <i class="fas fa-chevron-right text-gray-300 text-sm absolute right-0 top-1/2 -translate-y-1/2"></i>
+                        </div>
+                        <div class="flex justify-between items-center py-4 cursor-pointer">
+                            <span class="text-[16px] text-gray-900">群分类</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[14px] text-gray-400">未设置</span>
+                                <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
                             </div>
                         </div>
-                        <div class="flex justify-between items-center p-4 border-b border-gray-100/60">
-                            <span class="text-[16px] text-gray-900">群分类</span>
-                            <div class="flex items-center gap-1"><span class="text-[15px] text-gray-400">未设置</span><i class="fas fa-chevron-right text-gray-300 text-sm"></i></div>
-                        </div>
-                        <div class="flex justify-between items-center p-4 border-b border-gray-100/60">
+                        <div class="flex justify-between items-center py-4 cursor-pointer">
                             <span class="text-[16px] text-gray-900">群标签</span>
-                            <div class="flex items-center gap-1"><span class="text-[15px] text-gray-400">未设置</span><i class="fas fa-chevron-right text-gray-300 text-sm"></i></div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[14px] text-gray-400">未设置</span>
+                                <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-center p-4">
+                        <div class="flex justify-between items-center py-4 cursor-pointer">
                             <span class="text-[16px] text-gray-900">群地点</span>
-                            <div class="flex items-center gap-1"><span class="text-[15px] text-gray-400">未设置</span><i class="fas fa-chevron-right text-gray-300 text-sm"></i></div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[14px] text-gray-400">未设置</span>
+                                <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </transition>
-
-        <!-- 新增：拉人进群弹窗 -->
-        <transition name="app-slide">
-            <div v-if="groupAddMemberModal.show" class="fixed inset-0 z-[106000] bg-gray-50 flex flex-col">
-                <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-100 sticky top-0 z-10">
-                    <button @click="groupAddMemberModal.show = false" class="text-gray-500 font-medium text-sm">取消</button>
-                    <h1 class="text-[17px] font-bold">邀请好友入群</h1>
-                    <button @click="confirmAddGroupMembers" class="bg-[#07c160] text-white px-3 py-1.5 rounded text-sm font-bold">完成</button>
-                </header>
-                <div class="flex-1 overflow-y-auto p-4 bg-white">
-                     <div v-if="wechatState.friendList.length === 0" class="p-8 text-center text-gray-400 text-sm">暂无联系人</div>
-                     <div v-for="friend in wechatState.friendList" :key="friend.id" v-show="!wechatState.activeSession?.members?.includes(friend.id)" @click="toggleGroupAddMember(friend.id)" class="flex items-center gap-3 p-3 border-b border-gray-50 last:border-0 cursor-pointer active:bg-gray-50">
-                         <div class="w-5 h-5 rounded-full border flex items-center justify-center transition" :class="groupAddMemberModal.selectedIds.includes(friend.id) ? 'bg-[#07c160] border-[#07c160]' : 'border-gray-300'"><i v-if="groupAddMemberModal.selectedIds.includes(friend.id)" class="fas fa-check text-white text-xs"></i></div>
-                         <div class="w-10 h-10 rounded bg-gray-100 overflow-hidden"><img :src="friend.avatar" class="w-full h-full object-cover"></div>
-                         <span class="font-medium text-gray-900">{{ friend.remark || friend.name }}</span>
-                     </div>
                 </div>
             </div>
         </transition>
@@ -2247,11 +2234,13 @@
                                 <span class="text-[16px] text-gray-900">群资料管理</span>
                                 <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
                             </div>
+                            <!-- 新增：显示群头衔开关 -->
                             <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition">
                                 <span class="text-[16px] text-gray-900">显示群头衔</span>
                                 <input type="checkbox" class="switch-checkbox" id="show-title-toggle" v-model="wechatState.activeSession.showGroupTitle" @change="saveData">
                                 <label for="show-title-toggle" class="switch-label"><div class="switch-button"></div></label>
                             </div>
+                            <!-- 新增：群头衔分配入口 -->
                             <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition" @click="openGroupTitleModal()">
                                 <span class="text-[16px] text-gray-900">群头衔管理</span>
                                 <div class="flex items-center gap-2"><span class="text-[14px] text-gray-400">分配专属头衔与等级</span><i class="fas fa-chevron-right text-gray-300 text-sm"></i></div>
@@ -2283,12 +2272,16 @@
                     <div>
                         <div class="text-[13px] text-gray-500 mb-2 ml-1">成员管理</div>
                         <div class="bg-white rounded-[12px] overflow-hidden shadow-sm divide-y divide-gray-100">
-                            <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition" @click="wechatState.manageMemberId = null; showToast('请在聊天设置点击成员头像管理')">
-                                <span class="text-[16px] text-gray-900">设置群管理员</span>
+                            <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition">
+                                <span class="text-[16px] text-gray-900">成员数据</span>
                                 <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
                             </div>
                             <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition">
                                 <span class="text-[16px] text-gray-900">群黑名单管理</span>
+                                <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
+                            </div>
+                            <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition" @click="showToast('仅群主可设置管理员')">
+                                <span class="text-[16px] text-gray-900">设置群管理员</span>
                                 <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
                             </div>
                         </div>
@@ -2302,14 +2295,18 @@
                                 <span class="text-[16px] text-gray-900">群内禁言</span>
                                 <div class="flex items-center gap-2"><span class="text-[14px] text-gray-400">未开启禁言</span><i class="fas fa-chevron-right text-gray-300 text-sm"></i></div>
                             </div>
+                            <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition">
+                                <div class="flex items-center gap-1.5"><span class="text-[16px] text-gray-900">禁发特定消息</span><i class="fas fa-robot text-gray-400 text-xs"></i></div>
+                                <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
+                            </div>
                         </div>
                     </div>
-
+                    
                     <!-- 5. 危险操作 -->
-                    <div class="mt-8 mb-6">
-                        <div class="bg-white rounded-[12px] overflow-hidden shadow-sm divide-y divide-gray-100">
-                            <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition" @click="transferGroupOwner">
-                                <span class="text-[16px] text-red-500">转让群聊</span>
+                    <div class="mt-4">
+                        <div class="bg-white rounded-[12px] overflow-hidden shadow-sm">
+                            <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition" @click="showToast('只有群主才能转让群聊')">
+                                <span class="text-[16px] text-gray-900">转让群</span>
                                 <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
                             </div>
                         </div>
@@ -3129,7 +3126,7 @@
                             <div class="attach-item" @click="openRedPacketModal"><div class="attach-icon-box !bg-white border border-gray-200 text-gray-600 !rounded-2xl">
                                 <i class="fas fa-wallet text-lg"></i>
                             </div><span class="attach-label">红包</span></div>
-                            <div class="attach-item" @click.stop="openTakeoutModal"><div class="attach-icon-box"><i class="fas fa-utensils text-gray-600"></i></div><span class="attach-label">外卖</span></div>
+                            <div class="attach-item" @click="openTakeoutModal"><div class="attach-icon-box"><i class="fas fa-utensils text-gray-600"></i></div><span class="attach-label">外卖</span></div>
                             <div class="attach-item" @click="openTransferModal"><div class="attach-icon-box"><i class="fas fa-money-bill-wave text-gray-600"></i></div><span class="attach-label">转账</span></div>
                             <div class="attach-item" @click="showToast('敬请期待')"><div class="attach-icon-box"><i class="fas fa-brain text-gray-600"></i></div><span class="attach-label">记忆</span></div>
                             <div class="attach-item" @click="showMusicModal"><div class="attach-icon-box"><i class="fas fa-music text-gray-600"></i></div><span class="attach-label">一起听</span></div>
@@ -5494,21 +5491,6 @@ createApp({
             const friend = this.wechatState.friendList.find(f => f.id === this.wechatState.activeSession.targetId);
             return friend ? (friend.remark || friend.name) : this.wechatState.activeSession.name;
         },
-        updateMemberLevel(session, memberId) {
-            if (!session || !session.isGroup) return;
-            if (!session.membersInfo) session.membersInfo = {};
-            if (!session.membersInfo[memberId]) {
-                session.membersInfo[memberId] = { level: memberId === 'mine' ? 100 : 1, customTitle: '', lastSpokenDate: '' };
-            }
-            if (memberId === 'mine') return; // 群主等级不随发言变动
-            
-            const today = new Date().toLocaleDateString();
-            if (session.membersInfo[memberId].lastSpokenDate !== today) {
-                // 如果今天还没发过言，等级+1
-                session.membersInfo[memberId].level = Math.min(100, session.membersInfo[memberId].level + 1);
-                session.membersInfo[memberId].lastSpokenDate = today;
-            }
-        },
         formatVoiceCallTime(seconds) {
             if (!seconds || isNaN(seconds)) return '00:00';
             const m = Math.floor(seconds / 60);
@@ -5524,9 +5506,6 @@ createApp({
             // 如果选中了中途，间隔为 20 分钟 (1200000ms)；否则为默认的 5 分钟
             const threshold = mode === 'midchat' ? 1200000 : 300000;
             return (msg.time - prevMsg.time) > threshold;
-        },        
-        transferGroupOwner() {
-            this.showToast('功能开发中：后续支持选择特定成员转让群主');
         },
         
         // --- 转账接收与退还方法 ---
@@ -7119,8 +7098,19 @@ createApp({
                 this.replyingTo = null; 
             }
             const currentSession = this.wechatState.activeSession;
-            this.updateMemberLevel(currentSession, 'mine');
             currentSession.messages.push(msg);
+            currentSession.messages.push(msg);
+            
+            // 【新增】群聊玩家发消息升1级
+            if (currentSession.isGroup) {
+                if (!currentSession.membersInfo) currentSession.membersInfo = {};
+                if (!currentSession.membersInfo['mine']) currentSession.membersInfo['mine'] = { level: 1, customTitle: '', lastLevelDate: '' };
+                const today = new Date().toLocaleDateString();
+                if (currentSession.membersInfo['mine'].lastLevelDate !== today) {
+                    if (currentSession.membersInfo['mine'].level < 100) currentSession.membersInfo['mine'].level++;
+                    currentSession.membersInfo['mine'].lastLevelDate = today;
+                }
+            }
             currentSession.lastMessage = this.inputMsg;
             currentSession.bgTriggerCount = 0; // 【核心修正】我发了消息，清空后台触发次数
             currentSession.lastBgActivityTime = Date.now(); // 重置后台计时起点
@@ -7252,9 +7242,9 @@ createApp({
             if (!session.membersInfo) session.membersInfo = {};
             if (!session.membersInfo[memberId]) {
                 session.membersInfo[memberId] = {
-                    level: memberId === 'mine' ? 100 : 1, // 初始默认为1级
+                    level: memberId === 'mine' ? 100 : 1, // 默认变成 1 级
                     customTitle: '',
-                    lastSpokenDate: '' // 记录最后发言日期
+                    lastLevelDate: '' // 记录上次升级日期
                 };
             }
 
@@ -7489,11 +7479,13 @@ createApp({
             const maxCount = parseInt(session.bgActivityMaxCount) || 0;
             if (maxCount > 0 && (session.bgTriggerCount || 0) >= maxCount) return; 
 
-            // 计算时间间隔 (修复：引入独立的 lastBgActivityTime，不再污染原始时间戳)
             const delayHours = parseFloat(session.bgActivityDelay) || 2; 
             const delayMs = delayHours * 60 * 60 * 1000;
+            // 获取最后一条消息的时间
             const lastMsg = session.messages[session.messages.length - 1];
-            const referenceTime = session.lastBgActivityTime || lastMsg.time;
+            
+            // 如果最后一条是我发的，从我说完开始算时间；如果最后一条是AI发的，从它发完开始算时间（允许连发）
+            const referenceTime = lastMsg.time;
 
             if (Date.now() - referenceTime >= delayMs) {
                 // 3. 判断是否在免打扰时间段内
@@ -7515,7 +7507,16 @@ createApp({
                     this.triggerBackgroundActivity(session);
                 }
             }
-        },              
+        },
+        
+        // --- 逼真外卖代付平台逻辑 ---
+        openTakeoutModal() {
+            this.takeoutModal.activeTab = 'home';
+            this.takeoutModal.selectedItem = null;
+            this.takeoutModal.note = '';
+            this.takeoutModal.show = true;
+            this.wechatState.showAttachMenu = false;
+        },
 
         // ==== 这是新增的刷新商品方法 ====
         refreshTakeoutItems() {
@@ -7567,14 +7568,10 @@ createApp({
                 
                 const recentContext = session.messages.slice(-5).map(m => `[${m.isSelf ? '我' : friend.name}]: ${m.content}`).join('\n');
                 
-                const systemPrompt = `你是 ${friend.name}。人设: ${friend.bio || '无'}。你在忙自己的事情时，突然想到我，决定主动给我发微信。
-请根据你的人设以及我们的关系（${friend.relationship || '未知'}），像真人一样主动发消息。可以是分享日常、抛梗、调侃或是表达关心。
+                const systemPrompt = `你是 ${friend.name}。人设: ${friend.bio || '无'}。你在忙自己的事情时，突然想到我，决定主动给我发一条微信。
+请根据你的人设以及我们的关系（${friend.relationship || '未知'}），像真人一样简短随意地发一条消息。可以是分享日常、抛梗、调侃或是表达关心。
 参考最近聊天：\n${recentContext}
-要求：必须返回 JSON 格式，"reply" 是一个数组，可以将你要说的话切分为多条发送！
-Structure:
-{
-  "reply": ["第一句话", "第二句话"] // 必须是数组！可以说多句，也可以只有一句
-}`;
+要求：绝对不带引号，直接输出要发的一句话，10字到30字以内。`;
 
                 const res = await fetch(`${url}/chat/completions`, {
                     method: 'POST',
@@ -7588,48 +7585,30 @@ Structure:
                 
                 if (res.ok) {
                     const data = await res.json();
-                    let rawContent = data.choices[0].message.content.trim().replace(/```json/g, '').replace(/```/g, '').trim();
-                    let parsed = { reply:[] };
-                    try {
-                        parsed = JSON.parse(rawContent);
-                    } catch(e) {
-                        parsed.reply = [rawContent]; // 容错兜底
-                    }
-
-                    let sentences = Array.isArray(parsed.reply) ? parsed.reply : [parsed.reply || ""];
-                    let tDelay = 0;
-
-                    sentences.forEach((seg) => {
-                        if (!seg.trim()) return;
-                        setTimeout(() => {
-                            session.messages.push({
-                                content: seg.trim(),
-                                isSelf: false,
-                                time: Date.now(),
-                                avatar: this.getCurrentSessionAvatar(),
-                                type: 'text'
-                            });
-                            
-                            // 更新时间！这会让主界面的列表时间保持最新并置顶
-                            session.time = Date.now();
-                            session.lastMessage = seg.trim();
-
-                            if (this.currentApp !== 'wechat' || this.wechatState.activeNav !== 'room' || this.wechatState.activeSession?.id !== session.id || document.hidden) {
-                                session.unreadCount = (session.unreadCount || 0) + 1;
-                                if (!document.hidden) {
-                                    this.showGlobalNotification(session, seg);
-                                }
-                                this.sendPushNotification('微信新消息', session.name, seg.trim(), session.avatar);
-                            } else {
-                                this.scrollToBottom();
-                            }
-                            if(this.notificationConfig.currentSound) new Audio(this.notificationConfig.currentSound).play();
-                            this.saveData();
-                        }, tDelay);
-                        tDelay += 1500 + Math.random() * 1000; 
+                    const msgContent = data.choices[0].message.content.trim();
+                    session.messages.push({
+                        content: msgContent,
+                        isSelf: false,
+                        time: Date.now(),
+                        avatar: this.getCurrentSessionAvatar(),
+                        type: 'text'
                     });
+                    session.time = Date.now(); // 强制更新外部会话列表时间
                     
+                    if (this.currentApp !== 'wechat' || this.wechatState.activeNav !== 'room' || this.wechatState.activeSession?.id !== session.id || document.hidden) {
+                        session.unreadCount = (session.unreadCount || 0) + 1;
+                        if (!document.hidden) {
+                            this.showGlobalNotification(session, msgContent);
+                        }
+                        this.sendPushNotification('微信新消息', session.name, msgContent, session.avatar);
+                    } else {
+                        this.scrollToBottom();
+                    }
+                    if(this.notificationConfig.currentSound) new Audio(this.notificationConfig.currentSound).play();
+                    
+                    // 【核心修正】成功触发后，次数+1
                     session.bgTriggerCount = (session.bgTriggerCount || 0) + 1;
+                    this.saveData();
                 }
             } catch(e) {}
         },
@@ -8147,9 +8126,9 @@ Structure:
 `}
 【极度严格的作答纪律！！！】
 1. "reply" 必须是一个字符串数组！严禁把一大段长篇大论挤在一个句子里发出来！按句号、叹号或呼吸停顿切分！
-2. 除非非常有必要针对性地反驳或回答我刚刚说过的某句特定的话，否则请【尽量减少使用 "quote_user_message" 字段】。正常聊天时严禁频繁引用我的话！
+2. 【重要】只有当你要反驳、认同、或者针对性地回答我刚刚说过的**某句具体的长话**时，才偶尔使用 "quote_user_message" 字段！日常闲聊、普通对话**绝对不要**使用引用字段！
 ❌ 错误示范：["怎么了？你怎么不说话，别生闷气了行不行，我真的很担心你。"]
-✅ 正确示范：["怎么了？", "你怎么不说话", "别生闷气了行不行", "我真的很担心你。"]\`;
+✅ 正确示范：["怎么了？", "你怎么不说话", "别生闷气了行不行", "我真的很担心你。"]`;
 
             // 如果用户在“重回”时提出了具体的走向要求，强行注入最高优先级的提示词
             if (directionPrompt && directionPrompt.trim() !== '') {
@@ -8488,8 +8467,18 @@ Structure:
                                  // 【修改】如果是语音消息，强制清空引用，防止排版变异
                                  quote: msgType === 'voice' ? null : quoteObj 
                              };
-                             this.updateMemberLevel(session, speakerId || session.targetId);
                              session.messages.push(aiMsg);
+                             
+                             // 【新增】群聊AI发消息升1级
+                             if (session.isGroup && speakerId) {
+                                 if (!session.membersInfo) session.membersInfo = {};
+                                 if (!session.membersInfo[speakerId]) session.membersInfo[speakerId] = { level: 1, customTitle: '', lastLevelDate: '' };
+                                 const today = new Date().toLocaleDateString();
+                                 if (session.membersInfo[speakerId].lastLevelDate !== today) {
+                                     if (session.membersInfo[speakerId].level < 100) session.membersInfo[speakerId].level++;
+                                     session.membersInfo[speakerId].lastLevelDate = today;
+                                 }
+                             }
                              this.scrollToBottom();
                              
                              if (index === segments.length - 1) {
