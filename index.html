@@ -2249,6 +2249,17 @@
                                 <span class="text-[16px] text-gray-900">个性管理</span>
                                 <div class="flex items-center gap-2"><span class="text-[14px] text-gray-400">群身份等</span><i class="fas fa-chevron-right text-gray-300 text-sm"></i></div>
                             </div>
+                            <!-- 新增：显示群头衔开关 -->
+                            <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition">
+                                <span class="text-[16px] text-gray-900">显示群头衔</span>
+                                <input type="checkbox" class="switch-checkbox" id="show-title-toggle" v-model="wechatState.activeSession.showGroupTitle" @change="saveData">
+                                <label for="show-title-toggle" class="switch-label"><div class="switch-button"></div></label>
+                            </div>
+                            <!-- 新增：群头衔分配入口 -->
+                            <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition" @click="openGroupTitleModal()">
+                                <span class="text-[16px] text-gray-900">群头衔管理</span>
+                                <div class="flex items-center gap-2"><span class="text-[14px] text-gray-400">分配专属头衔与等级</span><i class="fas fa-chevron-right text-gray-300 text-sm"></i></div>
+                            </div>
                         </div>
                     </div>
 
@@ -2302,6 +2313,69 @@
                         </div>
                     </div>
 
+                </div>
+            </div>
+        </transition>
+        
+        <!-- 群头衔管理全屏弹窗 -->
+        <transition name="app-slide">
+            <div v-if="groupTitleModal.show" class="fixed inset-0 z-[116000] bg-[#f2f2f6] flex flex-col font-sans pb-safe">
+                <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-100 shrink-0 z-50 sticky top-0">
+                    <button @click="groupTitleModal.show = false" class="w-8 h-8 flex items-center justify-center text-gray-800 active:opacity-50"><i class="fas fa-chevron-left text-[18px]"></i></button>
+                    <h1 class="font-bold text-[17px] text-gray-900 absolute left-1/2 -translate-x-1/2">群头衔管理</h1>
+                    <div class="w-8"></div>
+                </header>
+                <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div class="text-[12px] text-gray-500 ml-1">点击群成员为其分配专属头衔与等级 (最高100级)</div>
+                    <div class="bg-white rounded-[16px] overflow-hidden shadow-sm divide-y divide-gray-100">
+                        <!-- 群主(我) -->
+                        <div class="flex items-center justify-between p-4 active:bg-gray-50 cursor-pointer" @click="editMemberTitle('mine')">
+                            <div class="flex items-center gap-3">
+                                <img :src="getMaskById(wechatState.activeSession.maskId).avatar" class="w-10 h-10 rounded-full object-cover border border-gray-100">
+                                <div>
+                                    <div class="text-[15px] font-bold text-gray-900">我 (群主)</div>
+                                    <div v-if="wechatState.activeSession.membersInfo && wechatState.activeSession.membersInfo['mine']" class="text-[11px] text-gray-400 mt-0.5">
+                                        LV.{{ wechatState.activeSession.membersInfo['mine'].level }} | {{ wechatState.activeSession.membersInfo['mine'].customTitle || '默认' }}
+                                    </div>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
+                        </div>
+                        <!-- 其他成员 -->
+                        <div v-for="memId in wechatState.activeSession.members" :key="memId" class="flex items-center justify-between p-4 active:bg-gray-50 cursor-pointer" @click="editMemberTitle(memId)">
+                            <div class="flex items-center gap-3">
+                                <img :src="getFriendAvatar(memId)" class="w-10 h-10 rounded-full object-cover border border-gray-100">
+                                <div>
+                                    <div class="text-[15px] font-bold text-gray-900">{{ getFriendName(memId) }}</div>
+                                    <div v-if="wechatState.activeSession.membersInfo && wechatState.activeSession.membersInfo[memId]" class="text-[11px] text-gray-400 mt-0.5">
+                                        LV.{{ wechatState.activeSession.membersInfo[memId].level }} | {{ wechatState.activeSession.membersInfo[memId].customTitle || '默认' }}
+                                    </div>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- 编辑头衔小弹窗 -->
+        <transition name="scale">
+            <div v-if="editTitleModal.show" class="fixed inset-0 z-[117000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                <div class="bg-white w-[85%] rounded-[24px] overflow-hidden shadow-2xl p-6 flex flex-col gap-4">
+                    <h3 class="text-lg font-bold text-center mb-2">修改群头衔</h3>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">等级 (1-100)</label>
+                        <input type="number" v-model.number="editTitleModal.level" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 ml-1 mb-1 block">专属头衔 (选填)</label>
+                        <input v-model="editTitleModal.customTitle" placeholder="如：大美女、臭贝贝 (不填则自动分配)" class="w-full bg-gray-50 p-3 rounded-xl text-sm border border-gray-200 outline-none">
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <button @click="editTitleModal.show = false" class="flex-1 bg-gray-100 text-gray-600 py-3.5 rounded-xl font-bold text-sm active:scale-95 transition">取消</button>
+                        <button @click="saveMemberTitle" class="flex-1 bg-black text-white py-3.5 rounded-xl font-bold text-sm active:scale-95 transition">保存</button>
+                    </div>
                 </div>
             </div>
         </transition>
@@ -2803,9 +2877,17 @@
                                 <div v-if="(wechatState.activeSession?.timestampMode) === 'avatar_bottom' && getAvatarVisibility(msg, i) === 'show'" class="text-[8px] text-gray-400 mt-1 scale-90 whitespace-nowrap">{{ formatChatTime(msg.time) }}</div>
                             </div>
                             
+                            
                             <div class="flex flex-col max-w-[70%]" :class="msg.isSelf ? 'items-end' : 'items-start'">
-                                <!-- 群聊专属：显示发消息人的名字 -->
-                                <span v-if="wechatState.activeSession?.isGroup && !msg.isSelf" class="text-[10px] text-gray-500 ml-1.5 mb-1">{{ msg.name }}</span>
+                                <!-- 群聊专属：显示发消息人的头衔和名字 -->
+                                <div v-if="wechatState.activeSession?.isGroup && !msg.isSelf" class="flex items-center gap-1.5 ml-1.5 mb-1">
+                                    <span v-if="wechatState.activeSession.showGroupTitle !== false && getGroupTitleInfo(msg)" 
+                                          class="px-1.5 py-[1px] rounded-[4px] text-[9px] font-bold text-white shadow-sm tracking-wide" 
+                                          :class="getGroupTitleInfo(msg).color">
+                                        LV{{ getGroupTitleInfo(msg).level }} {{ getGroupTitleInfo(msg).text }}
+                                    </span>
+                                    <span class="text-[10px] text-gray-500 font-medium">{{ msg.name }}</span>
+                                </div>
                                 
                                 <!-- 气泡核心 -->
                                 <div class="chat-bubble" :class="[msg.isSelf ? 'chat-bubble-user' : 'chat-bubble-ai', msg.type === 'voice' ? 'chat-bubble-voice' : '', msg.type === 'image' || msg.type === 'fake_image' || msg.type === 'sticker' ? 'chat-bubble-image' : '', msg.type === 'red_packet' || msg.type === 'transfer' ? 'chat-bubble-finance' : '', msg.type === 'transfer' ? 'chat-bubble-transfer' : '', msg.type === 'red_packet' ? 'chat-bubble-redpacket' : '', msg.type === 'qinmi_invite' ? 'chat-bubble-qinmi' : '', msg.type === 'moment' ? 'chat-bubble-moment' : '', msg.type === 'location' ? 'chat-bubble-location' : '', msg.isReceived ? 'received' : '', (msg.quote && msg.type === 'voice') ? '!flex-col !items-stretch !gap-1.5 min-w-[180px]' : '']" 
@@ -5076,6 +5158,8 @@ createApp({
             regenerateModal: { show: false, prompt: '' },
             timestampModeModal: { show: false },
             groupManageModal: { show: false }, // 群管理弹窗
+            groupTitleModal: { show: false },
+            editTitleModal: { show: false, targetId: '', level: 1, customTitle: '' },
             chatSearchModal: { show: false, keyword: '', results:[] },
             globalSearchModal: { show: false, keyword: '', contacts: [], groups: [], histories:[] },
             takeoutModal: { 
@@ -7088,7 +7172,7 @@ createApp({
                 }
             });
         },
-        // --- 逼真外卖代付平台逻辑 ---
+        // ================= 外卖小程序核心方法 =================
         openTakeoutModal() {
             this.takeoutModal.activeTab = 'home';
             this.takeoutModal.selectedItem = null;
@@ -7125,11 +7209,97 @@ createApp({
             this.takeoutModal.show = false;
             this.scrollToBottom();
             this.saveData();
-            
             setTimeout(() => {
-                this.triggerReceive('我发了一个外卖代付请求给你。如果你喜欢我，请二话不说直接付款；如果你很讨厌我，请拒绝。根据你的人设做出选择！');
+                this.triggerReceive('我发了一个外卖代付请求给你。如果你喜欢我，请二话不说直接付款；如果你讨厌我，请拒绝。根据人设做出选择！');
             }, 3000);
         },
+
+        // ================= 群头衔系统核心方法 =================
+        getGroupTitleInfo(msg) {
+            const session = this.wechatState.activeSession;
+            if (!session || !session.isGroup || session.showGroupTitle === false) return null;
+
+            // 识别是哪个成员发的消息
+            let memberId = msg.isSelf ? 'mine' : null;
+            if (!memberId) {
+                const friend = this.wechatState.friendList.find(f => (f.remark || f.name) === msg.name);
+                if (friend) memberId = friend.id;
+            }
+            if (!memberId) return null; 
+
+            // 初始化成员信息存储
+            if (!session.membersInfo) session.membersInfo = {};
+            if (!session.membersInfo[memberId]) {
+                session.membersInfo[memberId] = {
+                    level: memberId === 'mine' ? 100 : Math.floor(Math.random() * 100) + 1,
+                    customTitle: ''
+                };
+            }
+
+            const info = session.membersInfo[memberId];
+            const isOwner = memberId === 'mine'; // 默认玩家是群主
+            const isAdmin = !isOwner && session.admins && session.admins.includes(memberId);
+
+            let bgColor = 'bg-gray-400';
+            let titleText = '';
+
+            // 严格遵循配色和判定逻辑
+            if (isOwner) {
+                bgColor = 'bg-yellow-500';
+                titleText = info.customTitle || '群主';
+            } else if (isAdmin) {
+                bgColor = 'bg-[#07c160]'; // 微信绿
+                titleText = info.customTitle || '管理员';
+            } else {
+                if (info.customTitle) {
+                    bgColor = 'bg-purple-400';
+                    titleText = info.customTitle;
+                } else {
+                    bgColor = 'bg-gray-400';
+                    if (info.level <= 25) titleText = '青铜';
+                    else if (info.level <= 50) titleText = '黄金';
+                    else if (info.level <= 75) titleText = '钻石';
+                    else titleText = '王者';
+                }
+            }
+
+            return { level: info.level, text: titleText, color: bgColor };
+        },
+        openGroupTitleModal() {
+            const session = this.wechatState.activeSession;
+            // 如果不存在则初始化数据
+            if (!session.membersInfo) session.membersInfo = {};
+            session.members.forEach(id => {
+                if (!session.membersInfo[id]) session.membersInfo[id] = { level: Math.floor(Math.random() * 100) + 1, customTitle: '' };
+            });
+            if (!session.membersInfo['mine']) session.membersInfo['mine'] = { level: 100, customTitle: '' };
+            this.saveData();
+            this.groupTitleModal.show = true;
+        },
+        editMemberTitle(memberId) {
+            const session = this.wechatState.activeSession;
+            const info = session.membersInfo[memberId];
+            this.editTitleModal = {
+                show: true,
+                targetId: memberId,
+                level: info.level || 1,
+                customTitle: info.customTitle || ''
+            };
+        },
+        saveMemberTitle() {
+            const session = this.wechatState.activeSession;
+            const targetId = this.editTitleModal.targetId;
+            let level = parseInt(this.editTitleModal.level);
+            if (level < 1) level = 1; if (level > 100) level = 100;
+
+            session.membersInfo[targetId] = {
+                level: level,
+                customTitle: this.editTitleModal.customTitle.trim()
+            };
+            this.saveData();
+            this.editTitleModal.show = false;
+            this.showToast('群头衔已更新');
+        },     
         openChatSearch() {
             this.chatSearchModal.keyword = '';
             this.chatSearchModal.results =[];
