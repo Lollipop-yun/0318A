@@ -692,16 +692,20 @@
     <!-- 一起听音乐界面 (Music Player) -->
     <transition name="app-slide">
         <div v-if="musicModal.show" class="music-player-overlay">
-            <div class="music-header relative">
-                <button @click="minimizeMusic" class="w-8 h-8 flex items-center justify-center"><i class="fas fa-chevron-down text-xl"></i></button>
-                <!-- 将歌名和歌手移到中间偏右（绝对定位居中） -->
-                <div class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
-                    <span class="text-base font-bold">{{ musicModal.songTitle || '---' }}</span>
-                    <span class="text-xs text-gray-400">{{ musicModal.artist || '---' }}</span>
+            <div class="music-header relative flex justify-between items-center w-full px-6 pt-12 pb-2">
+                <!-- 左侧：下拉收起 -->
+                <button @click="minimizeMusic" class="w-10 h-10 flex items-center justify-start z-10"><i class="fas fa-chevron-down text-2xl text-gray-300 hover:text-white"></i></button>
+                
+                <!-- 中间：歌曲信息 (强制锁定宽度防止乱跑) -->
+                <div class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center z-0 w-[50%] text-center">
+                    <span class="text-lg font-bold truncate w-full">{{ musicModal.songTitle || '---' }}</span>
+                    <span class="text-xs text-gray-400 mt-1 truncate w-full">{{ musicModal.artist || '---' }}</span>
                 </div>
-                <div class="flex items-center gap-5">
-                     <button @click="stopListenTogether" class="text-gray-300 hover:text-white"><i class="fas fa-power-off text-xl"></i></button>
-                     <button @click="openMusicManager" class="text-gray-300 hover:text-white"><i class="fas fa-ellipsis-h text-xl"></i></button>
+                
+                <!-- 右侧：挂断与更多按钮 (强制并排，防止被挤掉) -->
+                <div class="flex items-center justify-end gap-6 z-10">
+                     <button @click="stopListenTogether" class="flex items-center justify-center text-gray-300 hover:text-white transition"><i class="fas fa-power-off text-xl"></i></button>
+                     <button @click="openMusicManager" class="flex items-center justify-center text-gray-300 hover:text-white transition"><i class="fas fa-ellipsis-h text-2xl"></i></button>
                 </div>
             </div>
             
@@ -2230,10 +2234,6 @@
                     <div>
                         <div class="text-[13px] text-gray-500 mb-2 ml-1">基础管理</div>
                         <div class="bg-white rounded-[12px] overflow-hidden shadow-sm divide-y divide-gray-100">
-                            <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition">
-                                <span class="text-[16px] text-gray-900">群资料管理</span>
-                                <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
-                            </div>
                             <!-- 新增：显示群头衔开关 -->
                             <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition">
                                 <span class="text-[16px] text-gray-900">显示群头衔</span>
@@ -3126,7 +3126,7 @@
                             <div class="attach-item" @click="openRedPacketModal"><div class="attach-icon-box !bg-white border border-gray-200 text-gray-600 !rounded-2xl">
                                 <i class="fas fa-wallet text-lg"></i>
                             </div><span class="attach-label">红包</span></div>
-                            <div class="attach-item" @click="openTakeoutModal"><div class="attach-icon-box"><i class="fas fa-utensils text-gray-600"></i></div><span class="attach-label">外卖</span></div>
+                            <div class="attach-item" @click="launchTakeoutProgram"><div class="attach-icon-box"><i class="fas fa-utensils text-gray-600"></i></div><span class="attach-label">外卖</span></div>
                             <div class="attach-item" @click="openTransferModal"><div class="attach-icon-box"><i class="fas fa-money-bill-wave text-gray-600"></i></div><span class="attach-label">转账</span></div>
                             <div class="attach-item" @click="showToast('敬请期待')"><div class="attach-icon-box"><i class="fas fa-brain text-gray-600"></i></div><span class="attach-label">记忆</span></div>
                             <div class="attach-item" @click="showMusicModal"><div class="attach-icon-box"><i class="fas fa-music text-gray-600"></i></div><span class="attach-label">一起听</span></div>
@@ -7184,7 +7184,19 @@ createApp({
             });
         },
         // ================= 外卖小程序核心方法 =================
-        openTakeoutModal() {
+        launchTakeoutProgram() {
+            // 终极防崩溃自愈：如果缓存里缺少商家数据，强制重新注入！
+            if (!this.takeoutModal || !this.takeoutModal.storeList || this.takeoutModal.storeList.length === 0) {
+                this.takeoutModal = { 
+                    show: false, activeTab: 'home', note: '', selectedItem: null,
+                    storeList:[
+                        { id: 1, name: 'Manner Coffee', tag: '精品咖啡', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '冰美式', price: '15.00'}, {name: '桂花燕麦拿铁', price: '22.00'}, {name: '提拉米苏风味拿铁', price: '25.00'}] },
+                        { id: 2, name: 'Wagas 沃歌斯', tag: '健康轻食', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '煎烤鸡肉沙拉', price: '45.00'}, {name: '牛肉能量碗', price: '52.00'}, {name: '鲜榨果汁', price: '28.00'}] },
+                        { id: 3, name: 'KFC 肯德基', tag: '西式快餐', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '麦辣鸡腿堡套餐', price: '38.00'}, {name: '原味鸡+薯条', price: '25.00'}, {name: '皮蛋瘦肉粥(早餐)', price: '12.00'}] },
+                        { id: 4, name: '霸王茶姬', tag: '新中式奶茶', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '伯牙绝弦(大杯)', price: '20.00'}, {name: '春日桃桃', price: '18.00'}, {name: '寻香山茶', price: '18.00'}] }
+                    ]
+                };
+            }
             this.takeoutModal.activeTab = 'home';
             this.takeoutModal.selectedItem = null;
             this.takeoutModal.note = '';
@@ -7507,57 +7519,6 @@ createApp({
                     this.triggerBackgroundActivity(session);
                 }
             }
-        },
-        
-        // --- 逼真外卖代付平台逻辑 ---
-        openTakeoutModal() {
-            this.takeoutModal.activeTab = 'home';
-            this.takeoutModal.selectedItem = null;
-            this.takeoutModal.note = '';
-            this.takeoutModal.show = true;
-            this.wechatState.showAttachMenu = false;
-        },
-
-        // ==== 这是新增的刷新商品方法 ====
-        refreshTakeoutItems() {
-            this.showToast('正在为您刷新商品...');
-            // 延迟一点点营造网络请求的刷新感，然后打乱数组内的商品顺序
-            setTimeout(() => {
-                if (this.takeoutModal.storeList) {
-                    this.takeoutModal.storeList.forEach(store => {
-                        if (store.items) {
-                            // 随机打乱商品排序，模拟刷新效果
-                            store.items.sort(() => Math.random() - 0.5);
-                        }
-                    });
-                    this.saveData();
-                }
-                this.showToast('刷新成功');
-            }, 600);
-        },
-        // ==================================        
-        confirmTakeoutRequest() {
-            if (!this.takeoutModal.selectedItem) return this.showToast('请先选择商品');
-            const session = this.wechatState.activeSession;
-            session.messages.push({
-                type: 'food_payment',
-                item: `${this.takeoutModal.selectedItem.store} - ${this.takeoutModal.selectedItem.name}`,
-                amount: this.takeoutModal.selectedItem.price,
-                remark: this.takeoutModal.note || '',
-                status: 'pending',
-                isSelf: true,
-                time: Date.now(),
-                avatar: this.getMaskById(session.maskId).avatar
-            });
-            session.lastMessage = '[外卖代付]';
-            this.takeoutModal.show = false;
-            this.scrollToBottom();
-            this.saveData();
-            
-            // AI 根据人设和心情决定付不付
-            setTimeout(() => {
-                this.triggerReceive('我发了一个外卖代付请求给你。如果你非常喜欢我、爱我或者是霸道总裁，请二话不说直接付款；如果你现在很穷或者很讨厌我，请严厉拒绝。根据你的真实人设做出选择！');
-            }, 3000);
         },
         async triggerBackgroundActivity(session) {
             const friend = this.wechatState.friendList.find(f => f.id === session.targetId);
