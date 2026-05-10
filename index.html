@@ -2002,10 +2002,9 @@
             </div>
         </transition>
         
-        <!-- iOS 灰白极简风：沉浸式外卖小程序 -->
+        <!-- 全新重构：防崩溃外卖小程序 -->
         <transition name="app-slide">
-            <div v-if="takeoutModal.show" class="fixed inset-0 z-[115000] bg-[#f2f2f6] flex flex-col font-sans pb-safe">
-                <!-- 全新顶部导航栏 -->
+            <div v-if="takeoutModal && takeoutModal.show" class="fixed inset-0 z-[115000] bg-[#f2f2f6] flex flex-col font-sans pb-safe">
                 <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white border-b border-gray-100 shrink-0 z-50 sticky top-0">
                     <button @click="takeoutModal.show = false" class="w-8 h-8 flex items-center justify-center text-gray-800 active:opacity-50"><i class="fas fa-chevron-left text-lg"></i></button>
                     <h1 class="font-bold text-[17px] text-gray-900 absolute left-1/2 -translate-x-1/2">{{ takeoutModal.activeTab === 'home' ? '外卖' : (takeoutModal.activeTab === 'cart' ? '购物车' : (takeoutModal.activeTab === 'msg' ? '消息' : '我的')) }}</h1>
@@ -2013,34 +2012,12 @@
                     <div v-else class="w-8"></div>
                 </header>
 
-                <!-- 内容切换区 -->
                 <div class="flex-1 overflow-y-auto pb-6 relative">
-                    
-                    <!-- 1. 首页 (推荐) 视图 -->
+                    <!-- 首页 -->
                     <div v-if="takeoutModal.activeTab === 'home'" class="flex flex-col">
-                        <!-- 搜索栏区 -->
-                        <div class="px-4 pt-4 pb-2 bg-white">
-                            <div class="bg-[#f2f2f6] rounded-xl flex items-center px-3 h-10 border border-gray-200/50">
-                                <i class="fas fa-search text-gray-400 mr-2"></i>
-                                <input placeholder="想吃点什么？" class="bg-transparent flex-1 outline-none text-[14px] text-gray-800">
-                                <button class="bg-black text-white px-3 py-1 rounded-lg text-xs font-bold ml-2 active:scale-95">搜索</button>
-                            </div>
-                        </div>
-
-                        <!-- 8大分类金刚区 -->
-                        <div class="px-4 py-5 bg-white rounded-b-2xl shadow-sm mb-4">
-                            <div class="grid grid-cols-4 gap-y-5 gap-x-2">
-                                <div v-for="cat in[{n:'美食',i:'fa-hamburger'},{n:'服装',i:'fa-tshirt'},{n:'美妆',i:'fa-magic'},{n:'数码',i:'fa-mobile-alt'},{n:'电器',i:'fa-tv'},{n:'百货',i:'fa-shopping-bag'},{n:'医药',i:'fa-pills'},{n:'其他',i:'fa-ellipsis-h'}]" :key="cat.n" class="flex flex-col items-center gap-1.5 cursor-pointer active:opacity-50">
-                                    <div class="w-11 h-11 rounded-[14px] bg-gray-50 flex items-center justify-center text-gray-600 border border-gray-100 shadow-sm"><i class="fas text-lg" :class="cat.i"></i></div>
-                                    <span class="text-[11px] font-medium text-gray-600">{{ cat.n }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 商家列表 -->
-                        <div class="px-4 space-y-4">
+                        <div class="px-4 space-y-4 pt-4">
                             <div class="text-[16px] font-bold text-gray-900 tracking-wide flex items-center gap-1"><i class="fas fa-fire-alt text-gray-400 text-sm"></i> 附近推荐</div>
-                            <div v-for="store in takeoutModal.storeList" :key="store.id" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col gap-3">
+                            <div v-for="store in (takeoutModal.storeList ||[])" :key="store.id" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col gap-3">
                                 <div class="flex items-center gap-3 border-b border-gray-50 pb-3">
                                     <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 shrink-0"><i class="fas fa-store"></i></div>
                                     <div class="flex flex-col">
@@ -2048,7 +2025,6 @@
                                         <span class="text-[10px] text-gray-400">{{ store.tag }} · 30分钟送达</span>
                                     </div>
                                 </div>
-                                <!-- 商品小划块 -->
                                 <div class="flex overflow-x-auto gap-3 scrollbar-hide">
                                     <div v-for="(item, idx) in store.items" :key="idx" @click="takeoutModal.selectedItem = { store: store.name, name: item.name, price: item.price }" class="w-28 shrink-0 flex flex-col gap-1 cursor-pointer active:scale-95 transition">
                                         <div class="w-28 h-20 bg-gray-100 rounded-xl overflow-hidden border border-gray-50 flex items-center justify-center text-gray-300"><i class="fas fa-utensils"></i></div>
@@ -2060,45 +2036,26 @@
                         </div>
                     </div>
 
-                    <!-- 2. 购物车 / 3. 消息 占位 -->
-                    <div v-if="takeoutModal.activeTab === 'cart' || takeoutModal.activeTab === 'msg'" class="h-full flex flex-col items-center justify-center text-gray-400">
+                    <!-- 购物车 / 消息 -->
+                    <div v-if="takeoutModal.activeTab === 'cart' || takeoutModal.activeTab === 'msg'" class="h-full flex flex-col items-center justify-center text-gray-400 mt-20">
                         <i class="fas text-4xl mb-3 opacity-20" :class="takeoutModal.activeTab === 'cart' ? 'fa-shopping-cart' : 'fa-comment-alt'"></i>
                         <span class="text-sm">{{ takeoutModal.activeTab === 'cart' ? '购物车空空如也' : '暂无消息' }}</span>
                     </div>
 
-                    <!-- 4. 我的 (Me) 视图 -->
+                    <!-- 我的 -->
                     <div v-if="takeoutModal.activeTab === 'me'" class="flex flex-col">
-                        <div class="pt-6 px-6 pb-6 bg-white rounded-b-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex items-center gap-4">
-                            <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-100 shadow-sm"><img :src="homeProfile.avatar" class="w-full h-full object-cover"></div>
+                        <div class="pt-6 px-6 pb-6 bg-white rounded-b-[24px] shadow-sm flex items-center gap-4">
+                            <div class="w-16 h-16 rounded-full overflow-hidden bg-gray-100 border border-gray-200"><i class="fas fa-user text-2xl mt-4 text-gray-300"></i></div>
                             <div class="flex flex-col">
-                                <span class="font-bold text-[20px] text-gray-900">{{ homeProfile.name }}</span>
-                                <span class="text-[12px] text-gray-400 mt-1 bg-gray-100 px-2 py-0.5 rounded-full w-fit">普通会员 <i class="fas fa-chevron-right text-[8px]"></i></span>
-                            </div>
-                        </div>
-                        <div class="px-4 mt-4">
-                            <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex justify-around">
-                                <div class="flex flex-col items-center gap-1"><i class="far fa-star text-gray-500 text-lg"></i><span class="text-[11px] text-gray-600">收藏</span></div>
-                                <div class="flex flex-col items-center gap-1"><i class="fas fa-history text-gray-500 text-lg"></i><span class="text-[11px] text-gray-600">足迹</span></div>
-                                <div class="flex flex-col items-center gap-1"><i class="fas fa-ticket-alt text-gray-500 text-lg"></i><span class="text-[11px] text-gray-600">红包卡券</span></div>
-                            </div>
-                        </div>
-                        <div class="px-4 mt-4">
-                            <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-                                <div class="font-bold text-[14px] text-gray-900 mb-4">我的订单</div>
-                                <div class="flex justify-between px-2">
-                                    <div class="flex flex-col items-center gap-2"><i class="fas fa-list-alt text-gray-400 text-xl"></i><span class="text-[11px] text-gray-600">全部订单</span></div>
-                                    <div class="flex flex-col items-center gap-2"><i class="far fa-clock text-gray-400 text-xl"></i><span class="text-[11px] text-gray-600">待使用</span></div>
-                                    <div class="flex flex-col items-center gap-2"><i class="far fa-comment-dots text-gray-400 text-xl"></i><span class="text-[11px] text-gray-600">待评价</span></div>
-                                    <div class="flex flex-col items-center gap-2"><i class="fas fa-hand-holding-usd text-gray-400 text-xl"></i><span class="text-[11px] text-gray-600">退款/售后</span></div>
-                                </div>
+                                <span class="font-bold text-[20px] text-gray-900">吃货大人</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 底部弹出：选择商品后的代付确认框 -->
+                <!-- 代付弹窗 -->
                 <transition name="app-slide">
-                    <div v-if="takeoutModal.selectedItem" class="absolute bottom-[75px] left-0 w-full bg-white border-t border-gray-200 rounded-t-3xl p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-40">
+                    <div v-if="takeoutModal.selectedItem" class="absolute bottom-[75px] left-0 w-full bg-white border-t border-gray-200 rounded-t-3xl p-6 shadow-2xl z-40">
                         <div class="flex justify-between items-start mb-4">
                             <div>
                                 <div class="text-[11px] text-gray-400 mb-1">正在向当前好友发送代付请求</div>
@@ -2116,7 +2073,7 @@
                     </div>
                 </transition>
 
-                <!-- 加高版：底部 4 大导航栏 -->
+                <!-- 底部导航 -->
                 <div class="h-[75px] pt-1.5 bg-white border-t border-gray-200 flex items-center justify-around shrink-0 pb-safe z-50">
                     <div @click="takeoutModal.activeTab = 'home'" class="flex flex-col items-center gap-1 cursor-pointer transition" :class="takeoutModal.activeTab === 'home' ? 'text-black' : 'text-gray-400'">
                         <i class="fas fa-home text-[22px]"></i><span class="text-[10px] font-bold">推荐</span>
@@ -2219,25 +2176,22 @@
             </div>
         </transition>
         
-        <!-- iOS 风格：群管理界面 -->
+        <!-- 全新重构：安全版群管理界面 -->
         <transition name="page-slide">
-            <div v-if="groupManageModal.show" class="fixed inset-0 z-[115000] bg-[#f2f2f6] flex flex-col font-sans pb-safe">
-                <!-- 顶部导航栏 -->
+            <div v-if="groupManageModal.show && wechatState.activeSession" class="fixed inset-0 z-[115000] bg-[#f2f2f6] flex flex-col font-sans pb-safe">
                 <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-[#f2f2f6] shrink-0 z-50 sticky top-0">
                     <button @click="groupManageModal.show = false" class="w-8 h-8 flex items-center justify-center text-gray-800 active:opacity-50"><i class="fas fa-chevron-left text-[18px]"></i></button>
                     <h1 class="font-bold text-[17px] text-gray-900 absolute left-1/2 -translate-x-1/2">管理群</h1>
                     <div class="w-8"></div>
                 </header>
-
                 <div class="flex-1 overflow-y-auto px-4 pb-12 space-y-6">
-                    <!-- 1. 基础管理 (已删掉多余项) -->
                     <div>
                         <div class="text-[13px] text-gray-500 mb-2 ml-1">基础管理</div>
                         <div class="bg-white rounded-[12px] overflow-hidden shadow-sm divide-y divide-gray-100">
                             <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition">
                                 <span class="text-[16px] text-gray-900">显示群头衔</span>
-                                <input type="checkbox" class="switch-checkbox" id="show-title-toggle" v-model="wechatState.activeSession.showGroupTitle" @change="saveData">
-                                <label for="show-title-toggle" class="switch-label"><div class="switch-button"></div></label>
+                                <input type="checkbox" class="switch-checkbox" id="show-title-toggle-safe" v-model="wechatState.activeSession.showGroupTitle" @change="saveData">
+                                <label for="show-title-toggle-safe" class="switch-label"><div class="switch-button"></div></label>
                             </div>
                             <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition" @click="openGroupTitleModal()">
                                 <span class="text-[16px] text-gray-900">群头衔管理</span>
@@ -2245,8 +2199,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- 2. 加群管理 -->
                     <div>
                         <div class="text-[13px] text-gray-500 mb-2 ml-1">加群管理</div>
                         <div class="bg-white rounded-[12px] overflow-hidden shadow-sm divide-y divide-gray-100">
@@ -2260,8 +2212,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- 3. 成员管理 -->
                     <div>
                         <div class="text-[13px] text-gray-500 mb-2 ml-1">成员管理</div>
                         <div class="bg-white rounded-[12px] overflow-hidden shadow-sm divide-y divide-gray-100">
@@ -2279,8 +2229,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- 4. 发言管理 -->
                     <div>
                         <div class="text-[13px] text-gray-500 mb-2 ml-1">发言管理</div>
                         <div class="bg-white rounded-[12px] overflow-hidden shadow-sm divide-y divide-gray-100">
@@ -2290,8 +2238,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- 5. 危险操作 -->
                     <div class="mt-4">
                         <div class="bg-white rounded-[12px] overflow-hidden shadow-sm">
                             <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition" @click="showToast('只有群主才能转让该群')">
@@ -2300,7 +2246,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </transition>
@@ -3115,7 +3060,7 @@
                             <div class="attach-item" @click="openRedPacketModal"><div class="attach-icon-box !bg-white border border-gray-200 text-gray-600 !rounded-2xl">
                                 <i class="fas fa-wallet text-lg"></i>
                             </div><span class="attach-label">红包</span></div>
-                            <div class="attach-item" @click="forceOpenTakeout"><div class="attach-icon-box"><i class="fas fa-utensils text-gray-600"></i></div><span class="attach-label">外卖</span></div>
+                            <div class="attach-item" @click="safeOpenTakeout"><div class="attach-icon-box"><i class="fas fa-utensils text-gray-600"></i></div><span class="attach-label">外卖</span></div>
                             <div class="attach-item" @click="openTransferModal"><div class="attach-icon-box"><i class="fas fa-money-bill-wave text-gray-600"></i></div><span class="attach-label">转账</span></div>
                             <div class="attach-item" @click="showToast('敬请期待')"><div class="attach-icon-box"><i class="fas fa-brain text-gray-600"></i></div><span class="attach-label">记忆</span></div>
                             <div class="attach-item" @click="showMusicModal"><div class="attach-icon-box"><i class="fas fa-music text-gray-600"></i></div><span class="attach-label">一起听</span></div>
@@ -3539,7 +3484,7 @@
 
                     <!-- 群聊专属：群管理入口 -->
                     <div v-if="wechatState.activeSession.isGroup" class="bg-white rounded-[16px] overflow-hidden shadow-sm">
-                        <div class="flex justify-between items-center p-4 cursor-pointer active:bg-gray-50 transition" @click="groupManageModal.show = true">
+                        <div class="flex justify-between items-center p-4 cursor-pointer active:bg-gray-50 transition" @click="safeOpenGroupManage">
                             <span class="text-[15px] text-gray-900">管理群</span>
                             <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
                         </div>
@@ -5150,18 +5095,6 @@ createApp({
             editTitleModal: { show: false, targetId: '', level: 1, customTitle: '' },
             chatSearchModal: { show: false, keyword: '', results:[] },
             globalSearchModal: { show: false, keyword: '', contacts: [], groups: [], histories:[] },
-            takeoutModal: { 
-                show: false, 
-                activeTab: 'home', 
-                note: '',
-                selectedItem: null,
-                storeList:[
-                    { id: 1, name: 'Manner Coffee', tag: '精品咖啡', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '冰美式', price: '15.00'}, {name: '桂花燕麦拿铁', price: '22.00'}, {name: '提拉米苏风味拿铁', price: '25.00'}] },
-                    { id: 2, name: 'Wagas 沃歌斯', tag: '健康轻食', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '煎烤鸡肉沙拉', price: '45.00'}, {name: '牛肉能量碗', price: '52.00'}, {name: '鲜榨果汁', price: '28.00'}] },
-                    { id: 3, name: 'KFC 肯德基', tag: '西式快餐', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '麦辣鸡腿堡套餐', price: '38.00'}, {name: '原味鸡+薯条', price: '25.00'}, {name: '皮蛋瘦肉粥(早餐)', price: '12.00'}] },
-                    { id: 4, name: '霸王茶姬', tag: '新中式奶茶', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '伯牙绝弦(大杯)', price: '20.00'}, {name: '春日桃桃', price: '18.00'}, {name: '寻香山茶', price: '18.00'}] }
-                ]
-            },            
             themeConfig: { wallpaper: '', fontFamily: '', fontUrl: '', fontSize: 1.0, fontColor: '#000000', isDarkMode: false }, fontPresets:[], fontInputUrl: '',
             
             // 美化配置
@@ -7172,18 +7105,28 @@ createApp({
                 }
             });
         },
-        forceOpenTakeout() {
-            // 彻底推翻缓存，强行使用干净的静态数据渲染，永远不会报错打不开！
+        safeOpenGroupManage() {
+            if (!this.groupManageModal) {
+                this.groupManageModal = { show: false };
+            }
+            if (!this.wechatState.activeSession) {
+                return this.showToast('无法获取当前群聊信息');
+            }
+            this.groupManageModal.show = true;
+        },
+
+        safeOpenTakeout() {
+            // 每一次点击，强行重新生成一份绝对干净的外卖菜单数据，永远告别缓存报错！
             this.takeoutModal = { 
                 show: true, 
                 activeTab: 'home', 
                 note: '', 
                 selectedItem: null,
                 storeList:[
-                    { id: 1, name: 'Manner Coffee', tag: '精品咖啡', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '冰美式', price: '15.00'}, {name: '桂花燕麦拿铁', price: '22.00'}, {name: '提拉米苏风味拿铁', price: '25.00'}] },
-                    { id: 2, name: 'Wagas 沃歌斯', tag: '健康轻食', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '煎烤鸡肉沙拉', price: '45.00'}, {name: '牛肉能量碗', price: '52.00'}, {name: '鲜榨果汁', price: '28.00'}] },
-                    { id: 3, name: 'KFC 肯德基', tag: '西式快餐', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '麦辣鸡腿堡套餐', price: '38.00'}, {name: '原味鸡+薯条', price: '25.00'}, {name: '皮蛋瘦肉粥(早餐)', price: '12.00'}] },
-                    { id: 4, name: '霸王茶姬', tag: '新中式奶茶', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '伯牙绝弦(大杯)', price: '20.00'}, {name: '春日桃桃', price: '18.00'}, {name: '寻香山茶', price: '18.00'}] }
+                    { id: 1, name: 'Manner Coffee', tag: '精品咖啡', items:[{name: '冰美式', price: '15.00'}, {name: '桂花燕麦拿铁', price: '22.00'}, {name: '提拉米苏风味拿铁', price: '25.00'}] },
+                    { id: 2, name: 'Wagas 沃歌斯', tag: '健康轻食', items:[{name: '煎烤鸡肉沙拉', price: '45.00'}, {name: '牛肉能量碗', price: '52.00'}, {name: '鲜榨果汁', price: '28.00'}] },
+                    { id: 3, name: 'KFC 肯德基', tag: '西式快餐', items:[{name: '麦辣鸡腿堡套餐', price: '38.00'}, {name: '原味鸡+薯条', price: '25.00'}, {name: '皮蛋瘦肉粥(早餐)', price: '12.00'}] },
+                    { id: 4, name: '霸王茶姬', tag: '新中式奶茶', items:[{name: '伯牙绝弦(大杯)', price: '20.00'}, {name: '春日桃桃', price: '18.00'}, {name: '寻香山茶', price: '18.00'}] }
                 ]
             };
             this.wechatState.showAttachMenu = false;
