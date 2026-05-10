@@ -1166,10 +1166,47 @@
 
                 <div class="flex-1 overflow-y-auto pb-6 relative">
                     <!-- 首页 -->
-                    <div v-if="takeoutModal.activeTab === 'home'" class="flex flex-col">
-                        <div class="px-4 space-y-4 pt-4">
-                            <div class="text-[16px] font-bold text-gray-900 tracking-wide flex items-center gap-1"><i class="fas fa-fire-alt text-gray-400 text-sm"></i> 附近推荐</div>
-                            <div v-for="store in (takeoutModal.storeList ||[])" :key="store.id" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col gap-3">
+                    <div v-if="takeoutModal.activeTab === 'home'" class="flex flex-col bg-[#f5f5f5] min-h-full">
+                        
+                        <!-- 顶部黄色背景与搜索栏 -->
+                        <div class="bg-gradient-to-b from-[#ffdb5c] to-[#f5f5f5] pt-4 px-4 pb-2">
+                            <div class="bg-white rounded-[12px] flex items-center px-3 h-10 shadow-sm border border-white">
+                                <i class="fas fa-search text-gray-400 mr-2 text-[14px]"></i>
+                                <input placeholder="搜外卖、搜商家..." class="bg-transparent flex-1 outline-none text-[14px] text-gray-800">
+                                <button class="bg-[#ffdb5c] text-gray-900 px-4 py-1.5 rounded-lg text-xs font-bold ml-2 active:scale-95 shadow-sm">搜索</button>
+                            </div>
+                        </div>
+
+                        <!-- 5大分类金刚区 -->
+                        <div class="px-4 py-5 bg-white shadow-sm mb-3 rounded-b-[20px] z-10">
+                            <div class="grid grid-cols-5 gap-y-4">
+                                <div class="flex flex-col items-center gap-1.5 cursor-pointer active:opacity-50">
+                                    <div class="w-[42px] h-[42px] rounded-full bg-orange-100 flex items-center justify-center text-orange-500"><i class="fas fa-hamburger text-[18px]"></i></div>
+                                    <span class="text-[11px] text-gray-700 font-medium">美食</span>
+                                </div>
+                                <div class="flex flex-col items-center gap-1.5 cursor-pointer active:opacity-50">
+                                    <div class="w-[42px] h-[42px] rounded-full bg-green-100 flex items-center justify-center text-green-500"><i class="fas fa-apple-alt text-[18px]"></i></div>
+                                    <span class="text-[11px] text-gray-700 font-medium">蔬果</span>
+                                </div>
+                                <div class="flex flex-col items-center gap-1.5 cursor-pointer active:opacity-50">
+                                    <div class="w-[42px] h-[42px] rounded-full bg-blue-100 flex items-center justify-center text-blue-500"><i class="fas fa-coffee text-[18px]"></i></div>
+                                    <span class="text-[11px] text-gray-700 font-medium">饮品</span>
+                                </div>
+                                <div class="flex flex-col items-center gap-1.5 cursor-pointer active:opacity-50">
+                                    <div class="w-[42px] h-[42px] rounded-full bg-purple-100 flex items-center justify-center text-purple-500"><i class="fas fa-shopping-bag text-[18px]"></i></div>
+                                    <span class="text-[11px] text-gray-700 font-medium">日用品</span>
+                                </div>
+                                <div class="flex flex-col items-center gap-1.5 cursor-pointer active:opacity-50">
+                                    <div class="w-[42px] h-[42px] rounded-full bg-gray-100 flex items-center justify-center text-gray-500"><i class="fas fa-ellipsis-h text-[18px]"></i></div>
+                                    <span class="text-[11px] text-gray-700 font-medium">其他</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 商家列表 -->
+                        <div class="px-4 space-y-3 pb-4">
+                            <div class="text-[16px] font-bold text-gray-900 tracking-wide flex items-center gap-1.5 ml-1 mb-1"><i class="fas fa-fire-alt text-orange-500 text-[15px]"></i> 附近推荐</div>
+                            <div v-for="store in (takeoutModal.storeList ||[])" :key="store.id" class="bg-white rounded-[16px] p-4 shadow-sm border border-gray-50 flex flex-col gap-3">
                                 <div class="flex items-center gap-3 border-b border-gray-50 pb-3">
                                     <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 shrink-0"><i class="fas fa-store"></i></div>
                                     <div class="flex flex-col">
@@ -7296,8 +7333,9 @@ createApp({
             if (!this.groupManageModal) {
                 this.groupManageModal = { show: false };
             }
-            if (!this.wechatState.activeSession) {
-                return this.showToast('无法获取当前群聊信息');
+            // 终极安全锁：如果当前没有会话，或者当前会话不是群聊（单聊），强制拦截并退出！
+            if (!this.wechatState.activeSession || !this.wechatState.activeSession.isGroup) {
+                return; 
             }
             this.groupManageModal.show = true;
         },        
@@ -8625,22 +8663,16 @@ Structure:
             } catch(e) {
                 this.isTyping = false;
                 
-                // --- 新增：弹出临时报错气泡 ---
-                let errAvatar = session.avatar;
-                if (!session.isGroup && friend) {
-                    errAvatar = friend.avatar;
-                }
+                // --- 修改为：系统旁白提示 ---
                 session.messages.push({
-                    content: '⚠️ [API 请求失败]: ' + e.message + '\n\n(注意：这是系统报错提示，并非设定剧情。退出此聊天界面重新进入后，该气泡会自动消失)',
+                    content: '[系统报错] API 请求失败: ' + e.message,
                     isSelf: false,
-                    isTempError: true, // 标记为临时消息
+                    isTempError: true, // 退出重进自动消失
                     time: Date.now(),
-                    avatar: errAvatar,
-                    type: 'text'
+                    type: 'system' // 改为系统旁白类型
                 });
                 this.scrollToBottom();
                 // 不调用 this.saveData()，保证它不会被永久存盘
-                // -----------------------------
             }
         },
         
