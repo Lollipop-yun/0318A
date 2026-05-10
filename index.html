@@ -692,20 +692,20 @@
     <!-- 一起听音乐界面 (Music Player) -->
     <transition name="app-slide">
         <div v-if="musicModal.show" class="music-player-overlay">
-            <div class="music-header relative flex justify-between items-center w-full px-6 pt-12 pb-2">
-                <!-- 左侧：下拉收起 -->
-                <button @click="minimizeMusic" class="w-10 h-10 flex items-center justify-start z-10"><i class="fas fa-chevron-down text-2xl text-gray-300 hover:text-white"></i></button>
+            <div class="w-full h-[90px] pt-10 px-6 flex justify-between items-center relative shrink-0 z-50">
+                <!-- 左侧下拉收起按钮 -->
+                <button @click="minimizeMusic" class="w-10 h-10 flex items-center justify-start"><i class="fas fa-chevron-down text-2xl text-gray-300 hover:text-white"></i></button>
                 
-                <!-- 中间：歌曲信息 (强制锁定宽度防止乱跑) -->
-                <div class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center z-0 w-[50%] text-center">
-                    <span class="text-lg font-bold truncate w-full">{{ musicModal.songTitle || '---' }}</span>
-                    <span class="text-xs text-gray-400 mt-1 truncate w-full">{{ musicModal.artist || '---' }}</span>
+                <!-- 中间歌名 (绝对居中) -->
+                <div class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center w-[50%]">
+                    <span class="text-[16px] font-bold text-white truncate w-full text-center">{{ musicModal.songTitle || '---' }}</span>
+                    <span class="text-[12px] text-gray-400 mt-1 truncate w-full text-center">{{ musicModal.artist || '---' }}</span>
                 </div>
                 
-                <!-- 右侧：挂断与更多按钮 (强制并排，防止被挤掉) -->
-                <div class="flex items-center justify-end gap-6 z-10">
-                     <button @click="stopListenTogether" class="flex items-center justify-center text-gray-300 hover:text-white transition"><i class="fas fa-power-off text-xl"></i></button>
-                     <button @click="openMusicManager" class="flex items-center justify-center text-gray-300 hover:text-white transition"><i class="fas fa-ellipsis-h text-2xl"></i></button>
+                <!-- 右侧两个按钮 (关机键 + 三个点) -->
+                <div class="flex items-center gap-6">
+                     <button @click="stopListenTogether" class="flex items-center justify-center text-gray-300 hover:text-white"><i class="fas fa-power-off text-[20px]"></i></button>
+                     <button @click="openMusicManager" class="flex items-center justify-center text-gray-300 hover:text-white"><i class="fas fa-ellipsis-v text-[20px]"></i></button>
                 </div>
             </div>
             
@@ -2230,17 +2230,15 @@
                 </header>
 
                 <div class="flex-1 overflow-y-auto px-4 pb-12 space-y-6">
-                    <!-- 1. 基础管理 -->
+                    <!-- 1. 基础管理 (已删掉多余项) -->
                     <div>
                         <div class="text-[13px] text-gray-500 mb-2 ml-1">基础管理</div>
                         <div class="bg-white rounded-[12px] overflow-hidden shadow-sm divide-y divide-gray-100">
-                            <!-- 新增：显示群头衔开关 -->
                             <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition">
                                 <span class="text-[16px] text-gray-900">显示群头衔</span>
                                 <input type="checkbox" class="switch-checkbox" id="show-title-toggle" v-model="wechatState.activeSession.showGroupTitle" @change="saveData">
                                 <label for="show-title-toggle" class="switch-label"><div class="switch-button"></div></label>
                             </div>
-                            <!-- 新增：群头衔分配入口 -->
                             <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition" @click="openGroupTitleModal()">
                                 <span class="text-[16px] text-gray-900">群头衔管理</span>
                                 <div class="flex items-center gap-2"><span class="text-[14px] text-gray-400">分配专属头衔与等级</span><i class="fas fa-chevron-right text-gray-300 text-sm"></i></div>
@@ -2257,15 +2255,10 @@
                                 <div class="flex items-center gap-2"><span class="text-[14px] text-gray-400">不允许任何人加群</span><i class="fas fa-chevron-right text-gray-300 text-sm"></i></div>
                             </div>
                             <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition">
-                                <span class="text-[16px] text-gray-900">加群自动审批</span>
-                                <div class="flex items-center gap-2"><span class="text-[14px] text-gray-400">未开启</span><i class="fas fa-chevron-right text-gray-300 text-sm"></i></div>
-                            </div>
-                            <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition">
                                 <span class="text-[16px] text-gray-900">群搜索方式</span>
                                 <div class="flex items-center gap-2"><span class="text-[14px] text-gray-400">不允许被搜索</span><i class="fas fa-chevron-right text-gray-300 text-sm"></i></div>
                             </div>
                         </div>
-                        <div class="text-[12px] text-gray-400 mt-2 ml-1">设置后，可通过指定搜索方式找到本群。</div>
                     </div>
 
                     <!-- 3. 成员管理 -->
@@ -2280,7 +2273,7 @@
                                 <span class="text-[16px] text-gray-900">群黑名单管理</span>
                                 <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
                             </div>
-                            <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition" @click="showToast('仅群主可设置管理员')">
+                            <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition" @click="showToast('仅群主可设置群管理员')">
                                 <span class="text-[16px] text-gray-900">设置群管理员</span>
                                 <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
                             </div>
@@ -2295,17 +2288,13 @@
                                 <span class="text-[16px] text-gray-900">群内禁言</span>
                                 <div class="flex items-center gap-2"><span class="text-[14px] text-gray-400">未开启禁言</span><i class="fas fa-chevron-right text-gray-300 text-sm"></i></div>
                             </div>
-                            <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition">
-                                <div class="flex items-center gap-1.5"><span class="text-[16px] text-gray-900">禁发特定消息</span><i class="fas fa-robot text-gray-400 text-xs"></i></div>
-                                <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
-                            </div>
                         </div>
                     </div>
-                    
+
                     <!-- 5. 危险操作 -->
                     <div class="mt-4">
                         <div class="bg-white rounded-[12px] overflow-hidden shadow-sm">
-                            <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition" @click="showToast('只有群主才能转让群聊')">
+                            <div class="flex justify-between items-center p-4 active:bg-gray-50 cursor-pointer transition" @click="showToast('只有群主才能转让该群')">
                                 <span class="text-[16px] text-gray-900">转让群</span>
                                 <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
                             </div>
@@ -3126,7 +3115,7 @@
                             <div class="attach-item" @click="openRedPacketModal"><div class="attach-icon-box !bg-white border border-gray-200 text-gray-600 !rounded-2xl">
                                 <i class="fas fa-wallet text-lg"></i>
                             </div><span class="attach-label">红包</span></div>
-                            <div class="attach-item" @click="launchTakeoutProgram"><div class="attach-icon-box"><i class="fas fa-utensils text-gray-600"></i></div><span class="attach-label">外卖</span></div>
+                            <div class="attach-item" @click="forceOpenTakeout"><div class="attach-icon-box"><i class="fas fa-utensils text-gray-600"></i></div><span class="attach-label">外卖</span></div>
                             <div class="attach-item" @click="openTransferModal"><div class="attach-icon-box"><i class="fas fa-money-bill-wave text-gray-600"></i></div><span class="attach-label">转账</span></div>
                             <div class="attach-item" @click="showToast('敬请期待')"><div class="attach-icon-box"><i class="fas fa-brain text-gray-600"></i></div><span class="attach-label">记忆</span></div>
                             <div class="attach-item" @click="showMusicModal"><div class="attach-icon-box"><i class="fas fa-music text-gray-600"></i></div><span class="attach-label">一起听</span></div>
@@ -7183,24 +7172,20 @@ createApp({
                 }
             });
         },
-        // ================= 外卖小程序核心方法 =================
-        launchTakeoutProgram() {
-            // 终极防崩溃自愈：如果缓存里缺少商家数据，强制重新注入！
-            if (!this.takeoutModal || !this.takeoutModal.storeList || this.takeoutModal.storeList.length === 0) {
-                this.takeoutModal = { 
-                    show: false, activeTab: 'home', note: '', selectedItem: null,
-                    storeList:[
-                        { id: 1, name: 'Manner Coffee', tag: '精品咖啡', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '冰美式', price: '15.00'}, {name: '桂花燕麦拿铁', price: '22.00'}, {name: '提拉米苏风味拿铁', price: '25.00'}] },
-                        { id: 2, name: 'Wagas 沃歌斯', tag: '健康轻食', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '煎烤鸡肉沙拉', price: '45.00'}, {name: '牛肉能量碗', price: '52.00'}, {name: '鲜榨果汁', price: '28.00'}] },
-                        { id: 3, name: 'KFC 肯德基', tag: '西式快餐', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '麦辣鸡腿堡套餐', price: '38.00'}, {name: '原味鸡+薯条', price: '25.00'}, {name: '皮蛋瘦肉粥(早餐)', price: '12.00'}] },
-                        { id: 4, name: '霸王茶姬', tag: '新中式奶茶', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '伯牙绝弦(大杯)', price: '20.00'}, {name: '春日桃桃', price: '18.00'}, {name: '寻香山茶', price: '18.00'}] }
-                    ]
-                };
-            }
-            this.takeoutModal.activeTab = 'home';
-            this.takeoutModal.selectedItem = null;
-            this.takeoutModal.note = '';
-            this.takeoutModal.show = true;
+        forceOpenTakeout() {
+            // 彻底推翻缓存，强行使用干净的静态数据渲染，永远不会报错打不开！
+            this.takeoutModal = { 
+                show: true, 
+                activeTab: 'home', 
+                note: '', 
+                selectedItem: null,
+                storeList:[
+                    { id: 1, name: 'Manner Coffee', tag: '精品咖啡', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '冰美式', price: '15.00'}, {name: '桂花燕麦拿铁', price: '22.00'}, {name: '提拉米苏风味拿铁', price: '25.00'}] },
+                    { id: 2, name: 'Wagas 沃歌斯', tag: '健康轻食', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '煎烤鸡肉沙拉', price: '45.00'}, {name: '牛肉能量碗', price: '52.00'}, {name: '鲜榨果汁', price: '28.00'}] },
+                    { id: 3, name: 'KFC 肯德基', tag: '西式快餐', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '麦辣鸡腿堡套餐', price: '38.00'}, {name: '原味鸡+薯条', price: '25.00'}, {name: '皮蛋瘦肉粥(早餐)', price: '12.00'}] },
+                    { id: 4, name: '霸王茶姬', tag: '新中式奶茶', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '伯牙绝弦(大杯)', price: '20.00'}, {name: '春日桃桃', price: '18.00'}, {name: '寻香山茶', price: '18.00'}] }
+                ]
+            };
             this.wechatState.showAttachMenu = false;
         },
         refreshTakeoutItems() {
