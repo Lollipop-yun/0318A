@@ -1165,48 +1165,33 @@
                 </header>
 
                 <div class="flex-1 overflow-y-auto pb-6 relative">
-                    <!-- 首页 -->
-                    <div v-if="takeoutModal.activeTab === 'home'" class="flex flex-col bg-[#f5f5f5] min-h-full">
+                    <!-- 首页 (iOS灰白风格 + 胶囊分类) -->
+                    <div v-if="takeoutModal.activeTab === 'home'" class="flex flex-col bg-[#f2f2f6] min-h-full">
                         
-                        <!-- 顶部黄色背景与搜索栏 -->
-                        <div class="bg-gradient-to-b from-[#ffdb5c] to-[#f5f5f5] pt-4 px-4 pb-2">
-                            <div class="bg-white rounded-[12px] flex items-center px-3 h-10 shadow-sm border border-white">
+                        <!-- 搜索栏 -->
+                        <div class="pt-4 px-4 pb-2 bg-[#f2f2f6]">
+                            <div class="bg-white rounded-[10px] flex items-center px-3 h-9 shadow-sm border border-gray-100">
                                 <i class="fas fa-search text-gray-400 mr-2 text-[14px]"></i>
                                 <input placeholder="搜外卖、搜商家..." class="bg-transparent flex-1 outline-none text-[14px] text-gray-800">
-                                <button class="bg-[#ffdb5c] text-gray-900 px-4 py-1.5 rounded-lg text-xs font-bold ml-2 active:scale-95 shadow-sm">搜索</button>
                             </div>
                         </div>
 
-                        <!-- 5大分类金刚区 -->
-                        <div class="px-4 py-5 bg-white shadow-sm mb-3 rounded-b-[20px] z-10">
-                            <div class="grid grid-cols-5 gap-y-4">
-                                <div class="flex flex-col items-center gap-1.5 cursor-pointer active:opacity-50">
-                                    <div class="w-[42px] h-[42px] rounded-full bg-orange-100 flex items-center justify-center text-orange-500"><i class="fas fa-hamburger text-[18px]"></i></div>
-                                    <span class="text-[11px] text-gray-700 font-medium">美食</span>
-                                </div>
-                                <div class="flex flex-col items-center gap-1.5 cursor-pointer active:opacity-50">
-                                    <div class="w-[42px] h-[42px] rounded-full bg-green-100 flex items-center justify-center text-green-500"><i class="fas fa-apple-alt text-[18px]"></i></div>
-                                    <span class="text-[11px] text-gray-700 font-medium">蔬果</span>
-                                </div>
-                                <div class="flex flex-col items-center gap-1.5 cursor-pointer active:opacity-50">
-                                    <div class="w-[42px] h-[42px] rounded-full bg-blue-100 flex items-center justify-center text-blue-500"><i class="fas fa-coffee text-[18px]"></i></div>
-                                    <span class="text-[11px] text-gray-700 font-medium">饮品</span>
-                                </div>
-                                <div class="flex flex-col items-center gap-1.5 cursor-pointer active:opacity-50">
-                                    <div class="w-[42px] h-[42px] rounded-full bg-purple-100 flex items-center justify-center text-purple-500"><i class="fas fa-shopping-bag text-[18px]"></i></div>
-                                    <span class="text-[11px] text-gray-700 font-medium">日用品</span>
-                                </div>
-                                <div class="flex flex-col items-center gap-1.5 cursor-pointer active:opacity-50">
-                                    <div class="w-[42px] h-[42px] rounded-full bg-gray-100 flex items-center justify-center text-gray-500"><i class="fas fa-ellipsis-h text-[18px]"></i></div>
-                                    <span class="text-[11px] text-gray-700 font-medium">其他</span>
+                        <!-- iOS胶囊分区切换栏 (仿图示UI) -->
+                        <div class="px-4 py-2 bg-[#f2f2f6] z-10 sticky top-0">
+                            <div class="bg-white/80 backdrop-blur-md rounded-full p-1 flex items-center justify-between shadow-sm border border-gray-200/60">
+                                <div v-for="cat in ['美食', '蔬果', '饮品', '日用品', '其他']" :key="cat"
+                                     class="flex-1 text-center py-1.5 rounded-full text-[13px] font-bold transition-all cursor-pointer"
+                                     :class="takeoutModal.activeCategory === cat ? 'bg-[#2c2c2e] text-white shadow-md' : 'text-gray-500 hover:text-gray-800'"
+                                     @click="takeoutModal.activeCategory = cat">
+                                    {{ cat }}
                                 </div>
                             </div>
                         </div>
 
                         <!-- 商家列表 -->
-                        <div class="px-4 space-y-3 pb-4">
-                            <div class="text-[16px] font-bold text-gray-900 tracking-wide flex items-center gap-1.5 ml-1 mb-1"><i class="fas fa-fire-alt text-orange-500 text-[15px]"></i> 附近推荐</div>
-                            <div v-for="store in (takeoutModal.storeList ||[])" :key="store.id" class="bg-white rounded-[16px] p-4 shadow-sm border border-gray-50 flex flex-col gap-3">
+                        <div class="px-4 space-y-3 pb-4 pt-2">
+                            <div class="text-[15px] font-bold text-gray-900 tracking-wide flex items-center gap-1.5 ml-1 mb-1">附近推荐</div>
+                            <div v-for="store in (takeoutModal.storeList ||[])" :key="store.id" class="bg-white rounded-[16px] p-4 shadow-sm border border-gray-100 flex flex-col gap-3">
                                 <div class="flex items-center gap-3 border-b border-gray-50 pb-3">
                                     <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 shrink-0"><i class="fas fa-store"></i></div>
                                     <div class="flex flex-col">
@@ -5587,9 +5572,9 @@ createApp({
         // --- 绝对安全的外卖打开方法 ---
         safeOpenTakeout() {
             this.takeoutModal.activeTab = 'home';
+            this.takeoutModal.activeCategory = '美食'; // 新增的分类状态变量
             this.takeoutModal.note = '';
             this.takeoutModal.selectedItem = null;
-            // 强行注入绝对干净的数据，断绝一切数据丢失导致的静默崩溃！
             this.takeoutModal.storeList =[
                 { id: 1, name: 'Manner Coffee', tag: '精品咖啡', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '冰美式', price: '15.00'}, {name: '桂花燕麦拿铁', price: '22.00'}, {name: '提拉米苏风味拿铁', price: '25.00'}] },
                 { id: 2, name: 'Wagas 沃歌斯', tag: '健康轻食', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '煎烤鸡肉沙拉', price: '45.00'}, {name: '牛肉能量碗', price: '52.00'}, {name: '鲜榨果汁', price: '28.00'}] },
@@ -7171,16 +7156,16 @@ createApp({
             this.wechatState.activeNav = 'room'; 
             this.inputMsg = ''; 
             this.showStickerPanel = false;
-            session.unreadCount = 0; // 【新增】进入聊天室时清空未读红点
+            session.unreadCount = 0; 
 
-            // --- 新增：强制解除卡死的“正在输入中”幽灵状态 ---
+            // 【终极修复】进入任何聊天时，强制把可能卡在缓存里的群管理弹窗关掉！
+            if (this.groupManageModal) this.groupManageModal.show = false;
+            if (this.groupAdminModal) this.groupAdminModal.show = false;
+
             this.isTyping = false; 
-
-            // 【新增】进入聊天室时，自动清除之前留下的临时 API 报错气泡
             if (session.messages) {
                 session.messages = session.messages.filter(m => !m.isTempError);
             }
-            
             this.$nextTick(() => {
                 setTimeout(() => {
                     const c = this.$refs.chatContainer;
@@ -8956,7 +8941,29 @@ Structure:
         },
         selectModel(model) { this.apiConfig.selectedModel = model; this.saveData(); this.modelSelectModal.show = false; },
         getMaskById(id) { return this.masks.find(m => m.id === id) || { avatar: '' }; },
-        formatChatTime(ts) { const d = new Date(ts); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; },
+        formatChatTime(ts) { 
+            if (!ts) return '';
+            const now = new Date();
+            const date = new Date(ts);
+            const formatTime = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+            
+            const isSameDay = now.getDate() === date.getDate() && now.getMonth() === date.getMonth() && now.getFullYear() === date.getFullYear();
+            if (isSameDay) return formatTime;
+            
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+            const isYesterday = yesterday.getDate() === date.getDate() && yesterday.getMonth() === date.getMonth() && yesterday.getFullYear() === date.getFullYear();
+            if (isYesterday) return `昨天 ${formatTime}`;
+            
+            const diffMs = now - date;
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            if (diffDays < 7 && now.getDay() !== date.getDay()) {
+                const days = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+                return `${days[date.getDay()]} ${formatTime}`;
+            }
+            
+            return `${date.getMonth() + 1}月${date.getDate()}日 ${formatTime}`;
+        },
         editCurrentSessionFriend() { const session = this.wechatState.activeSession; if(!session) return; const friend = this.wechatState.friendList.find(f => f.id === session.targetId); if(friend) { this.editFriend(friend); } else { this.showToast('当前会话对象未在通讯录中'); } },
         getCurrentSessionAvatar() { 
              const session = this.wechatState.activeSession;
