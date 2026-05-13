@@ -1191,7 +1191,7 @@
                         <!-- 商家列表 -->
                         <div class="px-4 space-y-3 pb-4 pt-2">
                             <div class="text-[15px] font-bold text-gray-900 tracking-wide flex items-center gap-1.5 ml-1 mb-1">附近推荐</div>
-                            <div v-for="store in (takeoutModal.storeList ||[])" :key="store.id" class="bg-white rounded-[16px] p-4 shadow-sm border border-gray-100 flex flex-col gap-3">
+                            <div v-for="store in (takeoutModal.storeList ||[]).filter(s => s.category === takeoutModal.activeCategory)" :key="store.id" class="bg-white rounded-[16px] p-4 shadow-sm border border-gray-100 flex flex-col gap-3">
                                 <div class="flex items-center gap-3 border-b border-gray-50 pb-3">
                                     <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 shrink-0"><i class="fas fa-store"></i></div>
                                     <div class="flex flex-col">
@@ -5572,14 +5572,32 @@ createApp({
         // --- 绝对安全的外卖打开方法 ---
         safeOpenTakeout() {
             this.takeoutModal.activeTab = 'home';
-            this.takeoutModal.activeCategory = '美食'; // 新增的分类状态变量
+            this.takeoutModal.activeCategory = '美食'; // 默认进入美食分类
             this.takeoutModal.note = '';
             this.takeoutModal.selectedItem = null;
+            // 为商家注入 category 字段并扩充各类目数据
             this.takeoutModal.storeList =[
-                { id: 1, name: 'Manner Coffee', tag: '精品咖啡', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '冰美式', price: '15.00'}, {name: '桂花燕麦拿铁', price: '22.00'}, {name: '提拉米苏风味拿铁', price: '25.00'}] },
-                { id: 2, name: 'Wagas 沃歌斯', tag: '健康轻食', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '煎烤鸡肉沙拉', price: '45.00'}, {name: '牛肉能量碗', price: '52.00'}, {name: '鲜榨果汁', price: '28.00'}] },
-                { id: 3, name: 'KFC 肯德基', tag: '西式快餐', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '麦辣鸡腿堡套餐', price: '38.00'}, {name: '原味鸡+薯条', price: '25.00'}, {name: '皮蛋瘦肉粥(早餐)', price: '12.00'}] },
-                { id: 4, name: '霸王茶姬', tag: '新中式奶茶', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '伯牙绝弦(大杯)', price: '20.00'}, {name: '春日桃桃', price: '18.00'}, {name: '寻香山茶', price: '18.00'}] }
+                // 美食
+                { id: 1, category: '美食', name: 'Wagas 沃歌斯', tag: '健康轻食', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '煎烤鸡肉沙拉', price: '45.00'}, {name: '牛肉能量碗', price: '52.00'}, {name: '意式肉酱面', price: '38.00'}] },
+                { id: 2, category: '美食', name: 'KFC 肯德基', tag: '西式快餐', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '麦辣鸡腿堡套餐', price: '38.00'}, {name: '原味鸡+薯条', price: '25.00'}, {name: '老北京卷', price: '18.00'}] },
+                { id: 3, category: '美食', name: '老乡鸡', tag: '中式快餐', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '肥西老母鸡汤', price: '18.00'}, {name: '梅菜扣肉', price: '22.00'}, {name: '葱油鸡', price: '20.00'}] },
+                
+                // 饮品
+                { id: 4, category: '饮品', name: 'Manner Coffee', tag: '精品咖啡', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '冰美式', price: '15.00'}, {name: '桂花燕麦拿铁', price: '22.00'}, {name: '提拉米苏拿铁', price: '25.00'}] },
+                { id: 5, category: '饮品', name: '霸王茶姬', tag: '新中式奶茶', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '伯牙绝弦', price: '20.00'}, {name: '春日桃桃', price: '18.00'}, {name: '寻香山茶', price: '18.00'}] },
+                { id: 6, category: '饮品', name: '喜茶 HEYTEA', tag: '鲜果茶', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '多肉葡萄', price: '28.00'}, {name: '烤黑糖牛乳', price: '25.00'}, {name: '芝芝芒芒', price: '29.00'}] },
+                
+                // 蔬果
+                { id: 7, category: '蔬果', name: '百果园', tag: '新鲜水果', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: 'A级车厘子500g', price: '58.00'}, {name: '红颜草莓300g', price: '35.00'}, {name: '阳光玫瑰', price: '45.00'}] },
+                { id: 8, category: '蔬果', name: '叮咚买菜', tag: '生鲜优选', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '有机西兰花', price: '9.90'}, {name: '鲜活基围虾', price: '29.90'}, {name: '宁夏小番茄', price: '12.80'}] },
+
+                // 日用品
+                { id: 9, category: '日用品', name: '屈臣氏', tag: '便利超市', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '洗脸巾', price: '15.00'}, {name: '洁面乳', price: '45.00'}, {name: '卫生纸提装', price: '25.00'}] },
+                { id: 10, category: '日用品', name: '名创优品', tag: '生活百货', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '无火香薰', price: '29.90'}, {name: 'U型枕', price: '19.90'}, {name: '盲盒盲袋', price: '39.00'}] },
+
+                // 其他
+                { id: 11, category: '其他', name: '海王星辰', tag: '健康药房', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '布洛芬缓释胶囊', price: '25.00'}, {name: '创可贴', price: '10.00'}, {name: '眼药水', price: '15.00'}] },
+                { id: 12, category: '其他', name: '花点时间', tag: '鲜花速递', img: 'https://pic1.imgdb.cn/item/69d1eb56ee81d8282b3ec4fb.png', items:[{name: '红玫瑰11朵', price: '99.00'}, {name: '向日葵花束', price: '88.00'}, {name: '满天星', price: '66.00'}] }
             ];
             this.wechatState.showAttachMenu = false;
             this.takeoutModal.show = true;
@@ -8455,7 +8473,11 @@ Structure:
                             
                             // 如果离线，设置恢复定时
                             if (newColor === 'offline' && duration > 0) {
-                                session.offlineUntil = Date.now() + duration * 60000;
+                                // 核心修改：±5分钟的真实浮动时间（保底最少1分钟）
+                                let variance = Math.floor(Math.random() * 11) - 5; 
+                                let actualDuration = Math.max(1, duration + variance);
+                                
+                                session.offlineUntil = Date.now() + actualDuration * 60000;
                                 session.messages.push({
                                     type: 'system',
                                     content: `[系统提示] ${speakerName} 预计约 ${duration} 分钟后恢复在线`,
