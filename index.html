@@ -2884,21 +2884,22 @@
 
             <!-- 聊天房间 (Chat Room) -->
             <div v-if="wechatState.activeNav === 'room'" class="flex-1 flex flex-col bg-[#fdfdfd] absolute inset-0 z-20">
-                <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white/95 backdrop-blur border-b border-gray-100 z-30 relative">
+                <header class="h-[90px] pt-10 px-4 flex items-center justify-between bg-white/95 backdrop-blur border-b border-gray-100 z-30 relative shrink-0">
                     <div class="flex items-center h-full flex-1">
+                        <!-- 返回按钮 -->
                         <button @click="wechatState.activeNav = 'chat'" class="w-8 h-8 flex items-center justify-center shrink-0"><i class="fas fa-chevron-left text-lg text-gray-800"></i></button>
                         
                         <!-- 左侧排版模式 -->
                         <div v-if="(wechatState.activeSession?.headerLayout || 'center') === 'left'" class="flex items-center gap-2 pl-2 flex-1">
-                            <div class="w-[38px] h-[38px] rounded-full overflow-hidden shrink-0 border border-gray-100 cursor-pointer active:opacity-80" @click="!wechatState.activeSession.isGroup && openStatusModal()">
-                                <img :src="wechatState.activeSession.isGroup ? wechatState.activeSession.avatar : getCurrentSessionAvatar()" class="w-full h-full object-cover">
+                            <div class="w-[38px] h-[38px] rounded-full overflow-hidden shrink-0 border border-gray-100 cursor-pointer active:opacity-80" @click="!wechatState.activeSession?.isGroup && openStatusModal()">
+                                <img :src="wechatState.activeSession?.isGroup ? wechatState.activeSession?.avatar : getCurrentSessionAvatar()" class="w-full h-full object-cover">
                             </div>
-                            <div class="flex flex-col cursor-pointer active:opacity-80" @click="!wechatState.activeSession.isGroup && openEditStatusModal()">
+                            <div class="flex flex-col cursor-pointer active:opacity-80" @click="!wechatState.activeSession?.isGroup && openEditStatusModal()">
                                 <h1 class="font-bold text-[15px] text-gray-900 leading-tight flex items-center gap-1">
                                     <span v-if="isTyping" class="text-sm font-normal text-gray-500">正在输入<span class="typing-dot">.</span><span class="typing-dot">.</span><span class="typing-dot">.</span></span>
                                     <span v-else>{{ getCurrentChatTitle() }}</span>
                                 </h1>
-                                <div v-if="!wechatState.activeSession.isGroup" class="flex items-center gap-1.5 mt-[3px]">
+                                <div v-if="!wechatState.activeSession?.isGroup" class="flex items-center gap-1.5 mt-[3px]">
                                     <div class="w-2 h-2 rounded-full shadow-sm" :class="getStatusColorClass(wechatState.activeSession?.onlineStatus)"></div>
                                     <span class="text-[10px] text-gray-500 font-medium select-none">{{ wechatState.activeSession?.statusText || '手机在线' }}</span>
                                 </div>
@@ -2907,24 +2908,22 @@
                     </div>
 
                     <!-- 中间排版模式 -->
-                    <div v-if="(wechatState.activeSession?.headerLayout || 'center') === 'center'" class="flex flex-col items-center cursor-pointer active:opacity-50 absolute left-1/2 -translate-x-1/2" @click="!wechatState.activeSession.isGroup && openStatusModal()" @dblclick="!wechatState.activeSession.isGroup && openEditStatusModal()">
+                    <div v-if="(wechatState.activeSession?.headerLayout || 'center') === 'center'" class="flex flex-col items-center cursor-pointer active:opacity-50 absolute left-1/2 -translate-x-1/2" @click="!wechatState.activeSession?.isGroup && openStatusModal()" @dblclick="!wechatState.activeSession?.isGroup && openEditStatusModal()">
                         <h1 class="font-medium text-[16px] text-gray-900 flex items-center gap-1">
                             <span v-if="isTyping">对方正在输入中<span class="typing-dot">.</span><span class="typing-dot">.</span><span class="typing-dot">.</span></span>
                             <span v-else>{{ getCurrentChatTitle() }}</span>
                         </h1>
-                        <div v-if="!wechatState.activeSession.isGroup" class="flex items-center gap-1.5 mt-[2px]">
+                        <div v-if="!wechatState.activeSession?.isGroup" class="flex items-center gap-1.5 mt-[2px]">
                             <div class="w-1.5 h-1.5 rounded-full shadow-sm" :class="getStatusColorClass(wechatState.activeSession?.onlineStatus)"></div>
                             <span class="text-[10px] text-gray-400 font-medium tracking-wider">{{ wechatState.activeSession?.statusText || '手机在线' }}</span>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-1 shrink-0">
-                        <!-- 加上 v-if="!wechatState.activeSession.isGroup" 判断，群聊不显示此按钮 -->
-                        <button v-if="!wechatState.activeSession.isGroup" class="w-8 h-8 flex items-center justify-center text-gray-800" @click="groupSelectModal.show = true"><i class="fas fa-folder-open"></i></button>
+                        <button v-if="!wechatState.activeSession?.isGroup" class="w-8 h-8 flex items-center justify-center text-gray-800" @click="groupSelectModal.show = true"><i class="fas fa-folder-open"></i></button>
                         <button class="w-8 h-8 flex items-center justify-center text-gray-800" @click="goToChatDetails"><i class="fas fa-ellipsis-h"></i></button>
                     </div>
-                </header>                               
-                                               
+                </header>                      
                 <!-- 聊天容器：支持自定义背景图 -->
                 <div class="flex-1 overflow-y-auto p-4 space-y-2 bg-[#fdfdfd] bg-cover bg-center" ref="chatContainer" @click="closeChatMenus"
                      :style="{ backgroundImage: wechatState.activeSession.wallpaper ? 'url(' + wechatState.activeSession.wallpaper + ')' : '' }">
@@ -7208,20 +7207,23 @@ createApp({
             this.enterChatRoom(session); this.saveData();
         },
         enterChatRoom(session) { 
+            if (!session) return; // 绝对安全锁，防止空数据崩溃
             this.wechatState.activeSession = session; 
             this.wechatState.activeNav = 'room'; 
             this.inputMsg = ''; 
             this.showStickerPanel = false;
             session.unreadCount = 0; 
 
-            // 【终极修复】进入任何聊天时，强制把可能卡在缓存里的群管理弹窗关掉！
+            // 强制清理任何卡死的群管理弹窗
             if (this.groupManageModal) this.groupManageModal.show = false;
             if (this.groupAdminModal) this.groupAdminModal.show = false;
 
             this.isTyping = false; 
-            if (session.messages) {
+            // 过滤临时报错气泡
+            if (session.messages && Array.isArray(session.messages)) {
                 session.messages = session.messages.filter(m => !m.isTempError);
             }
+            
             this.$nextTick(() => {
                 setTimeout(() => {
                     const c = this.$refs.chatContainer;
@@ -9005,6 +9007,8 @@ Structure:
             if (!ts) return '';
             const now = new Date();
             const date = new Date(ts);
+            if (isNaN(date.getTime())) return ''; // 防止时间错乱导致崩溃
+            
             const formatTime = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
             
             const isSameDay = now.getDate() === date.getDate() && now.getMonth() === date.getMonth() && now.getFullYear() === date.getFullYear();
