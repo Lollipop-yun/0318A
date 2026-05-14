@@ -7417,17 +7417,14 @@ createApp({
             }
             if (!memberId) return null; 
 
-            // 初始化成员信息存储
-            if (!session.membersInfo) session.membersInfo = {};
-            if (!session.membersInfo[memberId]) {
-                session.membersInfo[memberId] = {
-                    level: memberId === 'mine' ? 100 : 1, // 默认变成 1 级
-                    customTitle: '',
-                    lastLevelDate: '' // 记录上次升级日期
-                };
+            // 【核心修复】：绝对不能在这里使用 session.membersInfo = {} 写入数据！只做安全读取！
+            let info = { level: 1, customTitle: '' };
+            if (memberId === 'mine') info.level = 100;
+
+            if (session.membersInfo && session.membersInfo[memberId]) {
+                info = session.membersInfo[memberId];
             }
 
-            const info = session.membersInfo[memberId];
             const isOwner = memberId === 'mine'; // 默认玩家是群主
             const isAdmin = !isOwner && session.admins && session.admins.includes(memberId);
 
@@ -9788,7 +9785,14 @@ Structure:
             // 强制重置各种弹窗状态，解决幽灵卡死 Bug
             this.globalNotification.show = false;
             this.toast.show = false;
-            this.offlineState.show = false; // 修复一进微信就出现线下模式的BUG
+            this.offlineState.show = false; 
+            
+            // 强行清理残留的外卖和群管理缓存状态，防止一打开网页就弹出来
+            if (this.takeoutModal) this.takeoutModal.show = false;
+            if (this.groupManageModal) this.groupManageModal.show = false;
+            if (this.groupAdminModal) this.groupAdminModal.show = false;
+            if (this.redPacketModal) this.redPacketModal.show = false;
+            
             this.closeAllMenus();
 
             // 恢复系统级数据防清理状态
