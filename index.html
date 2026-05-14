@@ -5686,10 +5686,12 @@ createApp({
         shouldShowTime(msg, index) {
             if (index === 0) return true;
             const session = this.wechatState.activeSession;
+            // 绝对安全锁：数据缺失时不报错，默认显示时间
+            if (!session || !session.messages) return true; 
             const prevMsg = session.messages[index - 1];
-            const mode = session.timestampMode || 'outside';
+            if (!prevMsg || !msg.time || !prevMsg.time) return true;
             
-            // 如果选中了中途，间隔为 20 分钟 (1200000ms)；否则为默认的 5 分钟
+            const mode = session.timestampMode || 'outside';
             const threshold = mode === 'midchat' ? 1200000 : 300000;
             return (msg.time - prevMsg.time) > threshold;
         },
@@ -7207,22 +7209,30 @@ createApp({
             this.enterChatRoom(session); this.saveData();
         },
         enterChatRoom(session) { 
-            if (!session) return; // 绝对安全锁，防止空数据崩溃
+            if (!session) return; 
+            
+            // 【终极防线】：如果遇到以前留下的损坏存档，强行补齐数据结构，绝不报错！
+            if (!session.messages || !Array.isArray(session.messages)) session.messages = [];
+            if (!session.statusHistory) session.statusHistory = [];
+            if (!session.members) session.members = [];
+            if (!session.admins) session.admins = [];
+            if (!session.muted) session.muted = [];
+            
             this.wechatState.activeSession = session; 
             this.wechatState.activeNav = 'room'; 
             this.inputMsg = ''; 
             this.showStickerPanel = false;
             session.unreadCount = 0; 
 
-            // 强制清理任何卡死的群管理弹窗
+            // 强制清理任何可能卡死的弹窗
             if (this.groupManageModal) this.groupManageModal.show = false;
             if (this.groupAdminModal) this.groupAdminModal.show = false;
+            if (this.redPacketModal) this.redPacketModal.show = false;
 
             this.isTyping = false; 
+            
             // 过滤临时报错气泡
-            if (session.messages && Array.isArray(session.messages)) {
-                session.messages = session.messages.filter(m => !m.isTempError);
-            }
+            session.messages = session.messages.filter(m => !m.isTempError);
             
             this.$nextTick(() => {
                 setTimeout(() => {
@@ -7232,7 +7242,7 @@ createApp({
             });
 
             this.currentStatus = session.status || {};
-            this.currentStatusHistory = session.statusHistory ||[];
+            this.currentStatusHistory = session.statusHistory;
         },
         setHeaderLayout(layout) {
             if (this.wechatState.activeSession) {
