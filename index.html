@@ -5445,11 +5445,12 @@ createApp({
             let sessions = [...this.wechatState.sessions];
             sessions.sort((a, b) => {
                 if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
-                return b.time - a.time;
+                // 核心防御：防止 undefined 的时间参与排序导致死机
+                return (b.time || 0) - (a.time || 0);
             });
             if (!this.wechatState.searchQuery) return sessions;
             const query = this.wechatState.searchQuery.toLowerCase();
-            return sessions.filter(c => c.name.toLowerCase().includes(query));
+            return sessions.filter(c => c && c.name && c.name.toLowerCase().includes(query));
         },
         filteredStickers() {
             if(this.activeStickerGroupId === 'all') return this.stickers;
@@ -7211,7 +7212,7 @@ createApp({
         enterChatRoom(session) { 
             if (!session) return; 
             
-            // 【终极防线】：如果遇到以前留下的损坏存档，强行补齐数据结构，绝不报错！
+            // 【终极防线】：强行补齐数据结构，绝不报错！
             if (!session.messages || !Array.isArray(session.messages)) session.messages = [];
             if (!session.statusHistory) session.statusHistory = [];
             if (!session.members) session.members = [];
@@ -7231,8 +7232,8 @@ createApp({
 
             this.isTyping = false; 
             
-            // 过滤临时报错气泡
-            session.messages = session.messages.filter(m => !m.isTempError);
+            // 安全过滤临时报错气泡
+            session.messages = session.messages.filter(m => m && !m.isTempError);
             
             this.$nextTick(() => {
                 setTimeout(() => {
@@ -7242,7 +7243,7 @@ createApp({
             });
 
             this.currentStatus = session.status || {};
-            this.currentStatusHistory = session.statusHistory;
+            this.currentStatusHistory = session.statusHistory || [];
         },
         setHeaderLayout(layout) {
             if (this.wechatState.activeSession) {
@@ -7524,36 +7525,34 @@ createApp({
         // 动态时间戳格式化 (仿微信)
         formatSessionTime(ts) {
             if (!ts) return '';
-            const now = new Date();
-            const date = new Date(ts);
-            const diffMs = now - date;
-            const diffMins = Math.floor(diffMs / 60000);
+            try {
+                const now = new Date();
+                const date = new Date(ts);
+                if (isNaN(date.getTime())) return ''; // 核心防御：时间损坏直接跳过
+                const diffMs = now - date;
+                const diffMins = Math.floor(diffMs / 60000);
 
-            // < 5分钟显示刚刚/几分钟前
-            if (diffMins < 1) return '刚刚';
-            if (diffMins < 5) return `${diffMins}分钟前`;
-            if (diffMins < 60) return `${diffMins}分钟前`;
+                if (diffMins < 1) return '刚刚';
+                if (diffMins < 5) return `${diffMins}分钟前`;
+                if (diffMins < 60) return `${diffMins}分钟前`;
 
-            const formatTime = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-            const isSameDay = now.getDate() === date.getDate() && now.getMonth() === date.getMonth() && now.getFullYear() === date.getFullYear();
-            // 今天超过 1 小时
-            if (isSameDay) return formatTime;
+                const formatTime = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                const isSameDay = now.getDate() === date.getDate() && now.getMonth() === date.getMonth() && now.getFullYear() === date.getFullYear();
+                if (isSameDay) return formatTime;
 
-            const yesterday = new Date(now);
-            yesterday.setDate(now.getDate() - 1);
-            const isYesterday = yesterday.getDate() === date.getDate() && yesterday.getMonth() === date.getMonth() && yesterday.getFullYear() === date.getFullYear();
-            // 昨天
-            if (isYesterday) return `昨天 ${formatTime}`;
+                const yesterday = new Date(now);
+                yesterday.setDate(now.getDate() - 1);
+                const isYesterday = yesterday.getDate() === date.getDate() && yesterday.getMonth() === date.getMonth() && yesterday.getFullYear() === date.getFullYear();
+                if (isYesterday) return `昨天 ${formatTime}`;
 
-            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-            // 7天内且跨天，显示星期几
-            if (diffDays < 7 && now.getDay() !== date.getDay()) {
-                const days =['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-                return days[date.getDay()];
-            }
+                const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                if (diffDays < 7 && now.getDay() !== date.getDay()) {
+                    const days =['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+                    return days[date.getDay()];
+                }
 
-            // 更久以前
-            return `${date.getMonth() + 1}月${date.getDate()}日`;
+                return `${date.getMonth() + 1}月${date.getDate()}日`;
+            } catch(e) { return ''; }
         },
         
         // 全局搜索逻辑
