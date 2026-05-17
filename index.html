@@ -5442,14 +5442,15 @@ createApp({
         folders() { return this.worldData.filter(i => i.type === 'folder'); },
         rootFiles() { return this.worldData.filter(i => i.type === 'file' && !i.parentId); },
         filteredWechatContacts() {
-            let sessions = [...this.wechatState.sessions];
+            let sessions = [...(this.wechatState.sessions || [])];
             sessions.sort((a, b) => {
                 if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
-                return b.time - a.time;
+                return (b.time || 0) - (a.time || 0);
             });
             if (!this.wechatState.searchQuery) return sessions;
             const query = this.wechatState.searchQuery.toLowerCase();
-            return sessions.filter(c => c.name.toLowerCase().includes(query));
+            // 加入 c.name 安全校验，防止空名字导致白屏
+            return sessions.filter(c => c.name && c.name.toLowerCase().includes(query));
         },
         filteredStickers() {
             if(this.activeStickerGroupId === 'all') return this.stickers;
@@ -7211,40 +7212,40 @@ createApp({
         enterChatRoom(session) { 
             if (!session) return; 
             
-            // 【终极防线】：强行补齐数据结构，绝不报错
-            if (!session.messages || !Array.isArray(session.messages)) session.messages = [];
-            if (!session.statusHistory) session.statusHistory = [];
-            if (!session.members) session.members = [];
-            if (!session.admins) session.admins = [];
-            if (!session.muted) session.muted = [];
-            
-            // 过滤临时报错气泡
-            session.messages = session.messages.filter(m => !m.isTempError);
-            
-            this.wechatState.activeSession = session; 
-            this.inputMsg = ''; 
-            this.showStickerPanel = false;
-            session.unreadCount = 0; 
-            this.isTyping = false; 
-
-            // 强制清理任何可能卡死的弹窗
+            // 强制清理可能卡死的弹窗
             if (this.groupManageModal) this.groupManageModal.show = false;
             if (this.groupAdminModal) this.groupAdminModal.show = false;
             if (this.redPacketModal) this.redPacketModal.show = false;
 
-            this.currentStatus = session.status || {};
-            this.currentStatusHistory = session.statusHistory || [];
+            // 【终极破局】：使用 setTimeout 脱离当前事件循环，打破 Vue 的渲染死锁！
+            setTimeout(() => {
+                // 强行补齐数据结构，绝不报错
+                if (!session.messages || !Array.isArray(session.messages)) session.messages = [];
+                if (!session.statusHistory) session.statusHistory = [];
+                if (!session.members) session.members = [];
+                if (!session.admins) session.admins = [];
+                if (!session.muted) session.muted = [];
+                
+                // 过滤临时报错气泡
+                session.messages = session.messages.filter(m => !m.isTempError);
+                
+                this.wechatState.activeSession = session; 
+                this.inputMsg = ''; 
+                this.showStickerPanel = false;
+                session.unreadCount = 0; 
+                this.isTyping = false; 
 
-            // 【破局核心】：强行更新状态并撕碎 Vue 的死锁响应，画面必定瞬间切换！
-            this.wechatState.activeNav = 'room'; 
-            this.$forceUpdate();
+                this.currentStatus = session.status || {};
+                this.currentStatusHistory = session.statusHistory || [];
 
-            this.$nextTick(() => {
-                setTimeout(() => {
+                // 切换到聊天室画面
+                this.wechatState.activeNav = 'room'; 
+
+                this.$nextTick(() => {
                     const c = this.$refs.chatContainer;
                     if (c) c.scrollTop = c.scrollHeight;
-                }, 50);
-            });
+                });
+            }, 10); // 延迟 10 毫秒，完美绕过死锁
         },
         setHeaderLayout(layout) {
             if (this.wechatState.activeSession) {
@@ -7528,33 +7529,31 @@ createApp({
             if (!ts) return '';
             const now = new Date();
             const date = new Date(ts);
+            // 绝对安全锁：如果时间数据损坏，直接返回空，防止渲染卡死
+            if (isNaN(date.getTime())) return ''; 
+            
             const diffMs = now - date;
             const diffMins = Math.floor(diffMs / 60000);
 
-            // < 5分钟显示刚刚/几分钟前
             if (diffMins < 1) return '刚刚';
             if (diffMins < 5) return `${diffMins}分钟前`;
             if (diffMins < 60) return `${diffMins}分钟前`;
 
             const formatTime = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
             const isSameDay = now.getDate() === date.getDate() && now.getMonth() === date.getMonth() && now.getFullYear() === date.getFullYear();
-            // 今天超过 1 小时
             if (isSameDay) return formatTime;
 
             const yesterday = new Date(now);
             yesterday.setDate(now.getDate() - 1);
             const isYesterday = yesterday.getDate() === date.getDate() && yesterday.getMonth() === date.getMonth() && yesterday.getFullYear() === date.getFullYear();
-            // 昨天
             if (isYesterday) return `昨天 ${formatTime}`;
 
             const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-            // 7天内且跨天，显示星期几
             if (diffDays < 7 && now.getDay() !== date.getDay()) {
                 const days =['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
                 return days[date.getDay()];
             }
 
-            // 更久以前
             return `${date.getMonth() + 1}月${date.getDate()}日`;
         },
         
